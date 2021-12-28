@@ -75,7 +75,8 @@ const mainServer = mainHttps.createServer({
 mainServer.listen(config.mainPort);
 
 // start socket.io server on the https server
-const masterSocketServer = new SocketioServer(mainServer, {
+const masterSocketServer = new SocketioServer(
+    mainServer, {
     cors: {
         origin: "*",
         methods: ["GET", "POST", "OPTIONS"]
@@ -98,3 +99,4 @@ masterSocketServer.on("connection", socket =>{
 });
 
 console.log("all done");
+console.log(masterSocketServer.engine);
