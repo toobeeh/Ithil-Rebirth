@@ -68,9 +68,9 @@ dataObserver.observe();
 const mainExpress = express();
 mainExpress.use(cors());
 const mainServer = mainHttps.createServer({
-    // key: fs.readFileSync(config.certificatePath + '/privkey.pem', 'utf8'),
-    // cert: fs.readFileSync(config.certificatePath + '/cert.pem', 'utf8'),
-    // ca: fs.readFileSync(config.certificatePath + '/chain.pem', 'utf8')
+    key: fs.readFileSync(config.certificatePath + '/privkey.pem', 'utf8'),
+    cert: fs.readFileSync(config.certificatePath + '/cert.pem', 'utf8'),
+    ca: fs.readFileSync(config.certificatePath + '/chain.pem', 'utf8')
 }, mainExpress);
 mainServer.listen(config.mainPort);
 
