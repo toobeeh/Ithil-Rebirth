@@ -192,7 +192,6 @@ class PalantirDatabase {
             }
             else if (indicator == "id") {
                 let res = this.db.prepare("SELECT * FROM Lobbies WHERE LobbyID LIKE ?").get(value);
-                console.log("res", res);
                 if (res) {
                     result.result.lobby = JSON.parse(res.Lobby);
                     result.result.found = true;

@@ -15,13 +15,13 @@ module.exports = {
         } */
     ],
     config: {
-        masterPort: 4000,
-        dropPort: 4001,
-        workerRange: [4002, 4010],
+        mainPort: 5000,
+        dropPort: 5001,
+        workerRange: [5002, 5010],
         minAvailableWorker: 7,
         certificatePath: '/etc/letsencrypt/live/typo.rip',
         palantirDbPath: '../debugDB/palantir.db',
-        statDbPath: '/etc/letsencrypt/live/typo.rip',
+        statDbPath: '../debugDB/typoStats.db',
         imageDbParentPath: '/etc/letsencrypt/live/typo.rip',
     }
 };

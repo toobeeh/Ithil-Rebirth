@@ -61,7 +61,6 @@ class DataObserver {
      */
     refreshPublicData() {
         let dbResult = this.database.getPublicData();
-        console.log(dbResult);
         if (dbResult.success && dbResult.result != null) {
             if (JSON.stringify(this.publicData.onlineScenes) != JSON.stringify(dbResult.result.onlineScenes)
                 || JSON.stringify(this.publicData.onlineSprites) != JSON.stringify(dbResult.result.onlineSprites)) {
@@ -74,7 +73,6 @@ class DataObserver {
      * Clears volatile data in the database
      */
     clearVolatile() {
-        console.log(this);
         this.database.clearVolatile();
     }
     /**
