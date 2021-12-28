@@ -86,9 +86,11 @@ const masterSocketServer = new SocketioServer(mainServer, {
 // listen for socket connection events
 masterSocketServer.on("connection", socket =>{
     // create listener for port request
+    console.log("client connected");
     socket.on("request port", async data => {
         // find and respond the least busy port, log client and close socket
         const port = (await balancer.getBalancedWorker()).port;
+        console.log("sent to port " + port);
         statDb.updateClientContact(data.client);
         socket.emit("balanced port", {port: port});
         socket.disconnect();
