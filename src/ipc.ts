@@ -22,7 +22,7 @@ abstract class IthilIPC {
     static events = ipcEvents;
 
     constructor(id: string) {
-        this.ipc = new IPC()
+        this.ipc = new IPC();
         this.ipc.config.id = id;
         this.ipc.config.silent = true;
         this.ipc.config.retry = 1500;

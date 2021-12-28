@@ -104,9 +104,8 @@ class PalantirDatabase {
             let rows = this.db.prepare(`SELECT '"' || GuildID || '"' as GuildID, Lobbies FROM GuildLobbies`).all();
             result.result = [];
             rows.forEach(row => {
-                var _a;
                 try {
-                    (_a = result.result) === null || _a === void 0 ? void 0 : _a.push({
+                    result.result?.push({
                         guildID: JSON.parse(row.GuildID),
                         guildLobbies: JSON.parse(row.Lobbies)
                     });

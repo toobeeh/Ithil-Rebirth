@@ -20,7 +20,7 @@ module.exports = {
         workerRange: [4002, 4010],
         minAvailableWorker: 7,
         certificatePath: '/etc/letsencrypt/live/typo.rip',
-        palantirDbPath: './debugDB/palantir.db',
+        palantirDbPath: '../debugDB/palantir.db',
         statDbPath: '/etc/letsencrypt/live/typo.rip',
         imageDbParentPath: '/etc/letsencrypt/live/typo.rip',
     }
