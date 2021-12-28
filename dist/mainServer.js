@@ -57,14 +57,12 @@ const dataObserver = new dataObserver_1.default(palantirDb, (event, data) => ipc
 dataObserver.observe();
 // Start the https server with cors on main port
 const mainExpress = (0, express_1.default)();
-mainExpress.use((0, cors_1.default)());
-const serverConfig = {
+mainExpress.use((0, cors_1.default)({ credentials: true, origin: true }));
+const mainServer = https_1.default.createServer({
     key: fs_1.default.readFileSync(config.certificatePath + '/privkey.pem', 'utf8'),
     cert: fs_1.default.readFileSync(config.certificatePath + '/cert.pem', 'utf8'),
     ca: fs_1.default.readFileSync(config.certificatePath + '/chain.pem', 'utf8')
-};
-console.log(config.certificatePath, serverConfig);
-const mainServer = https_1.default.createServer(serverConfig, mainExpress);
+}, mainExpress);
 mainServer.listen(config.mainPort);
 // start socket.io server on the https server
 const masterSocketServer = new socket_io_1.Server(mainServer, {
@@ -88,4 +86,3 @@ masterSocketServer.on("connection", socket => {
     });
 });
 console.log("all done");
-console.log("yes", masterSocketServer.engine);

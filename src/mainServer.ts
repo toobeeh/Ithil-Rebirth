@@ -66,14 +66,12 @@ dataObserver.observe();
 
 // Start the https server with cors on main port
 const mainExpress = express();
-mainExpress.use(cors());
-const serverConfig = {
+mainExpress.use(cors({credentials: true, origin: true}));
+const mainServer = mainHttps.createServer({
     key: fs.readFileSync(config.certificatePath + '/privkey.pem', 'utf8'),
     cert: fs.readFileSync(config.certificatePath + '/cert.pem', 'utf8'),
     ca: fs.readFileSync(config.certificatePath + '/chain.pem', 'utf8')
-}
-console.log(config.certificatePath, serverConfig);
-const mainServer = mainHttps.createServer(serverConfig, mainExpress);
+}, mainExpress);
 mainServer.listen(config.mainPort);
 
 // start socket.io server on the https server
@@ -101,4 +99,3 @@ masterSocketServer.on("connection", socket =>{
 });
 
 console.log("all done");
-console.log("yes", masterSocketServer.engine);
