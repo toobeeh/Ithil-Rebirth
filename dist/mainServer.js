@@ -11,6 +11,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const https_1 = __importDefault(require("https"));
+const fs_1 = __importDefault(require("fs"));
 const cors_1 = __importDefault(require("cors"));
 const express_1 = __importDefault(require("express"));
 const socket_io_1 = require("socket.io");
@@ -57,11 +58,13 @@ dataObserver.observe();
 // Start the https server with cors on main port
 const mainExpress = (0, express_1.default)();
 mainExpress.use((0, cors_1.default)());
-const mainServer = https_1.default.createServer({
-// key: fs.readFileSync(config.certificatePath + '/privkey.pem', 'utf8'),
-// cert: fs.readFileSync(config.certificatePath + '/cert.pem', 'utf8'),
-// ca: fs.readFileSync(config.certificatePath + '/chain.pem', 'utf8')
-}, mainExpress);
+const serverConfig = {
+    key: fs_1.default.readFileSync(config.certificatePath + '/privkey.pem', 'utf8'),
+    cert: fs_1.default.readFileSync(config.certificatePath + '/cert.pem', 'utf8'),
+    ca: fs_1.default.readFileSync(config.certificatePath + '/chain.pem', 'utf8')
+};
+console.log(config.certificatePath, serverConfig);
+const mainServer = https_1.default.createServer(serverConfig, mainExpress);
 mainServer.listen(config.mainPort);
 // start socket.io server on the https server
 const masterSocketServer = new socket_io_1.Server(mainServer, {
@@ -74,12 +77,15 @@ const masterSocketServer = new socket_io_1.Server(mainServer, {
 // listen for socket connection events
 masterSocketServer.on("connection", socket => {
     // create listener for port request
+    console.log("client connected");
     socket.on("request port", async (data) => {
         // find and respond the least busy port, log client and close socket
         const port = (await balancer.getBalancedWorker()).port;
+        console.log("sent to port " + port);
         statDb.updateClientContact(data.client);
         socket.emit("balanced port", { port: port });
         socket.disconnect();
     });
 });
 console.log("all done");
+console.log("yes", masterSocketServer.engine);
