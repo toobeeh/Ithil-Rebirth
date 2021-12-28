@@ -5,16 +5,17 @@ import * as types from "./types";
  * Palantir/Typo main db access
  */
 class PalantirDatabase {
+    /**
+     * The Sqlite3 database object
+     */
     db: sqlite3.Database;
-    path: string;
 
     /**
      * Create a new palantir db connection
      * @param path Path to the sqlite3 db file
      */
     constructor(path: string) {
-        this.path = path;
-        this.db = new sqlite3(this.path);
+        this.db = new sqlite3(path);
         this.db.pragma('journal_mode = WAL');
     }
 
@@ -26,7 +27,7 @@ class PalantirDatabase {
     }
 
     /**
-     * generates an empty databse result
+     * Generates an empty database result
      */
     emptyResult<Type>() {
         let empty: types.dbResult<Type> = {
@@ -63,7 +64,7 @@ class PalantirDatabase {
     }
 
     /**
-     * Get a palantir user by their login
+     * Get a palantir user login by access token
      * @param accessToken The user's access token
      * @returns The user's login token
      */
@@ -114,13 +115,13 @@ class PalantirDatabase {
             let rows = this.db.prepare(`SELECT '"' || GuildID || '"' as GuildID, Lobbies FROM GuildLobbies`).all();
             result.result = [];
             rows.forEach(row => {
-                try{
+                try {
                     result.result?.push({
                         guildID: JSON.parse(row.GuildID),
                         guildLobbies: JSON.parse(row.Lobbies)
                     });
                 }
-                catch(e){
+                catch (e) {
                     console.warn("Error parsing lobby JSON: ", e);
                 }
             });
@@ -208,7 +209,7 @@ class PalantirDatabase {
             }
             else if (indicator == "id") {
                 let res = this.db.prepare("SELECT * FROM Lobbies WHERE LobbyID LIKE ?").get(value);
-                console.log("res",res);
+                console.log("res", res);
                 if (res) {
                     result.result.lobby = JSON.parse(res.Lobby);
                     result.result.found = true;
@@ -261,9 +262,9 @@ class PalantirDatabase {
     }
 
     /**
-     * Write a player's status for a certain session
-      * @returns Indicator if the query succeeded
-      */
+     *  Clear volatile data as reports, status, onlinesprites etc
+     * @returns Indicator if the query succeeded
+     */
     clearVolatile() {
         let success = false;
         try {
@@ -360,7 +361,7 @@ class PalantirDatabase {
       * @param lobbyPlayerID The ID of the target player in the skribbl lobby
       * @returns Indicator if the query succeeded
       */
-     isPalantirLobbyOwner(lobbyID: string, lobbyPlayerID: number) {
+    isPalantirLobbyOwner(lobbyID: string, lobbyPlayerID: number) {
         let result = this.emptyResult<boolean>();
         try {
             let lobbyplayers = this.db.prepare("select json_extract(Status, '$.LobbyPlayerID') as playerid from Status where json_extract(Status, '$.LobbyID') = ?").all(lobbyID);

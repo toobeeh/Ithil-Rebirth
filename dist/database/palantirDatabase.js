@@ -13,8 +13,7 @@ class PalantirDatabase {
      * @param path Path to the sqlite3 db file
      */
     constructor(path) {
-        this.path = path;
-        this.db = new better_sqlite3_1.default(this.path);
+        this.db = new better_sqlite3_1.default(path);
         this.db.pragma('journal_mode = WAL');
     }
     /**
@@ -24,7 +23,7 @@ class PalantirDatabase {
         this.db.close();
     }
     /**
-     * generates an empty databse result
+     * Generates an empty database result
      */
     emptyResult() {
         let empty = {
@@ -58,7 +57,7 @@ class PalantirDatabase {
         return result;
     }
     /**
-     * Get a palantir user by their login
+     * Get a palantir user login by access token
      * @param accessToken The user's access token
      * @returns The user's login token
      */
@@ -243,9 +242,9 @@ class PalantirDatabase {
         return success;
     }
     /**
-     * Write a player's status for a certain session
-      * @returns Indicator if the query succeeded
-      */
+     *  Clear volatile data as reports, status, onlinesprites etc
+     * @returns Indicator if the query succeeded
+     */
     clearVolatile() {
         let success = false;
         try {
