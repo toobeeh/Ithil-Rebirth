@@ -15,9 +15,9 @@ module.exports = {
         } */
     ],
     config: {
-        mainPort: 5000,
-        dropPort: 5001,
-        workerRange: [5002, 5010],
+        mainPort: 4100,
+        dropPort: 4101,
+        workerRange: [4102, 4110],
         minAvailableWorker: 7,
         certificatePath: '/etc/letsencrypt/live/typo.rip',
         palantirDbPath: '../debugDB/palantir.db',
