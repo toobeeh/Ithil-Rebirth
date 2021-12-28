@@ -17,6 +17,9 @@ const portscanner_1 = __importDefault(require("portscanner"));
  * Balancer object to balance load equally between worker servers
  */
 class Balancer {
+    /**
+    * Init new empty balancer
+    */
     constructor(config) {
         this.workers = [];
         this.queue = [];

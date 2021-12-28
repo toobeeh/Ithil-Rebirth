@@ -7,13 +7,14 @@
  */
 
 // import libs and local modules
+import portscanner from "portscanner";
 import mainHTTPS from 'https';
 import fs from 'fs';
 import cors from 'cors';
 import {Server as SocketServer} from "socket.io";
-import {IthilIPCServer} from './ipc';
 import Balancer from './balancer';
 import PalantirDatabase from './database/palantirDatabase';
+import {IthilIPCServer} from './ipc';
 import palantirDb from "./database/statDatabase";
 import StatDb from "./database/statDatabase";
 import * as types from "./database/types";
@@ -34,6 +35,7 @@ const balancer = new Balancer(config);
  * Ithil IPC coordination server
  */
 const ipcServer = new IthilIPCServer("main");
+
 // add callbacks to balancer events
 ipcServer.workerConnect = (data, socket) => {
     balancer.addWorker(data.port, socket);

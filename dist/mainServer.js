@@ -10,9 +10,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const ipc_1 = require("./ipc");
 const balancer_1 = __importDefault(require("./balancer"));
 const palantirDatabase_1 = __importDefault(require("./database/palantirDatabase"));
+const ipc_1 = require("./ipc");
 const mainExpress = require('express')();
 const config = require("../ecosystem.config").config;
 /**

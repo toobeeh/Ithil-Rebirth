@@ -24,10 +24,24 @@ interface worker {
  * Balancer object to balance load equally between worker servers
  */
  export default class Balancer {
+     /**
+     * Collection of currently connected workers
+     */
     workers: Array<worker>;
+
+    /**
+    * Collection of promises, whose resolving inits a client redirection to a worker
+    */
     queue: Array<Function>;
+
+    /**
+    * Configuration data
+    */
     config: any;
 
+    /**
+    * Init new empty balancer
+    */
     constructor(config: any){
         this.workers = [];
         this.queue = [];
