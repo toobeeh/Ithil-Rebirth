@@ -66,7 +66,7 @@ dataObserver.observe();
 
 // Start the https server with cors on main port
 const mainExpress = express();
-mainExpress.use(cors());
+//mainExpress.use(cors());
 const mainServer = mainHttps.createServer({
     key: fs.readFileSync(config.certificatePath + '/privkey.pem', 'utf8'),
     cert: fs.readFileSync(config.certificatePath + '/cert.pem', 'utf8'),
