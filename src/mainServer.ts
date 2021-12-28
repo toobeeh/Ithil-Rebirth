@@ -15,6 +15,7 @@ import {Server as SocketServer} from "socket.io";
 import Balancer from './balancer';
 import PalantirDatabase from './database/palantirDatabase';
 import {IthilIPCServer} from './ipc';
+import DataObserver from './dataObserver';
 import palantirDb from "./database/statDatabase";
 import StatDb from "./database/statDatabase";
 import * as types from "./database/types";
@@ -39,6 +40,7 @@ const ipcServer = new IthilIPCServer("main");
 // add callbacks to balancer events
 ipcServer.workerConnect = (data, socket) => {
     balancer.addWorker(data.port, socket);
+    // broadcast data
 }
 ipcServer.workerDisconnect = (data, socket) => {
     balancer.removeWorker(data.port);
@@ -47,3 +49,9 @@ ipcServer.updateBalance = (data, socket) => {
     if(data.port && data.clients) balancer.updateClients(data.port, data.clients);
     console.log(balancer.currentBalancing());
 }
+
+/**
+ * Data observer that broadcasts shared data to all workers os they dont have to fetch from the db
+ */
+const dataObserver = new DataObserver(palantirDB, ipcServer.broadcast);
+dataObserver.observe();

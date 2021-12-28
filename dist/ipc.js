@@ -1,11 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.IthilIPCClient = exports.IthilIPCServer = void 0;
+exports.IthilIPCClient = exports.IthilIPCServer = exports.ipcEvents = void 0;
 const node_ipc_1 = require("node-ipc");
-const ipcEvents = Object.freeze({
+exports.ipcEvents = Object.freeze({
     workerConnect: "workerConnect",
     workerDisconnect: "socket.disconnected",
-    updateBalance: "updatePortBalance"
+    updateBalance: "updatePortBalance",
+    publicData: "publicData",
+    activeLobbies: "activeLobbies"
 });
 /**
  * Abstract IPC class with common config
@@ -22,7 +24,7 @@ class IthilIPC {
 /**
  * All IPC events
  */
-IthilIPC.events = ipcEvents;
+IthilIPC.events = exports.ipcEvents;
 /**
  * The Ithil IPC server that listens for worker events and broadcasts data that is to be shared with the workers
  */
@@ -35,18 +37,18 @@ class IthilIPCServer extends IthilIPC {
         super(id);
         this.ipc.serve(() => {
             // execute callbacks on evens, if they are set
-            this.on(ipcEvents.workerConnect, (data, socket) => {
+            this.on(exports.ipcEvents.workerConnect, (data, socket) => {
                 if (this.workerConnect)
                     this.workerConnect(data, socket);
             });
-            this.on(ipcEvents.workerDisconnect, (data, socket) => {
+            this.on(exports.ipcEvents.workerDisconnect, (data, socket) => {
                 // execute with timeout because of reasons i simply forgot
                 setTimeout(() => {
                     if (this.workerDisconnect)
                         this.workerDisconnect(data, socket);
                 }, 100);
             });
-            this.on(ipcEvents.updateBalance, (data, socket) => {
+            this.on(exports.ipcEvents.updateBalance, (data, socket) => {
                 if (this.updateBalance)
                     this.updateBalance(data, socket);
             });

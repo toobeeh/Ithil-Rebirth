@@ -1,9 +1,11 @@
 import { IPC } from 'node-ipc';
 
-const ipcEvents = Object.freeze({
+export const ipcEvents = Object.freeze({
     workerConnect: "workerConnect",
     workerDisconnect: "socket.disconnected",
-    updateBalance: "updatePortBalance"
+    updateBalance: "updatePortBalance",
+    publicData: "publicData",
+    activeLobbies: "activeLobbies"
 });
 
 /**

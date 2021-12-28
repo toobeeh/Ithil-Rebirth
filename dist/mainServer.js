@@ -13,6 +13,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const balancer_1 = __importDefault(require("./balancer"));
 const palantirDatabase_1 = __importDefault(require("./database/palantirDatabase"));
 const ipc_1 = require("./ipc");
+const dataObserver_1 = __importDefault(require("./dataObserver"));
 const mainExpress = require('express')();
 const config = require("../ecosystem.config").config;
 /**
@@ -30,6 +31,7 @@ const ipcServer = new ipc_1.IthilIPCServer("main");
 // add callbacks to balancer events
 ipcServer.workerConnect = (data, socket) => {
     balancer.addWorker(data.port, socket);
+    // broadcast data
 };
 ipcServer.workerDisconnect = (data, socket) => {
     balancer.removeWorker(data.port);
@@ -39,3 +41,8 @@ ipcServer.updateBalance = (data, socket) => {
         balancer.updateClients(data.port, data.clients);
     console.log(balancer.currentBalancing());
 };
+/**
+ * Data observer that broadcasts shared data to all workers os they dont have to fetch from the db
+ */
+const dataObserver = new dataObserver_1.default(palantirDB, ipcServer.broadcast);
+dataObserver.observe();
