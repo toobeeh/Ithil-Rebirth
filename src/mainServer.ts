@@ -16,7 +16,7 @@ import Balancer from './balancer';
 import PalantirDatabase from './database/palantirDatabase';
 import {IthilIPCServer} from './ipc';
 import DataObserver from './dataObserver';
-import palantirDb from "./database/statDatabase";
+import xxx from "./database/statDatabase";
 import StatDb from "./database/statDatabase";
 import * as types from "./database/types";
 const mainExpress = require('express')();
@@ -25,7 +25,7 @@ const config = require("../ecosystem.config").config;
 /**
  * Palantir main database connection
  */
-const palantirDB = new PalantirDatabase(config.palantirDbPath);
+const palantirDb = new PalantirDatabase(config.palantirDbPath);
 
 /**
  * Ithil workers load balancer
@@ -53,5 +53,5 @@ ipcServer.updateBalance = (data, socket) => {
 /**
  * Data observer that broadcasts shared data to all workers os they dont have to fetch from the db
  */
-const dataObserver = new DataObserver(palantirDB, ipcServer.broadcast);
+const dataObserver = new DataObserver(palantirDb, ipcServer.broadcast);
 dataObserver.observe();

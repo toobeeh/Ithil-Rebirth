@@ -19,7 +19,7 @@ const config = require("../ecosystem.config").config;
 /**
  * Palantir main database connection
  */
-const palantirDB = new palantirDatabase_1.default(config.palantirDbPath);
+const palantirDb = new palantirDatabase_1.default(config.palantirDbPath);
 /**
  * Ithil workers load balancer
  */
@@ -44,5 +44,5 @@ ipcServer.updateBalance = (data, socket) => {
 /**
  * Data observer that broadcasts shared data to all workers os they dont have to fetch from the db
  */
-const dataObserver = new dataObserver_1.default(palantirDB, ipcServer.broadcast);
+const dataObserver = new dataObserver_1.default(palantirDb, ipcServer.broadcast);
 dataObserver.observe();
