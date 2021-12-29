@@ -20,6 +20,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+// import libs and local modules
+const socketioServer_1 = require("./socketioServer");
 const ipc_1 = require("./ipc");
 const portscanner_1 = __importDefault(require("portscanner"));
 const config = require("../ecosystem.config").config;
@@ -31,11 +33,19 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
         console.log(error);
         process.exit(1);
     }
-    // init IPC connection
     const workerPort = port;
+    /**
+     * The IPC connection to the main server
+     */
     const ipcClient = new ipc_1.IthilIPCClient("worker@" + port);
     await ipcClient.connect(config.mainIpcID, port);
-    ipcClient.updatePortBalance?.({ port: 4102, clients: 3 });
+    /**
+     * The worker socketio server
+     */
+    const workerSocketServer = new socketioServer_1.IthilSocketioServer(workerPort, config.certificatePath).server;
+    workerSocketServer.on("connection", (socket) => {
+        console.log(socket);
+    });
     // send ready state to pm2
     setTimeout(() => {
         if (process.send)

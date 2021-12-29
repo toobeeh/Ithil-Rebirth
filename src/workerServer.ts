@@ -17,16 +17,9 @@
  */
 
 // import libs and local modules
-import {spawn , Thread, Worker} from "threads";
-import https from 'https';
-import fs from 'fs';
-import cors from 'cors';
-import express from "express";
-import {Server as SocketioServer} from "socket.io";
-import Balancer from './balancer';
-import {palantirDatabaseWorker} from './database/palantirDatabaseWorker';
-import {IthilIPCClient} from './ipc';
-import DataObserver from './dataObserver';
+import { IthilSocketioServer } from './socketioServer';
+import { palantirDatabaseWorker } from './database/palantirDatabaseWorker';
+import { IthilIPCClient } from './ipc';
 import portscanner from "portscanner";
 const config = require("../ecosystem.config").config;
 
@@ -34,25 +27,33 @@ const config = require("../ecosystem.config").config;
 
 // find a free worker port and proceed startup as soon as found / errored
 portscanner.findAPortNotInUse(
-    config.workerRange[0], 
-    config.workerRange[1], 
+    config.workerRange[0],
+    config.workerRange[1],
     "127.0.0.1", async (error, port) => {
         // check if port was found
-        if(error){
+        if (error) {
             console.log(error);
             process.exit(1);
         }
-
-        // init IPC connection
         const workerPort = port;
+
+        /**
+         * The IPC connection to the main server
+         */
         const ipcClient = new IthilIPCClient("worker@" + port);
         await ipcClient.connect(config.mainIpcID, port);
 
-        ipcClient.updatePortBalance?.({port: 4102, clients: 3});
+        /**
+         * The worker socketio server
+         */
+        const workerSocketServer = new IthilSocketioServer(workerPort, config.certificatePath).server;
+        workerSocketServer.on("connection", (socket)=>{
+            console.log(socket);
+        });
 
         // send ready state to pm2
         setTimeout(() => {
-            if(process.send) process.send("ready");
+            if (process.send) process.send("ready");
             else console.log("Failed to send ready state");
         }, 1000);
     }

@@ -19,11 +19,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 // import libs and local modules
-const https_1 = __importDefault(require("https"));
-const fs_1 = __importDefault(require("fs"));
-const cors_1 = __importDefault(require("cors"));
-const express_1 = __importDefault(require("express"));
-const socket_io_1 = require("socket.io");
+const socketioServer_1 = require("./socketioServer");
 const balancer_1 = __importDefault(require("./balancer"));
 const palantirDatabase_1 = __importDefault(require("./database/palantirDatabase"));
 const ipc_1 = require("./ipc");
@@ -73,27 +69,12 @@ dataObserver.activeLobbiesChanged = (lobbies) => {
 dataObserver.publicDataChanged = (data) => {
     ipcServer.broadcastPublicData({ publicData: data });
 };
-// Start the https server with cors on main port
-const mainExpress = (0, express_1.default)();
-mainExpress.use((0, cors_1.default)());
-const mainServer = https_1.default.createServer({
-    key: fs_1.default.readFileSync(config.certificatePath + '/privkey.pem', 'utf8'),
-    cert: fs_1.default.readFileSync(config.certificatePath + '/cert.pem', 'utf8'),
-    ca: fs_1.default.readFileSync(config.certificatePath + '/chain.pem', 'utf8')
-}, mainExpress);
-mainServer.listen(config.mainPort);
 /**
  * The balancer socketio server
  */
-const masterSocketServer = new socket_io_1.Server(mainServer, {
-    cors: {
-        origin: "*",
-        methods: ["GET", "POST", "OPTIONS"]
-    },
-    pingTimeout: 20000
-});
+const mainSocketServer = new socketioServer_1.IthilSocketioServer(config.mainPort, config.certificatePath).server;
 // listen for socket connection events
-masterSocketServer.on("connection", socket => {
+mainSocketServer.on("connection", socket => {
     // create listener for port request
     socket.on("request port", async (data) => {
         // find and respond the least busy port, log client and close socket
