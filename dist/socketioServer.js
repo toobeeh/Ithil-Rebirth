@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.IthilSocketioServer = void 0;
+exports.eventNames = exports.IthilSocketioServer = void 0;
 const https_1 = __importDefault(require("https"));
 const fs_1 = __importDefault(require("fs"));
 const cors_1 = __importDefault(require("cors"));
@@ -36,3 +36,11 @@ class IthilSocketioServer {
     }
 }
 exports.IthilSocketioServer = IthilSocketioServer;
+//interfaces and eventdata for client connection
+exports.eventNames = Object.freeze({
+    onlineSprites: "online sprites",
+    activeLobbies: "active lobbies",
+    newDrop: "new drop",
+    clearDrop: "clear drop",
+    rankDrop: "rank drop"
+});

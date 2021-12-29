@@ -48,25 +48,25 @@ const ipcServer = new ipc_1.IthilIPCServer(config.mainIpcID);
 const dataObserver = new dataObserver_1.default(palantirDb);
 dataObserver.observe();
 // add callbacks to ipc balancer events
-ipcServer.workerConnected = (data, socket) => {
+ipcServer.onWorkerConnected = (data, socket) => {
     balancer.addWorker(data.port, socket);
     ipcServer.broadcastActiveLobbies({ activeLobbies: dataObserver.activeLobbies });
     ipcServer.broadcastPublicData({ publicData: dataObserver.publicData });
 };
-ipcServer.workerDisconnected = (socket, socketID) => {
+ipcServer.onWorkerDisconnected = (socket, socketID) => {
     balancer.updateOnlineWorker();
     console.log("Worker disconnected: ", socketID);
 };
-ipcServer.balanceChanged = (data, socket) => {
+ipcServer.onBalanceChanged = (data, socket) => {
     if (data.port && data.clients)
         balancer.updateClients(data.port, data.clients);
     console.log(balancer.currentBalancing());
 };
 // add callbacks to data observer events
-dataObserver.activeLobbiesChanged = (lobbies) => {
+dataObserver.onActiveLobbiesChanged = (lobbies) => {
     ipcServer.broadcastActiveLobbies({ activeLobbies: lobbies });
 };
-dataObserver.publicDataChanged = (data) => {
+dataObserver.onPublicDataChanged = (data) => {
     ipcServer.broadcastPublicData({ publicData: data });
 };
 /**

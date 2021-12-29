@@ -49,8 +49,8 @@ class DataObserver {
         let dbResult = this.database.getActiveLobbies();
         if (dbResult.success && dbResult.result != null) {
             if (JSON.stringify(this.activeLobbies) != JSON.stringify(dbResult.result)
-                && this.activeLobbiesChanged) {
-                this.activeLobbiesChanged(dbResult.result);
+                && this.onActiveLobbiesChanged) {
+                this.onActiveLobbiesChanged(dbResult.result);
             }
             this.activeLobbies = dbResult.result;
         }
@@ -63,8 +63,8 @@ class DataObserver {
         if (dbResult.success && dbResult.result != null) {
             if ((JSON.stringify(this.publicData.onlineScenes) != JSON.stringify(dbResult.result.onlineScenes)
                 || JSON.stringify(this.publicData.onlineSprites) != JSON.stringify(dbResult.result.onlineSprites))
-                && this.publicDataChanged) {
-                this.publicDataChanged(dbResult.result);
+                && this.onPublicDataChanged) {
+                this.onPublicDataChanged(dbResult.result);
             }
             this.publicData = dbResult.result;
         }

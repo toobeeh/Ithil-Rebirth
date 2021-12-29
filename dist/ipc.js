@@ -42,18 +42,18 @@ class IthilIPCServer extends IthilIPC {
             this.ipc.server.on(exports.ipcEvents.workerDisconnect, (socket, socketID) => {
                 // execute with timeout because of reasons i simply forgot
                 setTimeout(() => {
-                    if (this.workerDisconnected)
-                        this.workerDisconnected(socket, socketID);
+                    if (this.onWorkerDisconnected)
+                        this.onWorkerDisconnected(socket, socketID);
                 }, 100);
             });
             // listen to predefined events and make callbacks easy to set
             this.on(exports.ipcEvents.workerConnect, (data, socket) => {
-                if (this.workerConnected)
-                    this.workerConnected(data, socket);
+                if (this.onWorkerConnected)
+                    this.onWorkerConnected(data, socket);
             });
             this.on(exports.ipcEvents.updateBalance, (data, socket) => {
-                if (this.balanceChanged)
-                    this.balanceChanged(data, socket);
+                if (this.onBalanceChanged)
+                    this.onBalanceChanged(data, socket);
             });
         });
         this.ipc.server.start();
@@ -108,6 +108,13 @@ class IthilIPCClient extends IthilIPC {
                 this.emit(exports.ipcEvents.workerConnect, eventdata);
                 // init predefined emits
                 this.updatePortBalance = (data) => this.emit(exports.ipcEvents.updateBalance, data);
+                // init predefined events
+                this.on(exports.ipcEvents.activeLobbies, (data, socket) => {
+                    this.onActiveLobbiesChanged?.(data);
+                });
+                this.on(exports.ipcEvents.publicData, (data, socket) => {
+                    this.onPublicDataChanged?.(data);
+                });
                 resolve();
             });
         });
