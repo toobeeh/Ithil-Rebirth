@@ -18,7 +18,7 @@
 import { IthilSocketioServer } from './socketioServer';
 import Balancer from './balancer';
 import PalantirDatabase from './database/palantirDatabase';
-import {IthilIPCServer} from './ipc';
+import { IthilIPCServer } from './ipc';
 import DataObserver from './dataObserver';
 import StatDb from "./database/statDatabase";
 const config = require("../ecosystem.config").config;
@@ -41,19 +41,19 @@ const balancer = new Balancer(config);
 /**
  * Ithil IPC coordination server
  */
- const ipcServer = new IthilIPCServer(config.mainIpcID);
+const ipcServer = new IthilIPCServer(config.mainIpcID);
 
 /**
  * Data observer that broadcasts shared data to all workers os they dont have to fetch from the db
  */
- const dataObserver = new DataObserver(palantirDb);
+const dataObserver = new DataObserver(palantirDb);
 dataObserver.observe();
 
 // add callbacks to ipc balancer events
 ipcServer.onWorkerConnected = (data, socket) => {
     balancer.addWorker(data.port, socket);
-    ipcServer.broadcastActiveLobbies({activeLobbies: dataObserver.activeLobbies});
-    ipcServer.broadcastPublicData({publicData: dataObserver.publicData});
+    ipcServer.broadcastActiveLobbies({ activeLobbies: dataObserver.activeLobbies });
+    ipcServer.broadcastPublicData({ publicData: dataObserver.publicData });
 }
 
 ipcServer.onWorkerDisconnected = (socket, socketID) => {
@@ -62,17 +62,17 @@ ipcServer.onWorkerDisconnected = (socket, socketID) => {
 }
 
 ipcServer.onBalanceChanged = (data, socket) => {
-    if(data.port && data.clients) balancer.updateClients(data.port, data.clients);
+    if (data.port && data.clients) balancer.updateClients(data.port, data.clients);
     console.log(balancer.currentBalancing());
 }
 
 // add callbacks to data observer events
 dataObserver.onActiveLobbiesChanged = (lobbies) => {
-    ipcServer.broadcastActiveLobbies({activeLobbies: lobbies});
+    ipcServer.broadcastActiveLobbies({ activeLobbies: lobbies });
 }
 
 dataObserver.onPublicDataChanged = (data) => {
-    ipcServer.broadcastPublicData({publicData: data});
+    ipcServer.broadcastPublicData({ publicData: data });
 }
 
 /**
@@ -81,7 +81,7 @@ dataObserver.onPublicDataChanged = (data) => {
 const mainSocketServer = new IthilSocketioServer(config.mainPort, config.certificatePath).server;
 
 // listen for socket connection events
-mainSocketServer.on("connection", socket =>{
+mainSocketServer.on("connection", socket => {
 
     // create listener for port request
     socket.on("request port", async data => {
@@ -89,7 +89,7 @@ mainSocketServer.on("connection", socket =>{
         // find and respond the least busy port, log client and close socket
         const port = (await balancer.getBalancedWorker()).port;
         statDb.updateClientContact(data.client);
-        socket.emit("balanced port", {port: port});
+        socket.emit("balanced port", { port: port });
         socket.disconnect();
 
         console.log("Sent client to port " + port);
