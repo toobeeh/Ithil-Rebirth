@@ -78,10 +78,10 @@ dataObserver.publicDataChanged = (data) => {
 /**
  * The balancer socketio server
  */
-const masterSocketServer = new IthilSocketioServer(config.mainPort, config.certificatePath).server;
+const mainSocketServer = new IthilSocketioServer(config.mainPort, config.certificatePath).server;
 
 // listen for socket connection events
-masterSocketServer.on("connection", socket =>{
+mainSocketServer.on("connection", socket =>{
 
     // create listener for port request
     socket.on("request port", async data => {
