@@ -1,4 +1,5 @@
 import {IPC} from 'node-ipc';
+import { eventNames } from 'process';
 import * as types from "./database/types";
 
 // extract the type of an ipc client... yeah, ugly hack
@@ -65,28 +66,34 @@ export class IthilIPCServer extends IthilIPC {
 
     /**
      * Callback when a worker is online and ready
+     * @param data {@link EventdataInterfaces.workerConnectEventdata}
+     * @param socket The worker's ipc socket
      */
-    workerConnected?: (data: EventdataInterfaces.workerConnectEventdata, socket: IpcClient) => void;
+    onWorkerConnected?: (data: EventdataInterfaces.workerConnectEventdata, socket: IpcClient) => void;
 
     /**
      * Callback when the IPC connection to a worker crashes, most likely due to a crash on the worker
+     * @param socketID The disconnected socket's ID
+     * @param socket The dsiconnected worker's ipc socket
      */
-    workerDisconnected?: (socket: IpcClient, socketID: string) => void;
+    onWorkerDisconnected?: (socket: IpcClient, socketID: string) => void;
 
     /**
      * Callback when a worker's load is changed
+     * @param data {@link EventdataInterfaces.updatePortBalanceEventdata}
+     * @param socket The worker's ipc socket
      */
-    balanceChanged?: (data: EventdataInterfaces.updatePortBalanceEventdata, socket: IpcClient) => void;
+    onBalanceChanged?: (data: EventdataInterfaces.updatePortBalanceEventdata, socket: IpcClient) => void;
 
     /**
      * Broadcast public data to all connected workers
-     * @param data The public data object
+     * @param data The public data object {@link EventdataInterfaces.publicDataEventdata}
      */
     broadcastPublicData: (data:EventdataInterfaces.publicDataEventdata) => void;
 
     /**
      * Broadcast active lobbies to all connected workers
-     * @param data The active lobbies array
+     * @param data The active lobbies array {@link EventdataInterfaces.activeLobbiesEventdata}
      */
     broadcastActiveLobbies: (data:EventdataInterfaces.activeLobbiesEventdata) => void;
 
@@ -104,17 +111,17 @@ export class IthilIPCServer extends IthilIPC {
                 
                 // execute with timeout because of reasons i simply forgot
                 setTimeout(() => {
-                    if (this.workerDisconnected) this.workerDisconnected(socket, socketID);
+                    if (this.onWorkerDisconnected) this.onWorkerDisconnected(socket, socketID);
                 },100);
             });
 
             // listen to predefined events and make callbacks easy to set
             this.on(ipcEvents.workerConnect, (data: EventdataInterfaces.workerConnectEventdata, socket: IpcClient) => {
-                if (this.workerConnected) this.workerConnected(data, socket);
+                if (this.onWorkerConnected) this.onWorkerConnected(data, socket);
             });
 
             this.on(ipcEvents.updateBalance, (data: EventdataInterfaces.updatePortBalanceEventdata, socket: IpcClient) => {
-                if (this.balanceChanged) this.balanceChanged(data, socket);
+                if (this.onBalanceChanged) this.onBalanceChanged(data, socket);
             });
         });
         this.ipc.server.start();
@@ -159,6 +166,18 @@ export class IthilIPCClient extends IthilIPC {
     updatePortBalance?: (data: EventdataInterfaces.updatePortBalanceEventdata) => void;
 
     /**
+     * Callback when new active lobbies data is received from the ipc socket
+     * @param data {@link EventdataInterfaces.activeLobbiesEventdata}
+     */
+    onActiveLobbiesChanged?: (data: EventdataInterfaces.activeLobbiesEventdata) => void;
+
+    /**
+     * Callback when new public data is received from the ipc socket
+     * @param data {@link EventdataInterfaces.publicDataEventdata}
+     */
+    onPublicDataChanged?: (data: EventdataInterfaces.publicDataEventdata) => void;
+
+    /**
      * Create a new ithil client ipc socket
      * @param id The ID of the ipc socket
      */
@@ -187,6 +206,15 @@ export class IthilIPCClient extends IthilIPC {
 
                 // init predefined emits
                 this.updatePortBalance = (data) => this.emit(ipcEvents.updateBalance, data);
+
+                // init predefined events
+                this.on(ipcEvents.activeLobbies, (data, socket) => {
+                    this.onActiveLobbiesChanged?.(data);
+                });
+
+                this.on(ipcEvents.publicData, (data, socket) => {
+                    this.onPublicDataChanged?.(data);
+                });
 
                 resolve();
             });

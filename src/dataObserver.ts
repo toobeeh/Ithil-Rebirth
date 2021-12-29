@@ -23,12 +23,12 @@ export default class DataObserver{
     /**
      * The callback which fires when changes in active lobbies were found
      */
-    activeLobbiesChanged?: (lobbies: Array<types.activeGuildLobbies>) => void;
+    onActiveLobbiesChanged?: (lobbies: Array<types.activeGuildLobbies>) => void;
 
     /**
      * The callback which fires when changes in active lobbies were found
      */
-     publicDataChanged?: (data: types.publicData) => void;
+     onPublicDataChanged?: (data: types.publicData) => void;
 
     /**
      * The interval in which active lobbies are monitored
@@ -82,8 +82,8 @@ export default class DataObserver{
         let dbResult = this.database.getActiveLobbies();
         if(dbResult.success && dbResult.result != null){
             if(JSON.stringify(this.activeLobbies) != JSON.stringify(dbResult.result)
-                && this.activeLobbiesChanged){
-                this.activeLobbiesChanged(dbResult.result);
+                && this.onActiveLobbiesChanged){
+                this.onActiveLobbiesChanged(dbResult.result);
             }
             this.activeLobbies = dbResult.result;
         }
@@ -97,8 +97,8 @@ export default class DataObserver{
         if(dbResult.success && dbResult.result != null){
             if((JSON.stringify(this.publicData.onlineScenes) != JSON.stringify(dbResult.result.onlineScenes) 
                 || JSON.stringify(this.publicData.onlineSprites) != JSON.stringify(dbResult.result.onlineSprites))
-                && this.publicDataChanged){
-                this.publicDataChanged(dbResult.result);
+                && this.onPublicDataChanged){
+                this.onPublicDataChanged(dbResult.result);
             }
             this.publicData = dbResult.result;
         }
