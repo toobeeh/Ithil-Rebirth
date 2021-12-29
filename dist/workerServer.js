@@ -35,7 +35,7 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
     const workerPort = port;
     const ipcClient = new ipc_1.IthilIPCClient("worker@" + port);
     await ipcClient.connect(config.mainIpcID, port);
-    ipcClient.updatePortBalance?.({ port: 2, clients: 3 });
+    ipcClient.updatePortBalance?.({ port: 4002, clients: 3 });
     // send ready state to pm2
     setTimeout(() => {
         if (process.send)
