@@ -82,7 +82,8 @@ interface worker {
     updateOnlineWorker() {
         [...this.workers].forEach(
             worker => portscanner.checkPortStatus(worker.port, "127.0.0.1", (error, status) =>
-                status == "closed" ? this.removeWorker(worker.port) : 1));
+                status == "closed" ? this.removeWorker(worker.port) : 1)
+        );
     }
 
     /**
