@@ -15,6 +15,7 @@ module.exports = {
         } */
     ],
     config: {
+        mainIpcID: "main",
         mainPort: 4100,
         dropPort: 4101,
         workerRange: [4102, 4110],
