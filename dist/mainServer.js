@@ -1,10 +1,18 @@
 "use strict";
 /*
- * Ithil Main Server
- * - public socketio server to redirect to Ithil Worker servers
- *   redirect port depending on load balance
- * - internal ipc server to coordinate Ithil Workers
- *   manages public data, lobbies & load balance
+ * # Ithil Main Server
+ *
+ * ## Tasks
+ * The main server is focussed on internal organisation, not external socketio clients:
+ * - coordinate worker servers
+ * - balance worker servers load by forwarding clients
+ * - observe palantir data and distribute to workers
+ *
+ * ## Implementation
+ * - Palantir/Stat db object for database access
+ * - Balancer object to track conected workers and their load
+ * - IPC server to communicate with workers
+ * - Socketio SSL server to forward clients to a worker's port
  */
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -37,26 +45,33 @@ const balancer = new balancer_1.default(config);
 /**
  * Ithil IPC coordination server
  */
-const ipcServer = new ipc_1.IthilIPCServer("main");
+const ipcServer = new ipc_1.IthilIPCServer(config.mainIpcID);
 /**
  * Data observer that broadcasts shared data to all workers os they dont have to fetch from the db
  */
-const dataObserver = new dataObserver_1.default(palantirDb, (event, data) => ipcServer.broadcast(event, data));
+const dataObserver = new dataObserver_1.default(palantirDb);
 dataObserver.observe();
 // add callbacks to ipc balancer events
-ipcServer.workerConnect = (data, socket) => {
+ipcServer.workerConnected = (data, socket) => {
     balancer.addWorker(data.port, socket);
     ipcServer.broadcastActiveLobbies({ activeLobbies: dataObserver.activeLobbies });
     ipcServer.broadcastPublicData({ publicData: dataObserver.publicData });
 };
-ipcServer.workerDisconnect = (socket, socketID) => {
+ipcServer.workerDisconnected = (socket, socketID) => {
     balancer.updateOnlineWorker();
     console.log("Worker disconnected: ", socketID);
 };
-ipcServer.updateBalance = (data, socket) => {
+ipcServer.balanceChanged = (data, socket) => {
     if (data.port && data.clients)
         balancer.updateClients(data.port, data.clients);
     console.log(balancer.currentBalancing());
+};
+// add callbacks to data observer events
+dataObserver.activeLobbiesChanged = (lobbies) => {
+    ipcServer.broadcastActiveLobbies({ activeLobbies: lobbies });
+};
+dataObserver.publicDataChanged = (data) => {
+    ipcServer.broadcastPublicData({ publicData: data });
 };
 // Start the https server with cors on main port
 const mainExpress = (0, express_1.default)();

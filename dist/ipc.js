@@ -42,18 +42,18 @@ class IthilIPCServer extends IthilIPC {
             this.ipc.server.on(exports.ipcEvents.workerDisconnect, (socket, socketID) => {
                 // execute with timeout because of reasons i simply forgot
                 setTimeout(() => {
-                    if (this.workerDisconnect)
-                        this.workerDisconnect(socket, socketID);
+                    if (this.workerDisconnected)
+                        this.workerDisconnected(socket, socketID);
                 }, 100);
             });
             // listen to predefined events and make callbacks easy to set
             this.on(exports.ipcEvents.workerConnect, (data, socket) => {
-                if (this.workerConnect)
-                    this.workerConnect(data, socket);
+                if (this.workerConnected)
+                    this.workerConnected(data, socket);
             });
             this.on(exports.ipcEvents.updateBalance, (data, socket) => {
-                if (this.updateBalance)
-                    this.updateBalance(data, socket);
+                if (this.balanceChanged)
+                    this.balanceChanged(data, socket);
             });
         });
         this.ipc.server.start();

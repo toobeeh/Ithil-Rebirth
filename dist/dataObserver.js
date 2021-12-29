@@ -1,6 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const ipc_1 = require("./ipc");
 /**
  * Class that observes changes in the palantir db and broadcasts data if new data is found
  */
@@ -8,7 +7,7 @@ class DataObserver {
     /**
      * Inits a new observer; dont forget to start!
      */
-    constructor(database, emitter) {
+    constructor(database) {
         /**
          * The interval in which active lobbies are monitored
          */
@@ -42,29 +41,30 @@ class DataObserver {
             onlineScenes: [],
             onlineSprites: []
         };
-        this.emitter = emitter;
     }
     /**
-     * Checks for changes in active lobbies and emits if so
+     * Checks for changes in active lobbies and invoke callback if set
      */
     refreshActiveLobbies() {
         let dbResult = this.database.getActiveLobbies();
         if (dbResult.success && dbResult.result != null) {
-            if (JSON.stringify(this.activeLobbies) != JSON.stringify(dbResult.result)) {
-                this.emitter(ipc_1.ipcEvents.activeLobbies, dbResult.result);
+            if (JSON.stringify(this.activeLobbies) != JSON.stringify(dbResult.result)
+                && this.activeLobbiesChanged) {
+                this.activeLobbiesChanged(dbResult.result);
             }
             this.activeLobbies = dbResult.result;
         }
     }
     /**
-     * Checks for changes in public data and emits if so
+     * Checks for changes in public data and invoke callback if set
      */
     refreshPublicData() {
         let dbResult = this.database.getPublicData();
         if (dbResult.success && dbResult.result != null) {
-            if (JSON.stringify(this.publicData.onlineScenes) != JSON.stringify(dbResult.result.onlineScenes)
-                || JSON.stringify(this.publicData.onlineSprites) != JSON.stringify(dbResult.result.onlineSprites)) {
-                this.emitter(ipc_1.ipcEvents.publicData, dbResult.result);
+            if ((JSON.stringify(this.publicData.onlineScenes) != JSON.stringify(dbResult.result.onlineScenes)
+                || JSON.stringify(this.publicData.onlineSprites) != JSON.stringify(dbResult.result.onlineSprites))
+                && this.publicDataChanged) {
+                this.publicDataChanged(dbResult.result);
             }
             this.publicData = dbResult.result;
         }
