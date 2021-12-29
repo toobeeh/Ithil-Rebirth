@@ -7,8 +7,7 @@
  */
 
 // import libs and local modules
-import portscanner from "portscanner";
-import mainHttps from 'https';
+import https from 'https';
 import fs from 'fs';
 import cors from 'cors';
 import express from "express";
@@ -17,9 +16,7 @@ import Balancer from './balancer';
 import PalantirDatabase from './database/palantirDatabase';
 import {IthilIPCServer} from './ipc';
 import DataObserver from './dataObserver';
-import xxx from "./database/statDatabase";
 import StatDb from "./database/statDatabase";
-import * as types from "./database/types";
 const config = require("../ecosystem.config").config;
 
 /**
@@ -38,43 +35,49 @@ const statDb = new StatDb(config.statDbPath);
 const balancer = new Balancer(config);
 
 /**
- * Ithil IPC coordination server
- */
-const ipcServer = new IthilIPCServer("main");
-
-// add callbacks to balancer events
-ipcServer.workerConnect = (data, socket) => {
-    balancer.addWorker(data.port, socket);
-    // broadcast data
-}
-ipcServer.workerDisconnect = (data, socket) => {
-    balancer.removeWorker(data.port);
-}
-ipcServer.updateBalance = (data, socket) => {
-    if(data.port && data.clients) balancer.updateClients(data.port, data.clients);
-    console.log(balancer.currentBalancing());
-}
-
-/**
  * Data observer that broadcasts shared data to all workers os they dont have to fetch from the db
  */
-const dataObserver = new DataObserver(
+ const dataObserver = new DataObserver(
     palantirDb, 
     (event, data) => ipcServer.broadcast(event, data)
 );
 dataObserver.observe();
 
+/**
+ * Ithil IPC coordination server
+ */
+const ipcServer = new IthilIPCServer("main");
+
+// add callbacks to ipc balancer events
+ipcServer.workerConnect = (data, socket) => {
+    balancer.addWorker(data.port, socket);
+    ipcServer.broadcastActiveLobbies({activeLobbies: dataObserver.activeLobbies});
+    ipcServer.broadcastPublicData({publicData: dataObserver.publicData});
+}
+
+ipcServer.workerDisconnect = (socket, socketID) => {
+    balancer.updateOnlineWorker();
+    console.log("Worker disconnected: ", socketID)
+}
+
+ipcServer.updateBalance = (data, socket) => {
+    if(data.port && data.clients) balancer.updateClients(data.port, data.clients);
+    console.log(balancer.currentBalancing());
+}
+
 // Start the https server with cors on main port
 const mainExpress = express();
-mainExpress.use(cors({credentials: true, origin: true}));
-const mainServer = mainHttps.createServer({
+mainExpress.use(cors());
+const mainServer = https.createServer({
     key: fs.readFileSync(config.certificatePath + '/privkey.pem', 'utf8'),
     cert: fs.readFileSync(config.certificatePath + '/cert.pem', 'utf8'),
     ca: fs.readFileSync(config.certificatePath + '/chain.pem', 'utf8')
 }, mainExpress);
 mainServer.listen(config.mainPort);
 
-// start socket.io server on the https server
+/**
+ * The balancer socketio server
+ */
 const masterSocketServer = new SocketioServer(
     mainServer, {
     cors: {
@@ -86,15 +89,17 @@ const masterSocketServer = new SocketioServer(
 
 // listen for socket connection events
 masterSocketServer.on("connection", socket =>{
+
     // create listener for port request
-    console.log("client connected");
     socket.on("request port", async data => {
+
         // find and respond the least busy port, log client and close socket
         const port = (await balancer.getBalancedWorker()).port;
-        console.log("sent to port " + port);
         statDb.updateClientContact(data.client);
         socket.emit("balanced port", {port: port});
         socket.disconnect();
+
+        console.log("Sent client to port " + port);
     });
 });
 

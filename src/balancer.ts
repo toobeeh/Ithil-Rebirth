@@ -1,4 +1,5 @@
 import portscanner from "portscanner";
+import {IpcClient} from "./ipc";
 
 /**
  * Describes important details of a connected worker
@@ -12,7 +13,7 @@ interface worker {
     /**
      * The worker's connected IPC socket
      */
-    socket: any,
+    socket: IpcClient,
 
     /**
      * The worker's amount of currently connected clients
@@ -53,7 +54,7 @@ interface worker {
      * @param port The worker's socketio port
      * @param socket The worker's IPC socket
      */
-    addWorker(port:number, socket: any){
+    addWorker(port:number, socket: IpcClient){
         // add worker to list
         this.workers.push({ port: port, socket: socket, clients: 0 });
         // resolve queues if present
