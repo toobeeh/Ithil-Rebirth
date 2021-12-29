@@ -1,6 +1,5 @@
 import PalantirDatabase from "./database/palantirDatabase";
 import * as types from "./database/types";
-import {ipcEvents} from "./ipc";
 
 /**
  * Class that observes changes in the palantir db and broadcasts data if new data is found
@@ -22,9 +21,14 @@ export default class DataObserver{
     publicData: types.publicData;
 
     /**
-     * The callback which is called and used to send data when the observer found changes
+     * The callback which fires when changes in active lobbies were found
      */
-    emitter: (event:string, data: any) => void;
+    activeLobbiesChanged?: (lobbies: Array<types.activeGuildLobbies>) => void;
+
+    /**
+     * The callback which fires when changes in active lobbies were found
+     */
+     publicDataChanged?: (data: types.publicData) => void;
 
     /**
      * The interval in which active lobbies are monitored
@@ -59,7 +63,7 @@ export default class DataObserver{
     /**
      * Inits a new observer; dont forget to start!
      */
-    constructor(database: PalantirDatabase, emitter: (event:string, data: any) => void){
+    constructor(database: PalantirDatabase){
         this.database = database;
         this.activeLobbies = [];
         this.publicData = {
@@ -69,31 +73,32 @@ export default class DataObserver{
             onlineScenes: [],
             onlineSprites: []
         }
-        this.emitter = emitter;
     }
 
     /**
-     * Checks for changes in active lobbies and emits if so
+     * Checks for changes in active lobbies and invoke callback if set
      */
     refreshActiveLobbies(){
         let dbResult = this.database.getActiveLobbies();
         if(dbResult.success && dbResult.result != null){
-            if(JSON.stringify(this.activeLobbies) != JSON.stringify(dbResult.result)){
-                this.emitter(ipcEvents.activeLobbies, dbResult.result);
+            if(JSON.stringify(this.activeLobbies) != JSON.stringify(dbResult.result)
+                && this.activeLobbiesChanged){
+                this.activeLobbiesChanged(dbResult.result);
             }
             this.activeLobbies = dbResult.result;
         }
     }
 
     /**
-     * Checks for changes in public data and emits if so
+     * Checks for changes in public data and invoke callback if set
      */
     refreshPublicData(){
         let dbResult = this.database.getPublicData();
         if(dbResult.success && dbResult.result != null){
-            if(JSON.stringify(this.publicData.onlineScenes) != JSON.stringify(dbResult.result.onlineScenes) 
-                || JSON.stringify(this.publicData.onlineSprites) != JSON.stringify(dbResult.result.onlineSprites)){
-                this.emitter(ipcEvents.publicData, dbResult.result);
+            if((JSON.stringify(this.publicData.onlineScenes) != JSON.stringify(dbResult.result.onlineScenes) 
+                || JSON.stringify(this.publicData.onlineSprites) != JSON.stringify(dbResult.result.onlineSprites))
+                && this.publicDataChanged){
+                this.publicDataChanged(dbResult.result);
             }
             this.publicData = dbResult.result;
         }
