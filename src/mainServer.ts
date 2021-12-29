@@ -35,6 +35,11 @@ const statDb = new StatDb(config.statDbPath);
 const balancer = new Balancer(config);
 
 /**
+ * Ithil IPC coordination server
+ */
+ const ipcServer = new IthilIPCServer("main");
+
+/**
  * Data observer that broadcasts shared data to all workers os they dont have to fetch from the db
  */
  const dataObserver = new DataObserver(
@@ -42,11 +47,6 @@ const balancer = new Balancer(config);
     (event, data) => ipcServer.broadcast(event, data)
 );
 dataObserver.observe();
-
-/**
- * Ithil IPC coordination server
- */
-const ipcServer = new IthilIPCServer("main");
 
 // add callbacks to ipc balancer events
 ipcServer.workerConnect = (data, socket) => {

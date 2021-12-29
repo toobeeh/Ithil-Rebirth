@@ -35,14 +35,14 @@ const statDb = new statDatabase_1.default(config.statDbPath);
  */
 const balancer = new balancer_1.default(config);
 /**
+ * Ithil IPC coordination server
+ */
+const ipcServer = new ipc_1.IthilIPCServer("main");
+/**
  * Data observer that broadcasts shared data to all workers os they dont have to fetch from the db
  */
 const dataObserver = new dataObserver_1.default(palantirDb, (event, data) => ipcServer.broadcast(event, data));
 dataObserver.observe();
-/**
- * Ithil IPC coordination server
- */
-const ipcServer = new ipc_1.IthilIPCServer("main");
 // add callbacks to ipc balancer events
 ipcServer.workerConnect = (data, socket) => {
     balancer.addWorker(data.port, socket);
