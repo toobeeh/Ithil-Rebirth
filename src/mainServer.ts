@@ -15,11 +15,7 @@
  */
 
 // import libs and local modules
-import https from 'https';
-import fs from 'fs';
-import cors from 'cors';
-import express from "express";
-import {Server as SocketioServer} from "socket.io";
+import { IthilSocketioServer } from './socketioServer';
 import Balancer from './balancer';
 import PalantirDatabase from './database/palantirDatabase';
 import {IthilIPCServer} from './ipc';
@@ -79,27 +75,10 @@ dataObserver.publicDataChanged = (data) => {
     ipcServer.broadcastPublicData({publicData: data});
 }
 
-// Start the https server with cors on main port
-const mainExpress = express();
-mainExpress.use(cors());
-const mainServer = https.createServer({
-    key: fs.readFileSync(config.certificatePath + '/privkey.pem', 'utf8'),
-    cert: fs.readFileSync(config.certificatePath + '/cert.pem', 'utf8'),
-    ca: fs.readFileSync(config.certificatePath + '/chain.pem', 'utf8')
-}, mainExpress);
-mainServer.listen(config.mainPort);
-
 /**
  * The balancer socketio server
  */
-const masterSocketServer = new SocketioServer(
-    mainServer, {
-    cors: {
-        origin: "*",
-        methods: ["GET", "POST", "OPTIONS"]
-    },
-    pingTimeout: 20000
-});
+const masterSocketServer = new IthilSocketioServer(config.mainPort, config.certificatePath).server;
 
 // listen for socket connection events
 masterSocketServer.on("connection", socket =>{
