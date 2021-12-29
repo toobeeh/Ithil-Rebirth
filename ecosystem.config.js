@@ -1,18 +1,18 @@
 module.exports = {
     apps: [
         {
-            name: "Ithil Main Server",
+            name: "Ithil-Rebirth Main Server",
             script: "./dist/mainServer.js",
             time: true
-        } /* , {
-            name: "Ithil Worker Server",
-            script: "ithilWorker.js",
+        }, {
+            name: "Ithil-Rebirth Worker Server",
+            script: "./dist/workerServer.js",
             exec_mode: "cluster",
             instances: 8,
             wait_ready: true,
             listen_timeout: 10000,
             time: true
-        } */
+        }
     ],
     config: {
         mainIpcID: "main",

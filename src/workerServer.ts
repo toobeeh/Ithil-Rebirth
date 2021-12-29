@@ -48,5 +48,11 @@ portscanner.findAPortNotInUse(
         const ipcClient = new IthilIPCClient("worker@" + port);
         await ipcClient.connect(config.mainIpcID, port);
 
-});
+        // send ready state to pm2
+        setTimeout(() => {
+            if(process.send) process.send("ready");
+            else console.log("Failed to send ready state");
+        }, 1000);
+    }
+);
 
