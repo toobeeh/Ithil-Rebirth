@@ -17,15 +17,12 @@
  */
 
 // import libs and local modules
-import { IthilSocketioServer } from './socketioServer';
+import * as ithilSocketio from './socketioServer';
 import { palantirDatabaseWorker } from './database/palantirDatabaseWorker';
 import { IthilIPCClient } from './ipc';
 import * as types from "./database/types";
 import portscanner from "portscanner";
 const config = require("../ecosystem.config").config;
-
-
-
 //const database = await spawn<palantirDatabaseWorker>("./database/palantirDatabaseWorker");
 
 // find a free worker port and proceed startup as soon as found / errored
@@ -43,10 +40,10 @@ portscanner.findAPortNotInUse(
         /**
          * The worker socketio server
          */
-        const workerSocketServer = new IthilSocketioServer(workerPort, config.certificatePath).server;
-        workerSocketServer.on("connection", (socket) => {
-            console.log(socket);
-        });
+        const workerSocketServer = new ithilSocketio.IthilSocketioServer(
+            workerPort, 
+            config.certificatePath
+        ).server;
 
         /**
          * The IPC connection to the main server
@@ -62,11 +59,41 @@ portscanner.findAPortNotInUse(
         // listen to ipc events
         ipcClient.onActiveLobbiesChanged = (data) => {
             palantirData.activeLobbies = data.activeLobbies;
+            data.activeLobbies.forEach(guild => {
+
+                // build eventdata
+                const eventdata: ithilSocketio.activeLobbiesEventdata = {
+                    activeLobbies: guild
+                };
+
+                // volatile emit to all sockets that are a member of this guild
+                workerSocketServer.to("guild" + guild.guildID).volatile.emit(
+                    ithilSocketio.eventNames.activeLobbies,
+                    eventdata
+                );
+            });
         }
 
         ipcClient.onPublicDataChanged = (data) => {
             palantirData.publicData = data.publicData;
+
+            // build eventdata
+            const eventdata: ithilSocketio.onlineSpritesEventdata = {
+                onlineScenes: data.publicData.onlineScenes,
+                onlineSprites: data.publicData.onlineSprites
+            }
+
+            // volatile emit to all online sockets
+            workerSocketServer.volatile.emit(
+                ithilSocketio.eventNames.onlineSprites,
+                eventdata
+            );
         }
+
+        // init socketio client connection
+        workerSocketServer.on("connection", (socket) => {
+            console.log(socket);
+        });
 
         // send ready state to pm2
         setTimeout(() => {

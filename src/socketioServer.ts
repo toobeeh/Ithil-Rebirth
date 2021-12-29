@@ -3,6 +3,7 @@ import fs from 'fs';
 import cors from 'cors';
 import express from "express";
 import { Server as SocketioServer } from "socket.io";
+import * as types from "./database/types";
 
 export class IthilSocketioServer {
     /**
@@ -38,4 +39,39 @@ export class IthilSocketioServer {
         // start listening 
         mainServer.listen(port);
     }
+}
+
+//interfaces and eventdata for client connection
+
+export const eventNames = Object.freeze({
+    onlineSprites: "online sprites",
+    activeLobbies: "active lobbies",
+    newDrop: "new drop",
+    clearDrop: "clear drop",
+    rankDrop: "rank drop"
+});
+
+/**
+ * Socketio eventdata for the online sprites event
+ */
+export interface onlineSpritesEventdata{
+    /**
+     * Currently online sprites array
+     */
+    onlineSprites: Array<types.onlineSprite>;
+
+    /**
+     * Currently online scenes array
+     */
+    onlineScenes: Array<types.onlineSprite>;
+}
+
+/**
+ * Socketio eventdata for the active lobbies event
+ */
+ export interface activeLobbiesEventdata{
+    /**
+     * Currently active guildlobbies
+     */
+    activeLobbies: types.activeGuildLobbies;
 }
