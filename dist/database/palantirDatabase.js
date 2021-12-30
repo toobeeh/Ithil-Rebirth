@@ -350,3 +350,4 @@ class PalantirDatabase {
     }
 }
 exports.default = PalantirDatabase;
+//# sourceMappingURL=palantirDatabase.js.map

@@ -55,11 +55,15 @@ class TypoSocketioClient {
      * @param once Indicates wether the listener is once or permanent
      */
     subscribeEventAsync(eventName, handler, withResponse = true, once = false) {
-        (once ? this.socket.once : this.socket.on)(eventName, async (incoming, socket) => {
+        const callback = async (incoming, socket) => {
             const response = await handler(incoming);
             if (withResponse)
                 socket.emit(eventName + " response", response);
-        });
+        };
+        if (once)
+            this.socket.once(eventName, callback);
+        else
+            this.socket.on(eventName, callback);
     }
     /**
      * Emit an event to the client and wait async for a response
@@ -119,3 +123,4 @@ exports.eventNames = Object.freeze({
     rankDrop: "rank drop",
     login: "login"
 });
+//# sourceMappingURL=ithilSocketio.js.map

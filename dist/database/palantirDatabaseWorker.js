@@ -88,3 +88,4 @@ const palantirDatabaseWorker = {
     }
 };
 (0, threads_1.expose)(palantirDatabaseWorker.clearVolatile);
+//# sourceMappingURL=palantirDatabaseWorker.js.map

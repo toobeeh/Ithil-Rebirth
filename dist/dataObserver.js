@@ -108,3 +108,4 @@ class DataObserver {
     }
 }
 exports.default = DataObserver;
+//# sourceMappingURL=dataObserver.js.map

@@ -65,10 +65,12 @@ export class TypoSocketioClient {
      * @param once Indicates wether the listener is once or permanent
      */
     subscribeEventAsync<TIncoming, TResponse>(eventName: string, handler: (incomingData: TIncoming) => Promise<TResponse>, withResponse: boolean = true, once: boolean = false){
-        (once ? this.socket.once : this.socket.on)(eventName, async (incoming: TIncoming, socket: Socket)=>{
+        const callback = async (incoming: TIncoming, socket: Socket)=>{
             const response = await handler(incoming);
             if(withResponse) socket.emit(eventName + " response", response);
-        });
+        };
+        if(once) this.socket.once(eventName, callback);
+        else this.socket.on(eventName, callback);
     }
 
     /**

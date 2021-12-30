@@ -137,3 +137,4 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
             console.log("Failed to send ready state");
     }, 1000);
 });
+//# sourceMappingURL=workerServer.js.map

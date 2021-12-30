@@ -86,3 +86,4 @@ mainSocketServer.on("connection", socket => {
     });
 });
 console.log("all done");
+//# sourceMappingURL=mainServer.js.map

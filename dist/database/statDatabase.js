@@ -38,3 +38,4 @@ class StatDatabase {
     }
 }
 exports.default = StatDatabase;
+//# sourceMappingURL=statDatabase.js.map

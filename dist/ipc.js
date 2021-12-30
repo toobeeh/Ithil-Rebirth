@@ -145,3 +145,4 @@ class IthilIPCClient extends IthilIPC {
     }
 }
 exports.IthilIPCClient = IthilIPCClient;
+//# sourceMappingURL=ipc.js.map
