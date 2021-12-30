@@ -7,7 +7,7 @@ const threads_1 = require("threads");
 class TypoClient {
     /** Init a new client with all member-related data and bound events */
     constructor(socket, dbWorker, member, workerCache) {
-        this.socket = socket;
+        this.typosocket = socket;
         this.databaseWorker = dbWorker;
         this.workerCache = workerCache;
         this.member = member;
@@ -22,9 +22,11 @@ class TypoClient {
         if (this.permaBan)
             return;
         // init events 
-        this.socket.on("disconnect", () => {
-            threads_1.Thread.terminate(this.databaseWorker);
+        this.typosocket.subscribeDisconnect(async (reason) => {
+            await threads_1.Thread.terminate(this.databaseWorker);
+            console.log("disconnected");
         });
+        console.log("logged in");
     }
 }
 exports.default = TypoClient;

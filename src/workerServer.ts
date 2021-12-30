@@ -132,7 +132,7 @@ portscanner.findAPortNotInUse(
                 // if login succeeded, create a typo client and enable further events
                 if (loginResult.success) {
                     const memberResult = await asyncDb.getUserByLogin(loginResult.result.login);
-                    const client = new TypoClient(socket, asyncDb, memberResult.result, workerCache);
+                    const client = new TypoClient(clientSocket, asyncDb, memberResult.result, workerCache);
 
                     // fill login response data
                     response.authenticated = true;

@@ -2,7 +2,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "address": "localhost:9229/0c003dc4-7f6c-4594-b941-60c0186ff655",
+            "address": "localhost:9229/6927126d-e46e-4883-abdc-e8ffb1b54f21",
             "localRoot": "${workspaceFolder}/dist",
             "name": "RPI attach Main",
             "port": 9229,

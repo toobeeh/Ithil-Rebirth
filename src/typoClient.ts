@@ -14,7 +14,7 @@ export default class TypoClient {
     databaseWorker: ModuleThread<palantirDatabaseWorker>;
 
     /** Socketio client socket instance */
-    socket: Socket;
+    typosocket: ithilSocket.TypoSocketioClient;
 
     /** The authentificated member */
     member: types.member;
@@ -41,8 +41,8 @@ export default class TypoClient {
     workerCache: types.workerCache;
 
     /** Init a new client with all member-related data and bound events */
-    constructor(socket: Socket, dbWorker: ModuleThread<palantirDatabaseWorker>, member: types.member, workerCache: types.workerCache){
-        this.socket = socket;
+    constructor(socket: ithilSocket.TypoSocketioClient, dbWorker: ModuleThread<palantirDatabaseWorker>, member: types.member, workerCache: types.workerCache){
+        this.typosocket = socket;
         this.databaseWorker = dbWorker;
         this.workerCache = workerCache;
         this.member = member;
@@ -59,9 +59,11 @@ export default class TypoClient {
         if(this.permaBan) return;
 
         // init events 
-        this.socket.on("disconnect", ()=>{
-            Thread.terminate(this.databaseWorker);
+        this.typosocket.subscribeDisconnect(async (reason) => {
+            await Thread.terminate(this.databaseWorker);
+            console.log("disconnected");
         });
+        console.log("logged in");
     }
 
 }

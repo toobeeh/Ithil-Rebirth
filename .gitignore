@@ -4,6 +4,7 @@
 
 ## local debug db files
 debugDB/
+.vscode
 
 ### Node ###
 # Logs
