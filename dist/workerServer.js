@@ -39,12 +39,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-// import libs and local modules
 const ithilSocketio = __importStar(require("./socketioServer"));
+const threads_1 = require("threads");
 const ipc_1 = require("./ipc");
+const typoClient_1 = __importDefault(require("./typoClient"));
 const portscanner_1 = __importDefault(require("portscanner"));
 const config = require("../ecosystem.config").config;
-//const database = await spawn<palantirDatabaseWorker>("./database/palantirDatabaseWorker");
 // find a free worker port and proceed startup as soon as found / errored
 portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRange[1], "127.0.0.1", async (error, port) => {
     // check if port was found
@@ -62,13 +62,14 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
      */
     const ipcClient = new ipc_1.IthilIPCClient("worker@" + port);
     await ipcClient.connect(config.mainIpcID, port);
-    const palantirData = {
+    /** The worker's cache of last received data from the main ipc socket */
+    const workerCache = {
         activeLobbies: [],
-        publicData: {}
+        publicData: { drops: [], scenes: [], sprites: [], onlineScenes: [], onlineSprites: [] }
     };
     // listen to ipc events
     ipcClient.onActiveLobbiesChanged = (data) => {
-        palantirData.activeLobbies = data.activeLobbies;
+        workerCache.activeLobbies = data.activeLobbies;
         data.activeLobbies.forEach(guild => {
             // build eventdata
             const eventdata = {
@@ -79,7 +80,7 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
         });
     };
     ipcClient.onPublicDataChanged = (data) => {
-        palantirData.publicData = data.publicData;
+        workerCache.publicData = data.publicData;
         // build eventdata
         const eventdata = {
             onlineScenes: data.publicData.onlineScenes,
@@ -88,9 +89,42 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
         // volatile emit to all online sockets
         workerSocketServer.volatile.emit(ithilSocketio.eventNames.onlineSprites, eventdata);
     };
-    // init socketio client connection
+    /** array of currently connected sockets */
+    let connectedSockets = [];
+    // listen for new socket connections
     workerSocketServer.on("connection", (socket) => {
-        console.log(socket);
+        // push socket to array and update worker balance
+        connectedSockets.push(socket);
+        ipcClient.updatePortBalance?.({ port: workerPort, clients: connectedSockets.length });
+        // remove socket from array and update balance on disconnect
+        socket.on("disconnect", (reason) => {
+            connectedSockets = connectedSockets.filter(sck => sck.id != socket.id);
+            ipcClient.updatePortBalance?.({ port: workerPort, clients: connectedSockets.length });
+        });
+        // send public data to newly connected socket
+        const eventdata = { publicData: workerCache.publicData };
+        socket.emit(ithilSocketio.eventNames.publicData, eventdata);
+        // listen once for login attempt
+        socket.once(ithilSocketio.eventNames.login, async (data) => {
+            // create database worker and check access token
+            const asyncDb = await (0, threads_1.spawn)(new threads_1.Worker("./database/palantirDatabaseWorker"));
+            await asyncDb.init(config.palantirDbPath);
+            const loginResult = await asyncDb.getLoginFromAccessToken(data.accessToken);
+            // if login succeeded, create a typo client and enable further events
+            if (loginResult.success) {
+                const memberResult = await asyncDb.getUserByLogin(loginResult.result.login);
+                const client = new typoClient_1.default(socket, asyncDb, memberResult.result, workerCache);
+            }
+            // if not successful, send empty response
+            else {
+                const eventdata = {
+                    authenticated: false,
+                    activeLobbies: [],
+                    user: {}
+                };
+                socket.emit(ithilSocketio.eventNames.login + " response", eventdata);
+            }
+        });
     });
     // send ready state to pm2
     setTimeout(() => {

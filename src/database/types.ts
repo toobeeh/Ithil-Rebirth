@@ -10,7 +10,7 @@
     /**
      * The query result
      */
-    result: Type | null
+    result: Type
 }
 
 /**
@@ -472,4 +472,19 @@ export interface playerStatus {
     * The eventdrop ID, if associated with an event
     */
     EventDropID: number
+}
+
+/**
+* The worker's chache of last received data from the ipc main server
+*/
+export interface workerCache {
+    /**
+    * The worker's last received public data
+    */
+    publicData: publicData;
+
+    /**
+    * The worker's last received active lobbies
+    */
+    activeLobbies: Array<activeGuildLobbies>;
 }

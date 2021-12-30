@@ -28,7 +28,7 @@ class PalantirDatabase {
     emptyResult() {
         let empty = {
             success: false,
-            result: null
+            result: {}
         };
         return empty;
     }

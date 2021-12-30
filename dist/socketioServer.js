@@ -40,7 +40,9 @@ exports.IthilSocketioServer = IthilSocketioServer;
 exports.eventNames = Object.freeze({
     onlineSprites: "online sprites",
     activeLobbies: "active lobbies",
+    publicData: "public data",
     newDrop: "new drop",
     clearDrop: "clear drop",
-    rankDrop: "rank drop"
+    rankDrop: "rank drop",
+    login: "login"
 });
