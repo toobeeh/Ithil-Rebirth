@@ -107,8 +107,9 @@ portscanner.findAPortNotInUse(
             ipcClient.updatePortBalance?.({ port: workerPort, clients: connectedSockets.length });
 
             // remove socket from array and update balance on disconnect
-            clientSocket.subscribeDisconnect(async () => {
-                connectedSockets = connectedSockets.filter(clientSocket => clientSocket.socket.id != socket.id);
+            clientSocket.subscribeDisconnect(async (reason) => {
+                console.log("Client disconnected with reason " + reason);
+                connectedSockets = connectedSockets.filter(clientSocket => clientSocket.socket.connected);
                 ipcClient.updatePortBalance?.({ port: workerPort, clients: connectedSockets.length });
             });
 
@@ -116,7 +117,6 @@ portscanner.findAPortNotInUse(
             clientSocket.emitPublicData({ publicData: workerCache.publicData });
 
             // listen for login event
-            console.log(clientSocket.socket.on, clientSocket.socket.once);
             clientSocket.subscribeLoginEvent(async (loginData) => {
                 const response: ithilSocketio.loginResponseEventdata = {
                     authenticated: false,
