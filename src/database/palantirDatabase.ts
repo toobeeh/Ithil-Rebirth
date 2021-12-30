@@ -32,7 +32,7 @@ class PalantirDatabase {
     emptyResult<Type>() {
         let empty: types.dbResult<Type> = {
             success: false,
-            result: null
+            result: { } as Type
         }
         return empty;
     }
@@ -44,7 +44,7 @@ class PalantirDatabase {
      */
     getUserByLogin(login: number) {
         let result = this.emptyResult<types.member>();
-
+        
         try {
             let row = this.db.prepare("SELECT * FROM Members WHERE Login = ?").get(login);
             result.result = {
