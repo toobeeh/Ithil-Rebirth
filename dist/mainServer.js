@@ -19,7 +19,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 // import libs and local modules
-const socketioServer_1 = require("./socketioServer");
+const ithilSocketio_1 = require("./ithilSocketio");
 const balancer_1 = __importDefault(require("./balancer"));
 const palantirDatabase_1 = __importDefault(require("./database/palantirDatabase"));
 const ipc_1 = require("./ipc");
@@ -72,7 +72,7 @@ dataObserver.onPublicDataChanged = (data) => {
 /**
  * The balancer socketio server
  */
-const mainSocketServer = new socketioServer_1.IthilSocketioServer(config.mainPort, config.certificatePath).server;
+const mainSocketServer = new ithilSocketio_1.IthilSocketioServer(config.mainPort, config.certificatePath).server;
 // listen for socket connection events
 mainSocketServer.on("connection", socket => {
     // create listener for port request

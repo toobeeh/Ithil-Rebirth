@@ -1,7 +1,7 @@
 import { palantirDatabaseWorker } from './database/palantirDatabaseWorker';
 import { ModuleThread, spawn, Thread, Worker } from "threads";
 import * as types from "./database/types";
-import * as ithilSocket from "./socketioServer";
+import * as ithilSocket from "./ithilSocketio";
 import type { Socket } from 'socket.io';
 import { resolve } from 'path/posix';
 

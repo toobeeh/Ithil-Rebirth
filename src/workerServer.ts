@@ -18,7 +18,7 @@
 
 // import libs and local modules
 import * as types from "./database/types";
-import * as ithilSocketio from './socketioServer';
+import * as ithilSocketio from './ithilSocketio';
 import { palantirDatabaseWorker } from './database/palantirDatabaseWorker';
 import { ModuleThread, spawn, Thread, Worker } from "threads";
 import { IthilIPCClient } from './ipc';
@@ -95,13 +95,13 @@ portscanner.findAPortNotInUse(
         }
 
         /** array of currently connected sockets */
-        let connectedSockets: Array<ithilSocketio.TypoClientSocket> = [];
+        let connectedSockets: Array<ithilSocketio.TypoSocketioClient> = [];
 
         // listen for new socket connections
         workerSocketServer.on("connection", (socket) => {
 
             // cast socket to enable easier and typesafe event subscribing
-            const clientSocket = socket as ithilSocketio.TypoClientSocket;
+            const clientSocket = new ithilSocketio.TypoSocketioClient(socket);
 
             // push socket to array and update worker balance
             connectedSockets.push(clientSocket);
@@ -109,7 +109,7 @@ portscanner.findAPortNotInUse(
 
             // remove socket from array and update balance on disconnect
             clientSocket.subscribeDisconnect(async () => {
-                connectedSockets = connectedSockets.filter(sck => sck.id != socket.id);
+                connectedSockets = connectedSockets.filter(clientSocket => clientSocket.socket.id != socket.id);
                 ipcClient.updatePortBalance?.({ port: workerPort, clients: connectedSockets.length });
             });
 

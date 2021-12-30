@@ -39,7 +39,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const ithilSocketio = __importStar(require("./socketioServer"));
+const ithilSocketio = __importStar(require("./ithilSocketio"));
 const threads_1 = require("threads");
 const ipc_1 = require("./ipc");
 const typoClient_1 = __importDefault(require("./typoClient"));
@@ -94,13 +94,13 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
     // listen for new socket connections
     workerSocketServer.on("connection", (socket) => {
         // cast socket to enable easier and typesafe event subscribing
-        const clientSocket = socket;
+        const clientSocket = new ithilSocketio.TypoSocketioClient(socket);
         // push socket to array and update worker balance
         connectedSockets.push(clientSocket);
         ipcClient.updatePortBalance?.({ port: workerPort, clients: connectedSockets.length });
         // remove socket from array and update balance on disconnect
         clientSocket.subscribeDisconnect(async () => {
-            connectedSockets = connectedSockets.filter(sck => sck.id != socket.id);
+            connectedSockets = connectedSockets.filter(clientSocket => clientSocket.socket.id != socket.id);
             ipcClient.updatePortBalance?.({ port: workerPort, clients: connectedSockets.length });
         });
         // send public data to newly connected socket

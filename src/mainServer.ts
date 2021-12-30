@@ -15,7 +15,7 @@
  */
 
 // import libs and local modules
-import { IthilSocketioServer } from './socketioServer';
+import { IthilSocketioServer } from './ithilSocketio';
 import Balancer from './balancer';
 import PalantirDatabase from './database/palantirDatabase';
 import { IthilIPCServer } from './ipc';

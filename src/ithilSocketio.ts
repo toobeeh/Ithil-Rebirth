@@ -4,8 +4,10 @@ import cors from 'cors';
 import express from "express";
 import { Server as SocketioServer, Socket } from "socket.io";
 import * as types from "./database/types";
-import { resolve } from 'path/posix';
 
+/**
+ * A wrapper class for all required socketio server initialization
+ */
 export class IthilSocketioServer {
     /**
      * The socketio server instance
@@ -40,49 +42,86 @@ export class IthilSocketioServer {
         // start listening 
         mainServer.listen(port);
     }
-
-    
 }
 
-export class TypoClientSocket extends Socket{
+/**
+ * A wrapper class for a connected socketio client, enabling type-safe event listeners and responses
+ */
+export class TypoSocketioClient {
 
+    /** The underlying socketio client */
+    socket: Socket;
+
+    /** Init wrapper class */
+    constructor(socket: Socket){
+        this.socket = socket;
+    }
+
+    /**
+     * Subscribe to an event with an async handler
+     * @param eventName The event to listen for
+     * @param handler The async handler to process incoming data and return response data
+     * @param withResponse Indicates wether a response should be made
+     * @param once Indicates wether the listener is once or permanent
+     */
     subscribeEventAsync<TIncoming, TResponse>(eventName: string, handler: (incomingData: TIncoming) => Promise<TResponse>, withResponse: boolean = true, once: boolean = false){
-        (once ? this.once : this.on)(eventName, async (incoming: TIncoming, socket: Socket)=>{
+        (once ? this.socket.once : this.socket.on)(eventName, async (incoming: TIncoming, socket: Socket)=>{
             const response = await handler(incoming);
             if(withResponse) socket.emit(eventName + " response", response);
         });
     }
 
+    /**
+     * Emit an event to the client and wait async for a response
+     * @param eventName The event to emit
+     * @param outgoingData The data that is to be sent to the client
+     * @param withResponse Indicates wether a response should be waited for
+     * @param unique If true, the event name is added a unique string to identify it from same named events
+     * @param timeout The max timeout when the promise gets rejected
+     * @returns A promise of the expected return data
+     */
     async emitEventAsync<TOutgoing, TResponse>(eventName: string, outgoingData: TOutgoing, withResponse: boolean = true, unique: boolean = false, timeout: number = 15000){
         if(unique) eventName = eventName + "@" + Date.now();
         const promise = new Promise<TResponse>((resolve, reject) => {
             if(withResponse){
-                this.once(eventName, (data: TResponse) => {
+                this.socket.once(eventName + " response", (data: TResponse) => {
                     resolve(data);
                 });
                 setTimeout(()=>reject("Timed out"), timeout);
             }
             else resolve({} as TResponse);
         });
-        this.emit(eventName, outgoingData);
+        this.socket.emit(eventName, outgoingData);
         return promise;
     }
 
+    /**
+     * Send public data to the client
+     * @param data The public data eventdata
+     */
     emitPublicData(data: publicDataEventdata) {
         this.emitEventAsync<publicDataEventdata, void>(eventNames.publicData, data, false);
     }
 
+    /**
+     * Subscribe to the disconnect event
+     * @param handler Handler that is fired on the socket disconnect
+     */
     subscribeDisconnect(handler: (reason: string) => Promise<void>){
-        this.on("disconnect", handler);
+        this.socket.on("disconnect", handler);
     }
 
+    /**
+     * Subscribe to the login event - client is trying to log in
+     * @param handler Handler that should process login data and respond state
+     */
     subscribeLoginEvent(handler: (incoming: loginEventdata) => Promise<loginResponseEventdata>){
         this.subscribeEventAsync<loginEventdata, loginResponseEventdata>(eventNames.login, handler, true, true);
     }
 
 }
 
-//interfaces and eventdata for client connection
+//interfaces and event names for socketio communication
 
 export const eventNames = Object.freeze({
     onlineSprites: "online sprites",
