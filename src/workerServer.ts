@@ -17,19 +17,23 @@
  */
 
 // import libs and local modules
+import * as types from "./database/types";
 import * as ithilSocketio from './socketioServer';
 import { palantirDatabaseWorker } from './database/palantirDatabaseWorker';
+import { ModuleThread, spawn, Thread, Worker } from "threads";
 import { IthilIPCClient } from './ipc';
-import * as types from "./database/types";
+import TypoClient from "./typoClient";
 import portscanner from "portscanner";
+import { Socket } from 'socket.io';
+
 const config = require("../ecosystem.config").config;
-//const database = await spawn<palantirDatabaseWorker>("./database/palantirDatabaseWorker");
 
 // find a free worker port and proceed startup as soon as found / errored
 portscanner.findAPortNotInUse(
     config.workerRange[0],
     config.workerRange[1],
     "127.0.0.1", async (error, port) => {
+
         // check if port was found
         if (error) {
             console.log(error);
@@ -41,7 +45,7 @@ portscanner.findAPortNotInUse(
          * The worker socketio server
          */
         const workerSocketServer = new ithilSocketio.IthilSocketioServer(
-            workerPort, 
+            workerPort,
             config.certificatePath
         ).server;
 
@@ -51,14 +55,15 @@ portscanner.findAPortNotInUse(
         const ipcClient = new IthilIPCClient("worker@" + port);
         await ipcClient.connect(config.mainIpcID, port);
 
-        const palantirData = {
-            activeLobbies: [] as Array<types.activeGuildLobbies>,
-            publicData: {} as types.publicData
+        /** The worker's cache of last received data from the main ipc socket */
+        const workerCache: types.workerCache = {
+            activeLobbies: [],
+            publicData: { drops: [], scenes: [], sprites: [], onlineScenes: [], onlineSprites: [] }
         }
 
         // listen to ipc events
         ipcClient.onActiveLobbiesChanged = (data) => {
-            palantirData.activeLobbies = data.activeLobbies;
+            workerCache.activeLobbies = data.activeLobbies;
             data.activeLobbies.forEach(guild => {
 
                 // build eventdata
@@ -75,7 +80,7 @@ portscanner.findAPortNotInUse(
         }
 
         ipcClient.onPublicDataChanged = (data) => {
-            palantirData.publicData = data.publicData;
+            workerCache.publicData = data.publicData;
 
             // build eventdata
             const eventdata: ithilSocketio.onlineSpritesEventdata = {
@@ -90,9 +95,50 @@ portscanner.findAPortNotInUse(
             );
         }
 
-        // init socketio client connection
+        /** array of currently connected sockets */
+        let connectedSockets: Array<Socket> = [];
+
+        // listen for new socket connections
         workerSocketServer.on("connection", (socket) => {
-            console.log(socket);
+
+            // push socket to array and update worker balance
+            connectedSockets.push(socket);
+            ipcClient.updatePortBalance?.({ port: workerPort, clients: connectedSockets.length });
+
+            // remove socket from array and update balance on disconnect
+            socket.on("disconnect", (reason) => {
+                connectedSockets = connectedSockets.filter(sck => sck.id != socket.id);
+                ipcClient.updatePortBalance?.({ port: workerPort, clients: connectedSockets.length });
+            });
+
+            // send public data to newly connected socket
+            const eventdata: ithilSocketio.publicDataEventdata = { publicData: workerCache.publicData };
+            socket.emit(ithilSocketio.eventNames.publicData, eventdata);
+
+            // listen once for login attempt
+            socket.once(ithilSocketio.eventNames.login, async (data: ithilSocketio.loginEventdata) => {
+
+                // create database worker and check access token
+                const asyncDb = await spawn<palantirDatabaseWorker>(new Worker("./database/palantirDatabaseWorker"));
+                await asyncDb.init(config.palantirDbPath);
+                const loginResult = await asyncDb.getLoginFromAccessToken(data.accessToken);
+
+                // if login succeeded, create a typo client and enable further events
+                if (loginResult.success) {
+                    const memberResult = await asyncDb.getUserByLogin(loginResult.result.login);
+                    const client = new TypoClient(socket, asyncDb, memberResult.result, workerCache);
+                }
+
+                // if not successful, send empty response
+                else {
+                    const eventdata: ithilSocketio.loginResponseEventdata = {
+                        authenticated: false,
+                        activeLobbies: [],
+                        user: {} as types.member
+                    }
+                    socket.emit(ithilSocketio.eventNames.login + " response", eventdata);
+                }
+            });
         });
 
         // send ready state to pm2
