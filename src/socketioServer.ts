@@ -46,9 +46,11 @@ export class IthilSocketioServer {
 export const eventNames = Object.freeze({
     onlineSprites: "online sprites",
     activeLobbies: "active lobbies",
+    publicData: "public data",
     newDrop: "new drop",
     clearDrop: "clear drop",
-    rankDrop: "rank drop"
+    rankDrop: "rank drop",
+    login: "login"
 });
 
 /**
@@ -69,9 +71,54 @@ export interface onlineSpritesEventdata{
 /**
  * Socketio eventdata for the active lobbies event
  */
- export interface activeLobbiesEventdata{
+export interface activeLobbiesEventdata{
     /**
      * Currently active guildlobbies
      */
     activeLobbies: types.activeGuildLobbies;
+}
+
+/**
+ * Socketio eventdata for the public data event
+ */
+export interface publicDataEventdata {
+    /**
+     * Public data containing sprites, scenes, online data
+     */
+    publicData: types.publicData;
+}
+
+/**
+ * Socketio eventdata for the login event
+ */
+ export interface loginEventdata{
+    /**
+     * The user's access token
+     */
+    accessToken: string;
+
+    /**
+     * The user's login, may be removed in future
+     */
+    login: number;
+}
+
+/**
+ * Socketio eventdata for the login event response
+ */
+export interface loginResponseEventdata{
+    /**
+     * Signalizes wether the login attempt was successful
+     */
+    authenticated: boolean;
+
+    /**
+     * Currently active lobbies of all guilds the authenticated member is conencted to
+     */
+    activeLobbies: Array<types.activeGuildLobbies>;
+    
+    /**
+     * The authenticated member
+     */
+    user: types.member;
 }
