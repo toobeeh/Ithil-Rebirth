@@ -62,7 +62,7 @@ ipcServer.onWorkerDisconnected = (socket, socketID) => {
 }
 
 ipcServer.onBalanceChanged = (data, socket) => {
-    if (data.port && data.clients) balancer.updateClients(data.port, data.clients);
+    balancer.updateClients(data.port, data.clients);
     console.log(balancer.currentBalancing());
 }
 

@@ -100,7 +100,6 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
         ipcClient.updatePortBalance?.({ port: workerPort, clients: connectedSockets.length });
         // remove socket from array and update balance on disconnect
         clientSocket.subscribeDisconnect(async (reason) => {
-            console.log("Client disconnected with reason " + reason);
             connectedSockets = connectedSockets.filter(clientSocket => clientSocket.socket.connected);
             ipcClient.updatePortBalance?.({ port: workerPort, clients: connectedSockets.length });
         });
