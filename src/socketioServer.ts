@@ -4,6 +4,7 @@ import cors from 'cors';
 import express from "express";
 import { Server as SocketioServer, Socket } from "socket.io";
 import * as types from "./database/types";
+import { resolve } from 'path/posix';
 
 export class IthilSocketioServer {
     /**
@@ -44,12 +45,35 @@ export class IthilSocketioServer {
 }
 
 export class TypoClientSocket extends Socket{
-    
+
     subscribeEventAsync<TIncoming, TResponse>(eventName: string, handler: (incomingData: TIncoming) => Promise<TResponse>, withResponse: boolean = true, once: boolean = false){
         (once ? this.once : this.on)(eventName, async (incoming: TIncoming, socket: Socket)=>{
             const response = await handler(incoming);
             if(withResponse) socket.emit(eventName + " response", response);
         });
+    }
+
+    async emitEventAsync<TOutgoing, TResponse>(eventName: string, outgoingData: TOutgoing, withResponse: boolean = true, unique: boolean = false, timeout: number = 15000){
+        if(unique) eventName = eventName + "@" + Date.now();
+        const promise = new Promise<TResponse>((resolve, reject) => {
+            if(withResponse){
+                this.once(eventName, (data: TResponse) => {
+                    resolve(data);
+                });
+                setTimeout(()=>reject("Timed out"), timeout);
+            }
+            else resolve({} as TResponse);
+        });
+        this.emit(eventName, outgoingData);
+        return promise;
+    }
+
+    emitPublicData(data: publicDataEventdata) {
+        this.emitEventAsync<publicDataEventdata, void>(eventNames.publicData, data, false);
+    }
+
+    subscribeDisconnect(handler: (reason: string) => Promise<void>){
+        this.on("disconnect", handler);
     }
 
     subscribeLoginEvent(handler: (incoming: loginEventdata) => Promise<loginResponseEventdata>){

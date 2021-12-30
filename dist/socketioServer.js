@@ -44,6 +44,28 @@ class TypoClientSocket extends socket_io_1.Socket {
                 socket.emit(eventName + " response", response);
         });
     }
+    async emitEventAsync(eventName, outgoingData, withResponse = true, unique = false, timeout = 15000) {
+        if (unique)
+            eventName = eventName + "@" + Date.now();
+        const promise = new Promise((resolve, reject) => {
+            if (withResponse) {
+                this.once(eventName, (data) => {
+                    resolve(data);
+                });
+                setTimeout(() => reject("Timed out"), timeout);
+            }
+            else
+                resolve({});
+        });
+        this.emit(eventName, outgoingData);
+        return promise;
+    }
+    emitPublicData(data) {
+        this.emitEventAsync(exports.eventNames.publicData, data, false);
+    }
+    subscribeDisconnect(handler) {
+        this.on("disconnect", handler);
+    }
     subscribeLoginEvent(handler) {
         this.subscribeEventAsync(exports.eventNames.login, handler, true, true);
     }

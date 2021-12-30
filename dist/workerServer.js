@@ -96,16 +96,15 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
         // cast socket to enable easier and typesafe event subscribing
         const clientSocket = socket;
         // push socket to array and update worker balance
-        connectedSockets.push(socket);
+        connectedSockets.push(clientSocket);
         ipcClient.updatePortBalance?.({ port: workerPort, clients: connectedSockets.length });
         // remove socket from array and update balance on disconnect
-        socket.on("disconnect", (reason) => {
+        clientSocket.subscribeDisconnect(async () => {
             connectedSockets = connectedSockets.filter(sck => sck.id != socket.id);
             ipcClient.updatePortBalance?.({ port: workerPort, clients: connectedSockets.length });
         });
         // send public data to newly connected socket
-        const eventdata = { publicData: workerCache.publicData };
-        socket.emit(ithilSocketio.eventNames.publicData, eventdata);
+        clientSocket.emitPublicData({ publicData: workerCache.publicData });
         // listen for login event
         clientSocket.subscribeLoginEvent(async (loginData) => {
             const response = {
