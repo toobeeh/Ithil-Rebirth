@@ -59,10 +59,10 @@ export default class TypoClient {
         if(this.permaBan) return;
 
         // init events 
-        this.typosocket.subscribeDisconnect(async (reason) => {
-            await Thread.terminate(this.databaseWorker);
-            console.log("disconnected");
-        });
+        // this.typosocket.subscribeDisconnect(async (reason) => {
+        //     await Thread.terminate(this.databaseWorker);
+        //     console.log("disconnected");
+        // });
         console.log("logged in");
     }
 

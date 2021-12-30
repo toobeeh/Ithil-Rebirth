@@ -12,8 +12,7 @@ module.exports = {
             instances: 8,
             wait_ready: true,
             listen_timeout: 10000,
-            time: true,
-            node_args: "--inspect=9228"
+            time: true
         }
     ],
     config: {

@@ -1,6 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const threads_1 = require("threads");
 /**
  * Manage dataflow and interactions with a client accessing from typo
  */
@@ -22,10 +21,10 @@ class TypoClient {
         if (this.permaBan)
             return;
         // init events 
-        this.typosocket.subscribeDisconnect(async (reason) => {
-            await threads_1.Thread.terminate(this.databaseWorker);
-            console.log("disconnected");
-        });
+        // this.typosocket.subscribeDisconnect(async (reason) => {
+        //     await Thread.terminate(this.databaseWorker);
+        //     console.log("disconnected");
+        // });
         console.log("logged in");
     }
 }
