@@ -65,9 +65,19 @@ export class TypoSocketioClient {
      * @param once Indicates wether the listener is once or permanent
      */
     subscribeEventAsync<TIncoming, TResponse>(eventName: string, handler: (incomingData: TIncoming) => Promise<TResponse>, withResponse: boolean = true, once: boolean = false){
-        const callback = async (incoming: TIncoming, socket: Socket)=>{
-            const response = await handler(incoming);
-            if(withResponse) socket.emit(eventName + " response", response);
+        const callback = async (incoming: eventBase<TIncoming>, socket: Socket)=>{
+            
+            // get the payload from the event data consisting of eventname and payload
+            const response = await handler(incoming.payload);
+            if(withResponse) {
+
+                // build a response of the handler's result and emit it
+                const base: eventBase<TResponse> = {
+                    event: eventName + " response",
+                    payload: response
+                }
+                this.socket.emit(eventName + " response", base);
+            }
         };
         if(once) this.socket.once(eventName, callback);
         else this.socket.on(eventName, callback);
@@ -83,17 +93,36 @@ export class TypoSocketioClient {
      * @returns A promise of the expected return data
      */
     async emitEventAsync<TOutgoing, TResponse>(eventName: string, outgoingData: TOutgoing, withResponse: boolean = true, unique: boolean = false, timeout: number = 15000){
-        if(unique) eventName = eventName + "@" + Date.now();
+        
+        // generate unique event name if set
+        let uniqueName = eventName;
+        if(unique) uniqueName = uniqueName + "@" + Date.now();
+
+        // create promise that holds response data
         const promise = new Promise<TResponse>((resolve, reject) => {
+
+            // if resopnse is awaited, add a listener that will resolve on the event - else resolve instantly with empty data
             if(withResponse){
-                this.socket.once(eventName + " response", (data: TResponse) => {
-                    resolve(data);
-                });
+
+                // a event handler that removes itself and resolves the promise as soon as the right unique event was received
+                const handler = (data: eventBase<TResponse>) => {
+                    if(unique && data.event == uniqueName || !unique)  {
+                        resolve(data.payload);
+                        this.socket.off(eventName, handler);
+                    }
+                }
+                this.socket.on(eventName + " response", handler);
+
+                // set timeout to reject promise
                 setTimeout(()=>reject("Timed out"), timeout);
             }
             else resolve({} as TResponse);
         });
-        this.socket.emit(eventName, outgoingData);
+        const base: eventBase<TOutgoing> = {
+            event: uniqueName,
+            payload: outgoingData
+        }
+        this.socket.emit(eventName, base);
         return promise;
     }
 
@@ -134,6 +163,21 @@ export const eventNames = Object.freeze({
     rankDrop: "rank drop",
     login: "login"
 });
+
+/** 
+ * Interface for all typo client communication - extra event name property 
+ */
+export interface eventBase<TEventdata>{
+    /**
+     * The event's name
+     */
+    event: string;
+
+    /**
+     * The event's payload
+     */
+    payload: TEventdata;
+}
 
 /**
  * Socketio eventdata for the online sprites event

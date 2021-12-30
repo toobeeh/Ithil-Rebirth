@@ -56,9 +56,16 @@ class TypoSocketioClient {
      */
     subscribeEventAsync(eventName, handler, withResponse = true, once = false) {
         const callback = async (incoming, socket) => {
-            const response = await handler(incoming);
-            if (withResponse)
-                socket.emit(eventName + " response", response);
+            // get the payload from the event data consisting of eventname and payload
+            const response = await handler(incoming.payload);
+            if (withResponse) {
+                // build a response of the handler's result and emit it
+                const base = {
+                    event: eventName + " response",
+                    payload: response
+                };
+                this.socket.emit(eventName + " response", base);
+            }
         };
         if (once)
             this.socket.once(eventName, callback);
@@ -75,19 +82,33 @@ class TypoSocketioClient {
      * @returns A promise of the expected return data
      */
     async emitEventAsync(eventName, outgoingData, withResponse = true, unique = false, timeout = 15000) {
+        // generate unique event name if set
+        let uniqueName = eventName;
         if (unique)
-            eventName = eventName + "@" + Date.now();
+            uniqueName = uniqueName + "@" + Date.now();
+        // create promise that holds response data
         const promise = new Promise((resolve, reject) => {
+            // if resopnse is awaited, add a listener that will resolve on the event - else resolve instantly with empty data
             if (withResponse) {
-                this.socket.once(eventName + " response", (data) => {
-                    resolve(data);
-                });
+                // a event handler that removes itself and resolves the promise as soon as the right unique event was received
+                const handler = (data) => {
+                    if (unique && data.event == uniqueName || !unique) {
+                        resolve(data.payload);
+                        this.socket.off(eventName, handler);
+                    }
+                };
+                this.socket.on(eventName + " response", handler);
+                // set timeout to reject promise
                 setTimeout(() => reject("Timed out"), timeout);
             }
             else
                 resolve({});
         });
-        this.socket.emit(eventName, outgoingData);
+        const base = {
+            event: uniqueName,
+            payload: outgoingData
+        };
+        this.socket.emit(eventName, base);
         return promise;
     }
     /**
