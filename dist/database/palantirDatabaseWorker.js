@@ -87,5 +87,5 @@ const palantirDatabaseWorker = {
         return database.writeReport(lobbies);
     }
 };
-(0, threads_1.expose)(palantirDatabaseWorker.clearVolatile);
+(0, threads_1.expose)(palantirDatabaseWorker);
 //# sourceMappingURL=palantirDatabaseWorker.js.map

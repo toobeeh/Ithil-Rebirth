@@ -90,4 +90,4 @@ const palantirDatabaseWorker = {
 
 export type palantirDatabaseWorker = typeof palantirDatabaseWorker;
 
-expose(palantirDatabaseWorker.clearVolatile);
+expose(palantirDatabaseWorker);

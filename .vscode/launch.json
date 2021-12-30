@@ -2,10 +2,22 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "address": "localhost:9229/6927126d-e46e-4883-abdc-e8ffb1b54f21",
+            "address": "localhost:9229/ae70ef99-fc63-4022-bbb7-bc1cb4692219",
             "localRoot": "${workspaceFolder}/dist",
             "name": "RPI attach Main",
             "port": 9229,
+            "remoteRoot": "/home/pi/Ithil-Rebirth/dist",
+            "request": "attach",
+            "sourceMaps": true,
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "type": "pwa-node"
+        }, {
+            "address": "localhost:9228/0fbc11f3-f66e-4f02-9820-5b8685d698c3",
+            "localRoot": "${workspaceFolder}/dist",
+            "name": "RPI attach Worker",
+            "port": 9228,
             "remoteRoot": "/home/pi/Ithil-Rebirth/dist",
             "request": "attach",
             "sourceMaps": true,
