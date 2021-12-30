@@ -106,6 +106,7 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
         // send public data to newly connected socket
         clientSocket.emitPublicData({ publicData: workerCache.publicData });
         // listen for login event
+        console.log(clientSocket.socket.on, clientSocket.socket.once);
         clientSocket.subscribeLoginEvent(async (loginData) => {
             const response = {
                 authenticated: false,

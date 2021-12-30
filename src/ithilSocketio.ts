@@ -65,7 +65,6 @@ export class TypoSocketioClient {
      * @param once Indicates wether the listener is once or permanent
      */
     subscribeEventAsync<TIncoming, TResponse>(eventName: string, handler: (incomingData: TIncoming) => Promise<TResponse>, withResponse: boolean = true, once: boolean = false){
-        console.log("sea2",this.socket);
         (once ? this.socket.once : this.socket.on)(eventName, async (incoming: TIncoming, socket: Socket)=>{
             const response = await handler(incoming);
             if(withResponse) socket.emit(eventName + " response", response);
@@ -110,7 +109,6 @@ export class TypoSocketioClient {
      */
     subscribeDisconnect(handler: (reason: string) => Promise<void>){
         this.socket.on("disconnect", handler);
-        console.log("sde",this.socket);
     }
 
     /**
@@ -118,7 +116,6 @@ export class TypoSocketioClient {
      * @param handler Handler that should process login data and respond state
      */
     subscribeLoginEvent(handler: (incoming: loginEventdata) => Promise<loginResponseEventdata>){
-        console.log("sle",this.socket);
         this.subscribeEventAsync<loginEventdata, loginResponseEventdata>(eventNames.login, handler, true, true);
     }
 

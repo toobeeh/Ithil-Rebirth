@@ -99,7 +99,6 @@ portscanner.findAPortNotInUse(
 
         // listen for new socket connections
         workerSocketServer.on("connection", (socket) => {
-
             // cast socket to enable easier and typesafe event subscribing
             const clientSocket = new ithilSocketio.TypoSocketioClient(socket);
 
@@ -117,6 +116,7 @@ portscanner.findAPortNotInUse(
             clientSocket.emitPublicData({ publicData: workerCache.publicData });
 
             // listen for login event
+            console.log(clientSocket.socket.on, clientSocket.socket.once);
             clientSocket.subscribeLoginEvent(async (loginData) => {
                 const response: ithilSocketio.loginResponseEventdata = {
                     authenticated: false,

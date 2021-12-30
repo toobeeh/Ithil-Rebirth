@@ -55,7 +55,6 @@ class TypoSocketioClient {
      * @param once Indicates wether the listener is once or permanent
      */
     subscribeEventAsync(eventName, handler, withResponse = true, once = false) {
-        console.log("sea2", this.socket);
         (once ? this.socket.once : this.socket.on)(eventName, async (incoming, socket) => {
             const response = await handler(incoming);
             if (withResponse)
@@ -100,14 +99,12 @@ class TypoSocketioClient {
      */
     subscribeDisconnect(handler) {
         this.socket.on("disconnect", handler);
-        console.log("sde", this.socket);
     }
     /**
      * Subscribe to the login event - client is trying to log in
      * @param handler Handler that should process login data and respond state
      */
     subscribeLoginEvent(handler) {
-        console.log("sle", this.socket);
         this.subscribeEventAsync(exports.eventNames.login, handler, true, true);
     }
 }
