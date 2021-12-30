@@ -96,13 +96,16 @@ portscanner.findAPortNotInUse(
         }
 
         /** array of currently connected sockets */
-        let connectedSockets: Array<Socket> = [];
+        let connectedSockets: Array<ithilSocketio.TypoClientSocket> = [];
 
         // listen for new socket connections
         workerSocketServer.on("connection", (socket) => {
 
+            // cast socket to enable easier and typesafe event subscribing
+            const clientSocket = socket as ithilSocketio.TypoClientSocket;
+
             // push socket to array and update worker balance
-            connectedSockets.push(socket);
+            connectedSockets.push(socket as ithilSocketio.TypoClientSocket);
             ipcClient.updatePortBalance?.({ port: workerPort, clients: connectedSockets.length });
 
             // remove socket from array and update balance on disconnect
@@ -115,29 +118,33 @@ portscanner.findAPortNotInUse(
             const eventdata: ithilSocketio.publicDataEventdata = { publicData: workerCache.publicData };
             socket.emit(ithilSocketio.eventNames.publicData, eventdata);
 
-            // listen once for login attempt
-            socket.once(ithilSocketio.eventNames.login, async (data: ithilSocketio.loginEventdata) => {
+            // listen for login event
+            clientSocket.subscribeLoginEvent(async (loginData) => {
+                const response: ithilSocketio.loginResponseEventdata = {
+                    authenticated: false,
+                    activeLobbies: [],
+                    user: {} as types.member
+                }
 
                 // create database worker and check access token
                 const asyncDb = await spawn<palantirDatabaseWorker>(new Worker("./database/palantirDatabaseWorker"));
                 await asyncDb.init(config.palantirDbPath);
-                const loginResult = await asyncDb.getLoginFromAccessToken(data.accessToken);
+                const loginResult = await asyncDb.getLoginFromAccessToken(loginData.accessToken);
 
                 // if login succeeded, create a typo client and enable further events
                 if (loginResult.success) {
                     const memberResult = await asyncDb.getUserByLogin(loginResult.result.login);
                     const client = new TypoClient(socket, asyncDb, memberResult.result, workerCache);
-                }
 
-                // if not successful, send empty response
-                else {
-                    const eventdata: ithilSocketio.loginResponseEventdata = {
-                        authenticated: false,
-                        activeLobbies: [],
-                        user: {} as types.member
-                    }
-                    socket.emit(ithilSocketio.eventNames.login + " response", eventdata);
+                    // fill login response data
+                    response.authenticated = true;
+                    response.user = client.member;
+                    response.activeLobbies = workerCache.activeLobbies.filter(
+                        guild => client.member.memberDiscordDetails.Guilds.some(connectedGuild => connectedGuild.GuildID == guild.guildID) 
+                    );
                 }
+                
+                return response;
             });
         });
 

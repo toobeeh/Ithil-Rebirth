@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.eventNames = exports.IthilSocketioServer = void 0;
+exports.eventNames = exports.TypoClientSocket = exports.IthilSocketioServer = void 0;
 const https_1 = __importDefault(require("https"));
 const fs_1 = __importDefault(require("fs"));
 const cors_1 = __importDefault(require("cors"));
@@ -36,6 +36,19 @@ class IthilSocketioServer {
     }
 }
 exports.IthilSocketioServer = IthilSocketioServer;
+class TypoClientSocket extends socket_io_1.Socket {
+    subscribeEventAsync(eventName, handler, withResponse = true, once = false) {
+        (once ? this.once : this.on)(eventName, async (incoming, socket) => {
+            const response = await handler(incoming);
+            if (withResponse)
+                socket.emit(eventName + " response", response);
+        });
+    }
+    subscribeLoginEvent(handler) {
+        this.subscribeEventAsync(exports.eventNames.login, handler, true, true);
+    }
+}
+exports.TypoClientSocket = TypoClientSocket;
 //interfaces and eventdata for client connection
 exports.eventNames = Object.freeze({
     onlineSprites: "online sprites",

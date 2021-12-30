@@ -3,6 +3,7 @@ import { ModuleThread, spawn, Thread, Worker } from "threads";
 import * as types from "./database/types";
 import * as ithilSocket from "./socketioServer";
 import type { Socket } from 'socket.io';
+import { resolve } from 'path/posix';
 
 /**
  * Manage dataflow and interactions with a client accessing from typo
@@ -40,7 +41,7 @@ export default class TypoClient {
     workerCache: types.workerCache;
 
     /** Init a new client with all member-related data and bound events */
-    constructor(socket: Socket, dbWorker: ModuleThread<palantirDatabaseWorker>, member: types.member, workerCache: types.workerCache,){
+    constructor(socket: Socket, dbWorker: ModuleThread<palantirDatabaseWorker>, member: types.member, workerCache: types.workerCache){
         this.socket = socket;
         this.databaseWorker = dbWorker;
         this.workerCache = workerCache;
@@ -48,7 +49,7 @@ export default class TypoClient {
         this.username = member.memberDiscordDetails.UserName;
         this.login = member.memberDiscordDetails.UserLogin;
 
-        // get flags - convert integer to bit array
+        // get flags - convert integer to bit
         this.flags = ("00000000" + (member.flags >>> 0).toString(2)).slice(-8).split("")
             .map(f => Number(f)).reverse();
         this.permaBan = this.flags[5] == 1;
@@ -61,17 +62,6 @@ export default class TypoClient {
         this.socket.on("disconnect", ()=>{
             Thread.terminate(this.databaseWorker);
         });
-
-        // send login response
-        const responseEventdata: ithilSocket.loginResponseEventdata = {
-            authenticated: true,
-            user: this.member,
-            // filter the user's connected guilds
-            activeLobbies: this.workerCache.activeLobbies.filter(
-                guild => this.member.memberDiscordDetails.Guilds.some(connectedGuild => connectedGuild.GuildID == guild.guildID) 
-            )
-        }
-        this.socket.emit(ithilSocket.eventNames.activeLobbies, responseEventdata);
     }
 
 }

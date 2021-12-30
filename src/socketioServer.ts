@@ -2,7 +2,7 @@ import https from 'https';
 import fs from 'fs';
 import cors from 'cors';
 import express from "express";
-import { Server as SocketioServer } from "socket.io";
+import { Server as SocketioServer, Socket } from "socket.io";
 import * as types from "./database/types";
 
 export class IthilSocketioServer {
@@ -39,6 +39,23 @@ export class IthilSocketioServer {
         // start listening 
         mainServer.listen(port);
     }
+
+    
+}
+
+export class TypoClientSocket extends Socket{
+    
+    subscribeEventAsync<TIncoming, TResponse>(eventName: string, handler: (incomingData: TIncoming) => Promise<TResponse>, withResponse: boolean = true, once: boolean = false){
+        (once ? this.once : this.on)(eventName, async (incoming: TIncoming, socket: Socket)=>{
+            const response = await handler(incoming);
+            if(withResponse) socket.emit(eventName + " response", response);
+        });
+    }
+
+    subscribeLoginEvent(handler: (incoming: loginEventdata) => Promise<loginResponseEventdata>){
+        this.subscribeEventAsync<loginEventdata, loginResponseEventdata>(eventNames.login, handler, true, true);
+    }
+
 }
 
 //interfaces and eventdata for client connection

@@ -93,6 +93,8 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
     let connectedSockets = [];
     // listen for new socket connections
     workerSocketServer.on("connection", (socket) => {
+        // cast socket to enable easier and typesafe event subscribing
+        const clientSocket = socket;
         // push socket to array and update worker balance
         connectedSockets.push(socket);
         ipcClient.updatePortBalance?.({ port: workerPort, clients: connectedSockets.length });
@@ -104,26 +106,27 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
         // send public data to newly connected socket
         const eventdata = { publicData: workerCache.publicData };
         socket.emit(ithilSocketio.eventNames.publicData, eventdata);
-        // listen once for login attempt
-        socket.once(ithilSocketio.eventNames.login, async (data) => {
+        // listen for login event
+        clientSocket.subscribeLoginEvent(async (loginData) => {
+            const response = {
+                authenticated: false,
+                activeLobbies: [],
+                user: {}
+            };
             // create database worker and check access token
             const asyncDb = await (0, threads_1.spawn)(new threads_1.Worker("./database/palantirDatabaseWorker"));
             await asyncDb.init(config.palantirDbPath);
-            const loginResult = await asyncDb.getLoginFromAccessToken(data.accessToken);
+            const loginResult = await asyncDb.getLoginFromAccessToken(loginData.accessToken);
             // if login succeeded, create a typo client and enable further events
             if (loginResult.success) {
                 const memberResult = await asyncDb.getUserByLogin(loginResult.result.login);
                 const client = new typoClient_1.default(socket, asyncDb, memberResult.result, workerCache);
+                // fill login response data
+                response.authenticated = true;
+                response.user = client.member;
+                response.activeLobbies = workerCache.activeLobbies.filter(guild => client.member.memberDiscordDetails.Guilds.some(connectedGuild => connectedGuild.GuildID == guild.guildID));
             }
-            // if not successful, send empty response
-            else {
-                const eventdata = {
-                    authenticated: false,
-                    activeLobbies: [],
-                    user: {}
-                };
-                socket.emit(ithilSocketio.eventNames.login + " response", eventdata);
-            }
+            return response;
         });
     });
     // send ready state to pm2
