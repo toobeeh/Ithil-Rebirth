@@ -9,10 +9,17 @@ module.exports = {
             name: "Ithil-Rebirth Worker Server",
             script: "./dist/workerServer.js",
             exec_mode: "cluster",
-            instances: 8,
+            instances: 7,
             wait_ready: true,
             listen_timeout: 10000,
             time: true
+        }, {
+            name: "Ithil-Rebirth Worker Debug Server",
+            script: "./dist/workerServer.js",
+            wait_ready: true,
+            listen_timeout: 10000,
+            time: true,
+            node_args: "--inspect=9228"
         }
     ],
     config: {

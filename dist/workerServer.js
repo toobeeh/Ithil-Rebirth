@@ -115,6 +115,7 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
             };
             // create database worker and check access token
             const asyncDb = await (0, threads_1.spawn)(new threads_1.Worker("./database/palantirDatabaseWorker"));
+            console.log(asyncDb);
             await asyncDb.init(config.palantirDbPath);
             const loginResult = await asyncDb.getLoginFromAccessToken(loginData.accessToken);
             // if login succeeded, create a typo client and enable further events
