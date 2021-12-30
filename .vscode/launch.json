@@ -4,7 +4,7 @@
         {
             "address": "localhost:9229/0c003dc4-7f6c-4594-b941-60c0186ff655",
             "localRoot": "${workspaceFolder}/dist",
-            "name": "RPI attach",
+            "name": "RPI attach Main",
             "port": 9229,
             "remoteRoot": "/home/pi/Ithil-Rebirth/dist",
             "request": "attach",

@@ -3,7 +3,8 @@ module.exports = {
         {
             name: "Ithil-Rebirth Main Server",
             script: "./dist/mainServer.js",
-            time: true
+            time: true,
+            node_args: "--inspect=9929"
         }, {
             name: "Ithil-Rebirth Worker Server",
             script: "./dist/workerServer.js",
