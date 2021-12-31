@@ -9,6 +9,18 @@ class TypoClient {
      * Init a new client with all member-related data and bound events
      */
     constructor(socket, dbWorker, memberInit, workerCache) {
+        this.getUser = async () => {
+            console.log(this);
+            const member = await this.member;
+            const flags = await this.flags;
+            const slots = await this.spriteSlots;
+            const data = {
+                user: member,
+                flags: flags,
+                slots: slots
+            };
+            return data;
+        };
         this.typosocket = socket;
         this.databaseWorker = dbWorker;
         this.workerCache = workerCache;
@@ -54,18 +66,6 @@ class TypoClient {
     }
     async onDisconnect(reason) {
         await threads_1.Thread.terminate(this.databaseWorker);
-    }
-    async getUser() {
-        console.log(this);
-        const member = await this.member;
-        const flags = await this.flags;
-        const slots = await this.spriteSlots;
-        const data = {
-            user: member,
-            flags: flags,
-            slots: slots
-        };
-        return data;
     }
 }
 exports.default = TypoClient;

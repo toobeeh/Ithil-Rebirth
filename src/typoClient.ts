@@ -85,7 +85,7 @@ export default class TypoClient {
         await Thread.terminate(this.databaseWorker);
     }
 
-    async getUser(){
+    getUser = async () => {
         console.log(this);
         const member = await this.member;
         const flags = await this.flags;
