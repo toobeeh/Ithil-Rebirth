@@ -86,7 +86,6 @@ export default class TypoClient {
     }
 
     async getUser() {
-        console.log(this);
         const member = await this.member;
         const flags = await this.flags;
         const slots = await this.spriteSlots;
