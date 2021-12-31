@@ -150,6 +150,14 @@ export class TypoSocketioClient {
         this.subscribeEventAsync<loginEventdata, loginResponseEventdata>(eventNames.login, handler, true, true);
     }
 
+    /**
+     * Subscribe to the get user event - client is requesting user data
+     * @param handler Handler that fetches and returns user data
+     */
+    subscribeGetUserEvent(handler: () => Promise<getUserResponseEventdata>){
+        this.subscribeEventAsync<void, getUserResponseEventdata>(eventNames.getUser, handler, true, false);
+    }
+
 }
 
 //interfaces and event names for socketio communication
@@ -161,7 +169,8 @@ export const eventNames = Object.freeze({
     newDrop: "new drop",
     clearDrop: "clear drop",
     rankDrop: "rank drop",
-    login: "login"
+    login: "login",
+    getUser: "get user"
 });
 
 /** 
@@ -247,4 +256,24 @@ export interface loginResponseEventdata{
      * The authenticated member
      */
     user: types.member;
+}
+
+/**
+ * Socketio eventdata for the get member response
+ */
+export interface getUserResponseEventdata {
+    /**
+     * The conected member
+     */
+    user: types.member;
+
+    /**
+     * The member's sprite slot count
+     */
+    slots: number;
+
+    /**
+     * The member's permission flags
+     */
+    flags: types.memberFlags;
 }

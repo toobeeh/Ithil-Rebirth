@@ -46,13 +46,12 @@ const typoClient_1 = __importDefault(require("./typoClient"));
 const portscanner_1 = __importDefault(require("portscanner"));
 const config = require("../ecosystem.config").config;
 // find a free worker port and proceed startup as soon as found / errored
-portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRange[1], "127.0.0.1", async (error, port) => {
+portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRange[1], "127.0.0.1", async (error, workerPort) => {
     // check if port was found
     if (error) {
         console.log(error);
         process.exit(1);
     }
-    const workerPort = port;
     /**
      * The worker socketio server
      */
@@ -60,14 +59,14 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
     /**
      * The IPC connection to the main server
      */
-    const ipcClient = new ipc_1.IthilIPCClient("worker@" + port);
-    await ipcClient.connect(config.mainIpcID, port);
+    const ipcClient = new ipc_1.IthilIPCClient("worker@" + workerPort);
+    await ipcClient.connect(config.mainIpcID, workerPort);
     /** The worker's cache of last received data from the main ipc socket */
     const workerCache = {
         activeLobbies: [],
         publicData: { drops: [], scenes: [], sprites: [], onlineScenes: [], onlineSprites: [] }
     };
-    // listen to ipc events
+    // listen to ipc lobbies update event
     ipcClient.onActiveLobbiesChanged = (data) => {
         workerCache.activeLobbies = data.activeLobbies;
         data.activeLobbies.forEach(guild => {
@@ -79,6 +78,7 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
             workerSocketServer.to("guild" + guild.guildID).volatile.emit(ithilSocketio.eventNames.activeLobbies, eventdata);
         });
     };
+    // listen to ipc public data update event
     ipcClient.onPublicDataChanged = (data) => {
         workerCache.publicData = data.publicData;
         // build eventdata
@@ -89,7 +89,9 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
         // volatile emit to all online sockets
         workerSocketServer.volatile.emit(ithilSocketio.eventNames.onlineSprites, eventdata);
     };
-    /** array of currently connected sockets */
+    /**
+     * Array of currently connected sockets
+     */
     let connectedSockets = [];
     // listen for new socket connections
     workerSocketServer.on("connection", (socket) => {
@@ -107,23 +109,23 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
         clientSocket.emitPublicData({ publicData: workerCache.publicData });
         // listen for login event
         clientSocket.subscribeLoginEvent(async (loginData) => {
+            // create database worker and check access token - prepare empty event response
+            const asyncDb = await (0, threads_1.spawn)(new threads_1.Worker("./database/palantirDatabaseWorker"));
+            await asyncDb.init(config.palantirDbPath);
+            const loginResult = await asyncDb.getLoginFromAccessToken(loginData.accessToken);
             const response = {
                 authenticated: false,
                 activeLobbies: [],
                 user: {}
             };
-            // create database worker and check access token
-            const asyncDb = await (0, threads_1.spawn)(new threads_1.Worker("./database/palantirDatabaseWorker"));
-            await asyncDb.init(config.palantirDbPath);
-            const loginResult = await asyncDb.getLoginFromAccessToken(loginData.accessToken);
             // if login succeeded, create a typo client and enable further events
             if (loginResult.success) {
                 const memberResult = await asyncDb.getUserByLogin(loginResult.result.login);
                 const client = new typoClient_1.default(clientSocket, asyncDb, memberResult.result, workerCache);
                 // fill login response data
                 response.authenticated = true;
-                response.user = client.member;
-                response.activeLobbies = workerCache.activeLobbies.filter(guild => client.member.memberDiscordDetails.Guilds.some(connectedGuild => connectedGuild.GuildID == guild.guildID));
+                response.user = memberResult.result;
+                response.activeLobbies = workerCache.activeLobbies.filter(guild => memberResult.result.memberDiscordDetails.Guilds.some(connectedGuild => connectedGuild.GuildID == guild.guildID));
             }
             return response;
         });

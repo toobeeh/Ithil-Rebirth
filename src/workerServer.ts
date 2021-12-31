@@ -31,28 +31,24 @@ const config = require("../ecosystem.config").config;
 portscanner.findAPortNotInUse(
     config.workerRange[0],
     config.workerRange[1],
-    "127.0.0.1", async (error, port) => {
+    "127.0.0.1", async (error, workerPort) => {
 
         // check if port was found
         if (error) {
             console.log(error);
             process.exit(1);
         }
-        const workerPort = port;
 
         /**
          * The worker socketio server
          */
-        const workerSocketServer = new ithilSocketio.IthilSocketioServer(
-            workerPort,
-            config.certificatePath
-        ).server;
+        const workerSocketServer = new ithilSocketio.IthilSocketioServer(workerPort, config.certificatePath).server;
 
         /**
          * The IPC connection to the main server
          */
-        const ipcClient = new IthilIPCClient("worker@" + port);
-        await ipcClient.connect(config.mainIpcID, port);
+        const ipcClient = new IthilIPCClient("worker@" + workerPort);
+        await ipcClient.connect(config.mainIpcID, workerPort);
 
         /** The worker's cache of last received data from the main ipc socket */
         const workerCache: types.workerCache = {
@@ -60,7 +56,7 @@ portscanner.findAPortNotInUse(
             publicData: { drops: [], scenes: [], sprites: [], onlineScenes: [], onlineSprites: [] }
         }
 
-        // listen to ipc events
+        // listen to ipc lobbies update event
         ipcClient.onActiveLobbiesChanged = (data) => {
             workerCache.activeLobbies = data.activeLobbies;
             data.activeLobbies.forEach(guild => {
@@ -78,6 +74,7 @@ portscanner.findAPortNotInUse(
             });
         }
 
+        // listen to ipc public data update event
         ipcClient.onPublicDataChanged = (data) => {
             workerCache.publicData = data.publicData;
 
@@ -94,11 +91,14 @@ portscanner.findAPortNotInUse(
             );
         }
 
-        /** array of currently connected sockets */
+        /** 
+         * Array of currently connected sockets 
+         */
         let connectedSockets: Array<ithilSocketio.TypoSocketioClient> = [];
 
         // listen for new socket connections
         workerSocketServer.on("connection", (socket) => {
+
             // cast socket to enable easier and typesafe event subscribing
             const clientSocket = new ithilSocketio.TypoSocketioClient(socket);
 
@@ -117,16 +117,16 @@ portscanner.findAPortNotInUse(
 
             // listen for login event
             clientSocket.subscribeLoginEvent(async (loginData) => {
+
+                // create database worker and check access token - prepare empty event response
+                const asyncDb = await spawn<palantirDatabaseWorker>(new Worker("./database/palantirDatabaseWorker"));
+                await asyncDb.init(config.palantirDbPath);
+                const loginResult = await asyncDb.getLoginFromAccessToken(loginData.accessToken);
                 const response: ithilSocketio.loginResponseEventdata = {
                     authenticated: false,
                     activeLobbies: [],
                     user: {} as types.member
                 }
-
-                // create database worker and check access token
-                const asyncDb = await spawn<palantirDatabaseWorker>(new Worker("./database/palantirDatabaseWorker"));
-                await asyncDb.init(config.palantirDbPath);
-                const loginResult = await asyncDb.getLoginFromAccessToken(loginData.accessToken);
 
                 // if login succeeded, create a typo client and enable further events
                 if (loginResult.success) {
@@ -135,12 +135,12 @@ portscanner.findAPortNotInUse(
 
                     // fill login response data
                     response.authenticated = true;
-                    response.user = client.member;
+                    response.user = memberResult.result;
                     response.activeLobbies = workerCache.activeLobbies.filter(
-                        guild => client.member.memberDiscordDetails.Guilds.some(connectedGuild => connectedGuild.GuildID == guild.guildID) 
+                        guild => memberResult.result.memberDiscordDetails.Guilds.some(connectedGuild => connectedGuild.GuildID == guild.guildID)
                     );
                 }
-                
+
                 return response;
             });
         });

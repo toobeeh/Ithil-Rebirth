@@ -132,6 +132,13 @@ class TypoSocketioClient {
     subscribeLoginEvent(handler) {
         this.subscribeEventAsync(exports.eventNames.login, handler, true, true);
     }
+    /**
+     * Subscribe to the get user event - client is requesting user data
+     * @param handler Handler that fetches and returns user data
+     */
+    subscribeGetUserEvent(handler) {
+        this.subscribeEventAsync(exports.eventNames.getUser, handler, true, false);
+    }
 }
 exports.TypoSocketioClient = TypoSocketioClient;
 //interfaces and event names for socketio communication
@@ -142,6 +149,7 @@ exports.eventNames = Object.freeze({
     newDrop: "new drop",
     clearDrop: "clear drop",
     rankDrop: "rank drop",
-    login: "login"
+    login: "login",
+    getUser: "get user"
 });
 //# sourceMappingURL=ithilSocketio.js.map

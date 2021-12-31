@@ -488,3 +488,49 @@ export interface workerCache {
     */
     activeLobbies: Array<activeGuildLobbies>;
 }
+
+/**
+* A member's permission flags
+*/
+export interface memberFlags{
+
+    /**
+    * Flagged if the user is afk bubble farming
+    */
+    bubbleFarming: boolean;
+
+    /**
+    * Flagged if the user is a patreon subscriber or patronized
+    */
+    patron: boolean;
+
+    /**
+    * Flagged if the user is permanently banned from using palantir
+    */
+    permaBan: boolean;
+
+    /**
+    * Flagged if the user is a banned from catching drops
+    */
+    dropBan: boolean;
+
+    /**
+    * Flagged if the user has admin permissions
+    */
+    admin: boolean;
+
+    /**
+    * Flagged if the user has elevated bot permissions
+    */
+    moderator: boolean;
+    
+    /**
+    * Flagged if the user has unlimited cloud access
+    */
+    unlimitedCloud: boolean;
+    
+    /**
+    * Flagged if the user is a patreon subscriber with patronizer tier
+    */
+    patronizer: boolean;
+}
