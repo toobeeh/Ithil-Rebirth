@@ -73,6 +73,7 @@ export default class TypoClient {
         this.username = memberInit.memberDiscordDetails.UserName;
         this.login = memberInit.memberDiscordDetails.UserLogin;
         
+        this.getUser();
         // init events 
         this.typosocket.subscribeDisconnect(this.onDisconnect);
         this.typosocket.subscribeGetUserEvent(this.getUser);
