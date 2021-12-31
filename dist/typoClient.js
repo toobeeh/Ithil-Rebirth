@@ -55,10 +55,13 @@ class TypoClient {
         await threads_1.Thread.terminate(this.databaseWorker);
     }
     async getUser() {
+        const member = await this.member;
+        const flags = await this.flags;
+        const slots = await this.spriteSlots;
         const data = {
-            user: await this.member,
-            flags: await this.flags,
-            slots: await this.spriteSlots
+            user: member,
+            flags: flags,
+            slots: slots
         };
         return data;
     }

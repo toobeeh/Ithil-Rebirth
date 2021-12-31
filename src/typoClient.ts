@@ -85,10 +85,13 @@ export default class TypoClient {
     }
 
     async getUser(){
+        const member = await this.member;
+        const flags = await this.flags;
+        const slots = await this.spriteSlots;
         const data: ithilSocket.getUserResponseEventdata = {
-            user: await this.member,
-            flags: await this.flags,
-            slots: await this.spriteSlots
+            user: member,
+            flags: flags,
+            slots: slots
         };
         return data;
     }
