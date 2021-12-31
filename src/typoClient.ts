@@ -75,8 +75,8 @@ export default class TypoClient {
         
         this.getUser();
         // init events 
-        this.typosocket.subscribeDisconnect(this.onDisconnect);
-        this.typosocket.subscribeGetUserEvent(this.getUser);
+        this.typosocket.subscribeDisconnect(this.onDisconnect.bind(this));
+        this.typosocket.subscribeGetUserEvent(this.getUser.bind(this));
 
         console.log("logged in");
     }
@@ -85,7 +85,7 @@ export default class TypoClient {
         await Thread.terminate(this.databaseWorker);
     }
 
-    getUser = async () => {
+    async getUser() {
         console.log(this);
         const member = await this.member;
         const flags = await this.flags;
