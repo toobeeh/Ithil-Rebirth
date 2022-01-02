@@ -91,6 +91,7 @@ export default class TypoClient {
         // init events 
         this.typosocket.subscribeDisconnect(this.onDisconnect.bind(this));
         this.typosocket.subscribeGetUserEvent(this.getUser.bind(this));
+        this.typosocket.subscribeSetSlotEvent(this.setSpriteSlot.bind(this));
 
         console.log("logged in");
     }
