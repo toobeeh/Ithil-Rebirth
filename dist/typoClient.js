@@ -14,7 +14,6 @@ class TypoClient {
         this.workerCache = workerCache;
         this.username = memberInit.memberDiscordDetails.UserName;
         this.login = memberInit.memberDiscordDetails.UserLogin;
-        this.getUser();
         // init events 
         this.typosocket.subscribeDisconnect(this.onDisconnect.bind(this));
         this.typosocket.subscribeGetUserEvent(this.getUser.bind(this));
@@ -30,7 +29,15 @@ class TypoClient {
     /** The member's current sprite slots */
     get spriteSlots() {
         return new Promise(async (resolve) => {
-            resolve((await this.member).bubbles);
+            const member = await this.member;
+            const flags = await this.flags;
+            let slots = 0;
+            slots += Math.floor(member.drops / 1000);
+            if (flags.patron)
+                slots++;
+            if (flags.admin)
+                slots += 100;
+            resolve(slots);
         });
     }
     /** The member's current sprite inventory */
@@ -39,7 +46,7 @@ class TypoClient {
             const inv = await this.member;
             const sprites = inv.sprites.split(",").map(item => {
                 return {
-                    slot: item.split(".").length,
+                    slot: item.split(".").length - 1,
                     id: Number(item.replace(".", ""))
                 };
             });
