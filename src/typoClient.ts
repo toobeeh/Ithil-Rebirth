@@ -16,7 +16,7 @@ export default class TypoClient {
     /** Socketio client socket instance */
     typosocket: ithilSocket.TypoSocketioClient;
 
-    
+
     /** The authentificated member */
     get member() {
         return new Promise<types.member>(async resolve => {
@@ -28,6 +28,20 @@ export default class TypoClient {
     get spriteSlots() {
         return new Promise<number>(async resolve => {
             resolve((await this.member).bubbles)
+        });
+    }
+
+    /** The member's current sprite inventory */
+    get spriteInventory() {
+        return new Promise<types.spriteProperty[]>(async resolve => {
+            const inv = await this.member;
+            const sprites = inv.sprites.split(",").map(item => {
+                return {
+                    slot: item.split(".").length,
+                    id: Number(item.replace(".", ""))
+                } as types.spriteProperty;
+            })
+            resolve(sprites);
         });
     }
 
@@ -72,7 +86,7 @@ export default class TypoClient {
         this.workerCache = workerCache;
         this.username = memberInit.memberDiscordDetails.UserName;
         this.login = memberInit.memberDiscordDetails.UserLogin;
-        
+
         this.getUser();
         // init events 
         this.typosocket.subscribeDisconnect(this.onDisconnect.bind(this));
@@ -81,20 +95,43 @@ export default class TypoClient {
         console.log("logged in");
     }
 
-    async onDisconnect(reason: string){
+    async onDisconnect(reason: string) {
         await Thread.terminate(this.databaseWorker);
     }
 
     async getUser() {
-        const member = await this.member;
-        const flags = await this.flags;
-        const slots = await this.spriteSlots;
         const data: ithilSocket.getUserResponseEventdata = {
-            user: member,
-            flags: flags,
-            slots: slots
+            user: await this.member,
+            flags: await this.flags,
+            slots: await this.spriteSlots
         };
         return data;
+    }
+
+    async setSpriteSlot(eventdata: ithilSocket.setSlotEventdata) {
+        const slots = await this.spriteSlots;
+        const currentInv = await this.spriteInventory;
+        
+        if(slots >= eventdata.slot && eventdata.slot > 0 && currentInv.some(inv => inv.id == eventdata.sprite)){
+
+            // disable old slot sprite and activate new
+            currentInv.forEach(prop => {
+                if(prop.slot == eventdata.slot) prop.slot = 0;
+                else if(prop.id == eventdata.sprite) prop.slot = eventdata.slot;
+            });
+
+            const newInv = currentInv.map(prop => ".".repeat(prop.slot) + prop.id).join(",");
+            await this.databaseWorker.setUserSprites(Number(this.login), newInv);
+        }
+
+        // return updated data
+        const data: ithilSocket.getUserResponseEventdata = {
+            user: await this.member,
+            flags: await this.flags,
+            slots: await this.spriteSlots
+        };
+        return data;
+
     }
 
 }

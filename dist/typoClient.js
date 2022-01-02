@@ -32,6 +32,19 @@ class TypoClient {
             resolve((await this.member).bubbles);
         });
     }
+    /** The member's current sprite inventory */
+    get spriteInventory() {
+        return new Promise(async (resolve) => {
+            const inv = await this.member;
+            const sprites = inv.sprites.split(",").map(item => {
+                return {
+                    slot: item.split(".").length,
+                    id: Number(item.replace(".", ""))
+                };
+            });
+            resolve(sprites);
+        });
+    }
     /** The authentificated member's flags */
     get flags() {
         return new Promise(async (resolve) => {
@@ -56,13 +69,32 @@ class TypoClient {
         await threads_1.Thread.terminate(this.databaseWorker);
     }
     async getUser() {
-        const member = await this.member;
-        const flags = await this.flags;
-        const slots = await this.spriteSlots;
         const data = {
-            user: member,
-            flags: flags,
-            slots: slots
+            user: await this.member,
+            flags: await this.flags,
+            slots: await this.spriteSlots
+        };
+        return data;
+    }
+    async setSpriteSlot(eventdata) {
+        const slots = await this.spriteSlots;
+        const currentInv = await this.spriteInventory;
+        if (slots >= eventdata.slot && eventdata.slot > 0 && currentInv.some(inv => inv.id == eventdata.sprite)) {
+            // disable old slot sprite and activate new
+            currentInv.forEach(prop => {
+                if (prop.slot == eventdata.slot)
+                    prop.slot = 0;
+                else if (prop.id == eventdata.sprite)
+                    prop.slot = eventdata.slot;
+            });
+            const newInv = currentInv.map(prop => ".".repeat(prop.slot) + prop.id).join(",");
+            await this.databaseWorker.setUserSprites(Number(this.login), newInv);
+        }
+        // return updated data
+        const data = {
+            user: await this.member,
+            flags: await this.flags,
+            slots: await this.spriteSlots
         };
         return data;
     }

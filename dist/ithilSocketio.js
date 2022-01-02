@@ -139,6 +139,13 @@ class TypoSocketioClient {
     subscribeGetUserEvent(handler) {
         this.subscribeEventAsync(exports.eventNames.getUser, handler, true, false);
     }
+    /**
+     * Subscribe to the set slot event - client is requesting to set a sprite on one of their slots
+     * @param handler Handler that processes the request and responds with the new member data
+     */
+    subscribeSetSlotEvent(handler) {
+        this.subscribeEventAsync(exports.eventNames.setSlot, handler, true, false);
+    }
 }
 exports.TypoSocketioClient = TypoSocketioClient;
 //interfaces and event names for socketio communication
@@ -150,6 +157,7 @@ exports.eventNames = Object.freeze({
     clearDrop: "clear drop",
     rankDrop: "rank drop",
     login: "login",
-    getUser: "get user"
+    getUser: "get user",
+    setSlot: "set slot"
 });
 //# sourceMappingURL=ithilSocketio.js.map

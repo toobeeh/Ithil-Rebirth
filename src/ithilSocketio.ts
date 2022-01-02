@@ -158,6 +158,14 @@ export class TypoSocketioClient {
         this.subscribeEventAsync<void, getUserResponseEventdata>(eventNames.getUser, handler, true, false);
     }
 
+    /**
+     * Subscribe to the set slot event - client is requesting to set a sprite on one of their slots
+     * @param handler Handler that processes the request and responds with the new member data
+     */
+    subscribeSetSlotEvent(handler: (incoming: setSlotEventdata) => Promise<getUserResponseEventdata>){
+        this.subscribeEventAsync<setSlotEventdata, getUserResponseEventdata>(eventNames.setSlot, handler, true, false);
+    }
+
 }
 
 //interfaces and event names for socketio communication
@@ -170,7 +178,8 @@ export const eventNames = Object.freeze({
     clearDrop: "clear drop",
     rankDrop: "rank drop",
     login: "login",
-    getUser: "get user"
+    getUser: "get user",
+    setSlot: "set slot"
 });
 
 /** 
@@ -263,7 +272,7 @@ export interface loginResponseEventdata{
  */
 export interface getUserResponseEventdata {
     /**
-     * The conected member
+     * The connected member
      */
     user: types.member;
 
@@ -276,4 +285,20 @@ export interface getUserResponseEventdata {
      * The member's permission flags
      */
     flags: types.memberFlags;
+}
+
+/**
+ * Socketio eventdata for the set sprite slot event:
+ * User requests to set a sprite on a specific sprite slot
+ */
+export interface setSlotEventdata {
+    /**
+     * The target slot (>0)
+     */
+    slot: number;
+
+    /**
+     * The target sprite id
+     */
+    sprite:number;
 }

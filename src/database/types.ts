@@ -394,6 +394,21 @@ export interface activeGuildLobbies{
 }
 
 /**
+ * A user sprite inventory item
+ */
+export interface spriteProperty {
+    /**
+    * The sprite ID
+    */
+    id: number;
+
+    /**
+    * The sprite's slot, 0 if inactive
+    */
+    slot:number;
+}
+
+/**
  * Contains all Palantir public data as sprites, scenes, drops etc
  */
  export interface publicData{
