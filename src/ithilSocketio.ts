@@ -166,6 +166,14 @@ export class TypoSocketioClient {
         this.subscribeEventAsync<setSlotEventdata, getUserResponseEventdata>(eventNames.setSlot, handler, true, false);
     }
 
+    /**
+     * Subscribe to the set combo event - client is requesting to activate a sprite combo
+     * @param handler Handler that processes the combo data and responds with the new member data
+     */
+     subscribeSetComboEvent(handler: (incoming: setComboEventdata) => Promise<getUserResponseEventdata>){
+        this.subscribeEventAsync<setComboEventdata, getUserResponseEventdata>(eventNames.setSlot, handler, true, false);
+    }
+
 }
 
 //interfaces and event names for socketio communication
@@ -179,7 +187,8 @@ export const eventNames = Object.freeze({
     rankDrop: "rank drop",
     login: "login",
     getUser: "get user",
-    setSlot: "set slot"
+    setSlot: "set slot",
+    setCombo: "set combo"
 });
 
 /** 
@@ -301,4 +310,15 @@ export interface setSlotEventdata {
      * The target sprite id
      */
     sprite:number;
+}
+
+/**
+ * Socketio eventdata for the set combo event:
+ * User requests to activate a sprite combo
+ */
+ export interface setComboEventdata {
+    /**
+     * The sprite combo string - as inventory sprite IDs spearated with , and . to indicate slot ID
+     */
+    combostring: string;
 }

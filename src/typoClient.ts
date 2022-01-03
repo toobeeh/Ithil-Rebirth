@@ -30,10 +30,10 @@ export default class TypoClient {
             const member = await this.member;
             const flags = await this.flags;
 
-            let slots = 0;
+            let slots = 1;
             slots += Math.floor(member.drops / 1000);
-            if(flags.patron) slots++;
-            if(flags.admin) slots += 100;
+            if (flags.patron) slots++;
+            if (flags.admin) slots += 100;
 
             resolve(slots);
         });
@@ -119,13 +119,17 @@ export default class TypoClient {
     async setSpriteSlot(eventdata: ithilSocket.setSlotEventdata) {
         const slots = await this.spriteSlots;
         const currentInv = await this.spriteInventory;
-        
-        if(slots >= eventdata.slot && eventdata.slot > 0 && currentInv.some(inv => inv.id == eventdata.sprite)){
+        const flags = await this.flags;
 
-            // disable old slot sprite and activate new
+        // check if slot is valid and sprite is owned
+        if (flags.admin || slots >= eventdata.slot && eventdata.slot > 0 && currentInv.some(inv => inv.id == eventdata.sprite)) {
+
+            // disable old slot sprite and activate new - if new is special, disable old special
+            const targetIsSpecial = this.isSpecialSprite(eventdata.sprite);
             currentInv.forEach(prop => {
-                if(prop.slot == eventdata.slot) prop.slot = 0;
-                else if(prop.id == eventdata.sprite) prop.slot = eventdata.slot;
+                if (prop.slot == eventdata.slot) prop.slot = 0;
+                else if (targetIsSpecial && prop.slot > 0 && this.isSpecialSprite(prop.id)) prop.slot = 0
+                else if (prop.id == eventdata.sprite) prop.slot = eventdata.slot;
             });
 
             const newInv = currentInv.map(prop => ".".repeat(prop.slot) + prop.id).join(",");
@@ -135,11 +139,53 @@ export default class TypoClient {
         // return updated data
         const data: ithilSocket.getUserResponseEventdata = {
             user: await this.member,
-            flags: await this.flags,
-            slots: await this.spriteSlots
+            flags: flags,
+            slots: slots
         };
         return data;
+    }
 
+    async setSpriteCombo(eventdata: ithilSocket.setComboEventdata) {
+        const combo = eventdata.combostring.split(",").map(slot => {
+            return {
+                id: Number(slot.replace(".", "")),
+                slot: slot.split(".").length - 1
+            } as types.spriteProperty;
+        });
+        const currentInv = await this.spriteInventory;
+        const slots = await this.spriteSlots;
+        const flags = await this.flags;
+
+        // validate combo - if there are no sprites in the combo which are not in the inventory, and max slot is valid
+        const spritesValid = !combo.some(comboSprite => !currentInv.some(invSprite => invSprite.id == comboSprite.id));
+        const maxSlotValid = Math.max.apply(Math, combo.map(slot => slot.slot)) <= slots;
+
+        // change combo only if full combo is valid, else abort *all*
+        if (flags.admin || maxSlotValid && spritesValid) {
+            const newInv: Array<types.spriteProperty> = [];
+            currentInv.forEach(sprite => {
+                const spriteInCombo = combo.find(comboSprite => comboSprite.id == sprite.id);
+                if (spriteInCombo) newInv.push(spriteInCombo);
+                else newInv.push({ id: sprite.id, slot: 0 });
+            });
+
+            const newInvString = newInv.map(prop => ".".repeat(prop.slot) + prop.id).join(",");
+            await this.databaseWorker.setUserSprites(Number(this.login), newInvString);
+        }
+
+        // return updated data
+        const data: ithilSocket.getUserResponseEventdata = {
+            user: await this.member,
+            flags: flags,
+            slots: slots
+        };
+        return data;
+    }
+
+    isSpecialSprite(spriteID: number) {
+        const result = this.workerCache.publicData.sprites.find(sprite => sprite.ID == spriteID);
+        if (result && result.Special) return true;
+        else return false;
     }
 
 }

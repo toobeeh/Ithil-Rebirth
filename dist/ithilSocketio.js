@@ -146,6 +146,13 @@ class TypoSocketioClient {
     subscribeSetSlotEvent(handler) {
         this.subscribeEventAsync(exports.eventNames.setSlot, handler, true, false);
     }
+    /**
+     * Subscribe to the set combo event - client is requesting to activate a sprite combo
+     * @param handler Handler that processes the combo data and responds with the new member data
+     */
+    subscribeSetComboEvent(handler) {
+        this.subscribeEventAsync(exports.eventNames.setSlot, handler, true, false);
+    }
 }
 exports.TypoSocketioClient = TypoSocketioClient;
 //interfaces and event names for socketio communication
@@ -158,6 +165,7 @@ exports.eventNames = Object.freeze({
     rankDrop: "rank drop",
     login: "login",
     getUser: "get user",
-    setSlot: "set slot"
+    setSlot: "set slot",
+    setCombo: "set combo"
 });
 //# sourceMappingURL=ithilSocketio.js.map
