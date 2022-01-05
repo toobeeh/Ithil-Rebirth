@@ -169,6 +169,11 @@ export interface accessToken{
     Private: boolean,
 
     /**
+    * The lobby's current round
+    */
+    Round: string,
+
+    /**
     * The players in the lobby
     */
     Players: Array<{
