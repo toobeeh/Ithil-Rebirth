@@ -131,7 +131,7 @@ portscanner.findAPortNotInUse(
                 const response: ithilSocketio.loginResponseEventdata = {
                     authorized: false,
                     activeLobbies: [],
-                    user: {} as types.member
+                    member: {} as types.member
                 }
 
                 // if login succeeded, create a typo client and enable further events
@@ -141,7 +141,7 @@ portscanner.findAPortNotInUse(
 
                     // fill login response data
                     response.authorized = true;
-                    response.user = memberResult.result;
+                    response.member = memberResult.result;
                     response.activeLobbies = workerCache.activeLobbies.filter(
                         guild => memberResult.result.memberDiscordDetails.Guilds.some(connectedGuild => connectedGuild.GuildID == guild.guildID)
                     );

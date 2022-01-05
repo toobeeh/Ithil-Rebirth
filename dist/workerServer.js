@@ -122,7 +122,7 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
             const response = {
                 authorized: false,
                 activeLobbies: [],
-                user: {}
+                member: {}
             };
             // if login succeeded, create a typo client and enable further events
             if (loginResult.success) {
@@ -130,7 +130,7 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
                 const client = new typoClient_1.default(clientSocket, asyncDb, memberResult.result, workerCache);
                 // fill login response data
                 response.authorized = true;
-                response.user = memberResult.result;
+                response.member = memberResult.result;
                 response.activeLobbies = workerCache.activeLobbies.filter(guild => memberResult.result.memberDiscordDetails.Guilds.some(connectedGuild => connectedGuild.GuildID == guild.guildID));
             }
             return response;

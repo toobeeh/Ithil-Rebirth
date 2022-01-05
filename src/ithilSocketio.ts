@@ -309,7 +309,7 @@ export interface loginResponseEventdata {
     /**
      * The authenticated member
      */
-    user: types.member;
+    member: types.member;
 }
 
 /**
