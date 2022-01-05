@@ -202,7 +202,7 @@ export class TypoSocketioClient {
      * Subscribe to the search lobby event - client searches for a lobby
      * @param handler Handler processes search data
      */
-     subscribeSearchLobbyEvent(handler: (incoming: searchLobbyEventdata) => Promise<void>) {
+    subscribeSearchLobbyEvent(handler: (incoming: searchLobbyEventdata) => Promise<void>) {
         this.subscribeEventAsync<searchLobbyEventdata, void>(eventNames.searchLobby, handler, true, false);
     }
 
@@ -442,16 +442,18 @@ export interface setLobbyResponseEventdata {
  * User searchs for a lobby and requests their status update
  */
 export interface searchLobbyEventdata {
+    searchData: {
 
-    /**
-     * The user's current ingame nickname
-     */
-    userName: string;
+        /**
+         * The user's current ingame nickname
+         */
+        userName: string;
 
-    /**
-     * Indicator if the search is paused due to a full lobby
-     */
-    waiting: boolean;
+        /**
+         * Indicator if the search is paused due to a full lobby
+         */
+        waiting: boolean;
+    }
 }
 
 /**

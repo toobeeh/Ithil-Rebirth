@@ -350,9 +350,9 @@ export default class TypoClient {
      * @param eventdata Eventdata conatining search nickname of the client
      */
     async searchLobby(eventdata: ithilSocket.searchLobbyEventdata) {
-        if(eventdata.waiting) this.reportData.currentStatus = "waiting";
+        if(eventdata.searchData.waiting) this.reportData.currentStatus = "waiting";
         else this.reportData.currentStatus = "searching";
-        this.reportData.nickname = eventdata.userName;
+        this.reportData.nickname = eventdata.searchData.userName;
     }
 
     /**
@@ -444,7 +444,7 @@ export default class TypoClient {
         else if (statusIsAnyOf("searching", "waiting")) {
 
             // write searching or waiting status
-            if(this.reportData.nickname.length > 0) currentMember.UserName = this.reportData.nickname;
+            if(this.reportData.nickname) currentMember.UserName = this.reportData.nickname;
             const status: types.playerStatus = {
                 PlayerMember: currentMember,
                 Status: this.reportData.currentStatus,
@@ -452,7 +452,6 @@ export default class TypoClient {
                 LobbyPlayerID: ""
             }
             await this.databaseWorker.writePlayerStatus(status, this.typosocket.socket.id);
-            console.log("wrote status: " + status);
         }
         else if (statusIsAnyOf("idle")) {
             // do nothing. user is idling. yay.
