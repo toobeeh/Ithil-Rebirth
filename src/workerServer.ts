@@ -69,8 +69,8 @@ portscanner.findAPortNotInUse(
                     }
                 };
 
-                // volatile emit to all sockets that are a member of this guild
-                workerSocketServer.in("playing").in("guild" + guild.guildID).volatile.emit(
+                // volatile emit to all sockets that are a member of this guild and not playing
+                workerSocketServer.in("guild" + guild.guildID).except("playing").volatile.emit(
                     ithilSocketio.eventNames.activeLobbies,
                     eventdata
                 );

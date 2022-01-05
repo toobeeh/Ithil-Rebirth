@@ -193,6 +193,7 @@ class TypoClient {
                     const createdLobbyResult = await this.databaseWorker.getLobby(key, "key");
                     if (createdLobbyResult.success && createdLobbyResult.result.found && createdLobbyResult.result.lobby) {
                         lobby = createdLobbyResult.result.lobby;
+                        this.reportData.joinedLobby = lobby;
                         success = true;
                     }
                 }
@@ -200,6 +201,7 @@ class TypoClient {
         }
         else {
             lobby = lobbyResult.result.lobby;
+            this.reportData.joinedLobby = lobby;
             success = true;
         }
         // return found or created lobby
