@@ -31,7 +31,7 @@ class TypoClient {
             nickname: this.username,
             joinedLobby: undefined,
             reportLobby: undefined,
-            updateInterval: setInterval(this.updateStatus, 2500)
+            updateInterval: setInterval(this.updateStatus.bind(this), 2500)
         };
         console.log("logged in");
     }
