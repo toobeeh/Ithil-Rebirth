@@ -326,7 +326,9 @@ export default class TypoClient {
 
         // return updated lobby
         const response: ithilSocket.setLobbyResponseEventdata = {
-            lobbyData: updatedLobby,
+            lobbyData: {
+                lobby: updatedLobby
+            },
             owner: owner,
             ownerID: ownerID
         }

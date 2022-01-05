@@ -257,7 +257,9 @@ class TypoClient {
         }
         // return updated lobby
         const response = {
-            lobbyData: updatedLobby,
+            lobbyData: {
+                lobby: updatedLobby
+            },
             owner: owner,
             ownerID: ownerID
         };

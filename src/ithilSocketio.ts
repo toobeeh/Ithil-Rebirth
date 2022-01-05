@@ -420,9 +420,11 @@ export interface setLobbyEventdata {
 export interface setLobbyResponseEventdata {
 
     /**
-     * The updated lobby data of the target lobby
+     * The updated lobby data of the target lobby - capsulated due to compatibility!
      */
-    lobbyData: types.palantirLobby;
+    lobbyData: {
+        lobby: types.palantirLobby;
+    }
 
     /**
      * Indicator if the client is the palantir lobby owner
