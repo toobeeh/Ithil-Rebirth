@@ -151,7 +151,35 @@ class TypoSocketioClient {
      * @param handler Handler that processes the combo data and responds with the new member data
      */
     subscribeSetComboEvent(handler) {
-        this.subscribeEventAsync(exports.eventNames.setSlot, handler, true, false);
+        this.subscribeEventAsync(exports.eventNames.setCombo, handler, true, false);
+    }
+    /**
+     * Subscribe to the join lobby event - client has joined a lobby and requests status update
+     * @param handler Handler that processes the lobby key and eventually adds a db entry, returns corresponding lobby data
+     */
+    subscribeJoinLobbyEvent(handler) {
+        this.subscribeEventAsync(exports.eventNames.joinLobby, handler, true, false);
+    }
+    /**
+     * Subscribe to the set lobby event - client observed lobby change and reports new data
+     * @param handler Handler that processes the lobby data and responds with verified new data
+     */
+    subscribeSetLobbyEvent(handler) {
+        this.subscribeEventAsync(exports.eventNames.setLobby, handler, true, false);
+    }
+    /**
+     * Subscribe to the leave lobby event - client leaves a lobby
+     * @param handler Handler returns currently active lobbies
+     */
+    subscribeLeaveLobbyEvent(handler) {
+        this.subscribeEventAsync(exports.eventNames.leaveLobby, handler, true, false);
+    }
+    /**
+     * Subscribe to the search lobby event - client searches for a lobby
+     * @param handler Handler processes search data
+     */
+    subscribeSearchLobbyEvent(handler) {
+        this.subscribeEventAsync(exports.eventNames.searchLobby, handler, true, false);
     }
 }
 exports.TypoSocketioClient = TypoSocketioClient;
@@ -166,6 +194,10 @@ exports.eventNames = Object.freeze({
     login: "login",
     getUser: "get user",
     setSlot: "set slot",
-    setCombo: "set combo"
+    setCombo: "set combo",
+    joinLobby: "join lobby",
+    setLobby: "set lobby",
+    searchLobby: "search lobby",
+    leaveLobby: "leave lobby"
 });
 //# sourceMappingURL=ithilSocketio.js.map

@@ -38,6 +38,12 @@ const palantirDatabaseWorker = {
             throw new Error("Database is not initialized.");
         return database.getLoginFromAccessToken(accessToken);
     },
+    /** Executes {@link PalantirDatabase.getLobby} in a worker*/
+    getLobby(key, indicator = "key") {
+        if (!database)
+            throw new Error("Database is not initialized.");
+        return database.getLobby(key, indicator);
+    },
     /** Executes {@link PalantirDatabase.getPublicData} in a worker*/
     getPublicData() {
         if (!database)

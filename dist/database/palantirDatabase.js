@@ -335,18 +335,19 @@ class PalantirDatabase {
       * Check if a player is the palantir owner of a lobby
       * @param lobbyID The ID of the target lobby
       * @param lobbyPlayerID The ID of the target player in the skribbl lobby
-      * @returns Indicator if the query succeeded
+      * @returns Indicator if the passed id is the owner as well as the actual owner id
       */
     isPalantirLobbyOwner(lobbyID, lobbyPlayerID) {
         let result = this.emptyResult();
         try {
             let lobbyplayers = this.db.prepare("select json_extract(Status, '$.LobbyPlayerID') as playerid from Status where json_extract(Status, '$.LobbyID') = ?").all(lobbyID);
-            result.result = !lobbyplayers.some(player => player.playerid < lobbyPlayerID);
+            result.result.owner = !lobbyplayers.some(player => player.playerid < lobbyPlayerID);
+            result.result.ownerID = lobbyplayers.sort((a, b) => a - b)[0];
         }
         catch (e) {
             console.warn("Error in query: ", e);
         }
-        return result.success;
+        return result;
     }
 }
 exports.default = PalantirDatabase;
