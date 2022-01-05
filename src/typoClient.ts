@@ -234,7 +234,14 @@ export default class TypoClient {
         return data;
     }
 
+    /**
+     * Handler for join lobby event
+     * @param eventdata Eventdata containing the joined lobby's key
+     * @returns Response data containing the joined lobby data
+     */
     async joinLobby(eventdata: ithilSocket.joinLobbyEventdata) {
+        console.log(this.username + " joined a lobby.");
+
         this.reportData.currentStatus = "playing";
         const key = eventdata.key;
         let success = false;
@@ -271,6 +278,11 @@ export default class TypoClient {
         return response;
     }
 
+    /**
+     * Handler for set lobby event
+     * @param eventdata Eventdata containing lobby details as well as key, restriction, description
+     * @returns Response data containing the new lobby data and owner information
+     */
     async setLobby(eventdata: ithilSocket.setLobbyEventdata) {
         let owner = false;
         let ownerID = 0;
@@ -333,20 +345,38 @@ export default class TypoClient {
         return response;
     }
 
+    /**
+     * Handler for search lobby event
+     * @param eventdata Eventdata conatining search nickname of the client
+     */
     async searchLobby(eventdata: ithilSocket.searchLobbyEventdata) {
         if(eventdata.waiting) this.reportData.currentStatus = "waiting";
         else this.reportData.currentStatus = "searching";
         this.reportData.nickname = eventdata.userName;
     }
 
+    /**
+     * Handler for leave lobby event
+     * @returns Response currently active lobbies, if player was in playing state
+     */
     async leaveLobby() {
+        const previousState = this.reportData.currentStatus;
         this.reportData.currentStatus = "idle";
         this.reportData.joinedLobby = undefined;
         this.reportData.reportLobby = undefined;
 
-        const guilds = (await this.member).member.Guilds;
+        let activeLobbies: types.activeGuildLobbies[] = [];
+        if(previousState == "playing"){
+
+            // send currently active lobbies if player was in a lobby (playing -> no broadcast of active lobbies)
+            console.log(this.username + " left a lobby.");
+        
+            const guilds = (await this.member).member.Guilds;
+            activeLobbies = this.workerCache.activeLobbies.filter(guildLobby => guilds.some(guild => guild.GuildID == guildLobby.guildID));
+        }
+
         const response: ithilSocket.leaveLobbyResponseEventdata = {
-            activeLobbies: this.workerCache.activeLobbies.filter(guildLobby => guilds.some(guild => guild.GuildID == guildLobby.guildID))
+            activeLobbies: activeLobbies
         }
         return response;
     }

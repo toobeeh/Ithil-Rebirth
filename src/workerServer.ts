@@ -125,8 +125,9 @@ portscanner.findAPortNotInUse(
             clientSocket.subscribeLoginEvent(async (loginData) => {
 
                 // create database worker and check access token - prepare empty event response
-                console.log("spawning..");
-                const asyncDb = await spawn<palantirDatabaseWorker>(new Worker("./database/palantirDatabaseWorker"));
+                const id = "PDB thread " + Date.now();
+                console.log("spawning thread: " + id);
+                const asyncDb = await spawn<palantirDatabaseWorker>(new Worker("./database/palantirDatabaseWorker", {name: id}));
                 await asyncDb.init(config.palantirDbPath);
                 const loginResult = await asyncDb.getLoginFromAccessToken(loginData.accessToken);
                 const response: ithilSocketio.loginResponseEventdata = {
