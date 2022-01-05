@@ -255,7 +255,7 @@ class TypoClient {
                         description = currentLobby.Description;
                     }
                 }
-                await this.databaseWorker.setLobby(this.reportData.joinedLobby.ID, key, restriction, description);
+                await this.databaseWorker.setLobby(this.reportData.joinedLobby.ID, key, description, restriction);
             }
             const updatedLobbyResult = (await this.databaseWorker.getLobby(this.reportData.joinedLobby.ID, "id")).result.lobby;
             if (updatedLobbyResult) {
