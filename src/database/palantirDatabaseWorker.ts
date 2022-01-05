@@ -39,6 +39,12 @@ const palantirDatabaseWorker = {
         return database.getLoginFromAccessToken(accessToken);
     },
 
+    /** Executes {@link PalantirDatabase.getLobby} in a worker*/
+    getLobby(key: string, indicator: string = "key") {
+        if(!database) throw new Error("Database is not initialized.");
+        return database.getLobby(key, indicator);
+    },
+
     /** Executes {@link PalantirDatabase.getPublicData} in a worker*/
     getPublicData() {
         if(!database) throw new Error("Database is not initialized.");
@@ -82,7 +88,7 @@ const palantirDatabaseWorker = {
     },
 
     /** Executes {@link PalantirDatabase.writeReport} in a worker*/
-    writeReport(lobbies: types.reportLobby[]) {
+    writeReport(lobbies: types.guildLobby[]) {
         if(!database) throw new Error("Database is not initialized.");
         return database.writeReport(lobbies);
     }
