@@ -174,6 +174,11 @@ export interface accessToken{
     Round: string,
 
     /**
+    * The lobby's host, skribbl or sketchful
+    */
+    Host: string,
+
+    /**
     * The players in the lobby
     */
     Players: Array<{

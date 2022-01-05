@@ -386,7 +386,8 @@ export default class TypoClient {
                     Language: this.reportData.reportLobby.Language,
                     Private: this.reportData.reportLobby.Private,
                     Link: this.reportData.reportLobby.Link,
-                    Round: this.reportData.reportLobby.Round
+                    Round: this.reportData.reportLobby.Round,
+                    Host: this.reportData.reportLobby.Host
                 };
 
                 // create guild-specific lobby and write to db
