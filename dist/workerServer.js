@@ -120,7 +120,7 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
             await asyncDb.init(config.palantirDbPath);
             const loginResult = await asyncDb.getLoginFromAccessToken(loginData.accessToken);
             const response = {
-                authenticated: false,
+                authorized: false,
                 activeLobbies: [],
                 user: {}
             };
@@ -129,7 +129,7 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
                 const memberResult = await asyncDb.getUserByLogin(loginResult.result.login);
                 const client = new typoClient_1.default(clientSocket, asyncDb, memberResult.result, workerCache);
                 // fill login response data
-                response.authenticated = true;
+                response.authorized = true;
                 response.user = memberResult.result;
                 response.activeLobbies = workerCache.activeLobbies.filter(guild => memberResult.result.memberDiscordDetails.Guilds.some(connectedGuild => connectedGuild.GuildID == guild.guildID));
             }

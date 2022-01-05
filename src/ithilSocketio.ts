@@ -299,7 +299,7 @@ export interface loginResponseEventdata {
     /**
      * Signalizes wether the login attempt was successful
      */
-    authenticated: boolean;
+    authorized: boolean;
 
     /**
      * Currently active lobbies of all guilds the authenticated member is conencted to
