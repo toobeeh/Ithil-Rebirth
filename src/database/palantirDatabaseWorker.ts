@@ -58,7 +58,7 @@ const palantirDatabaseWorker = {
     },
 
     /** Executes {@link PalantirDatabase.isPalantirLobbyOwner} in a worker*/
-    isPalantirLobbyOwner(lobbyID: string, lobbyPlayerID: number) {
+    isPalantirLobbyOwner(lobbyID: string, lobbyPlayerID: string) {
         if(!database) throw new Error("Database is not initialized.");
         return database.isPalantirLobbyOwner(lobbyID, lobbyPlayerID);
     },

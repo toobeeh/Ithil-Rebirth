@@ -294,9 +294,8 @@ export default class TypoClient {
 
             // get owner 
             const senderID = eventdata.lobby.Players.find(player => player.Sender)?.LobbyPlayerID;
-            console.log(senderID, eventdata.lobby.Players);
             if(senderID){
-                const ownerResult = await this.databaseWorker.isPalantirLobbyOwner(eventdata.lobby.ID, senderID);
+                const ownerResult = await this.databaseWorker.isPalantirLobbyOwner(eventdata.lobby.ID, senderID.toString());
                 if(ownerResult.success && ownerResult.result.owner != null && ownerResult.result.ownerID != null){
                     owner = ownerResult.result.owner;
                     ownerID = ownerResult.result.ownerID;
