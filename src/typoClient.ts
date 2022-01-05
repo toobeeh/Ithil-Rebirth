@@ -440,7 +440,6 @@ export default class TypoClient {
                 }
                 await this.databaseWorker.writePlayerStatus(status, this.typosocket.socket.id);
             }
-
         }
         else if (statusIsAnyOf("searching", "waiting")) {
 
@@ -453,6 +452,7 @@ export default class TypoClient {
                 LobbyPlayerID: ""
             }
             await this.databaseWorker.writePlayerStatus(status, this.typosocket.socket.id);
+            console.log("wrote status");
         }
         else if (statusIsAnyOf("idle")) {
             // do nothing. user is idling. yay.
