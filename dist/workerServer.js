@@ -72,7 +72,10 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
         data.activeLobbies.forEach(guild => {
             // build eventdata
             const eventdata = {
-                activeLobbies: guild
+                event: ithilSocketio.eventNames.activeLobbies,
+                payload: {
+                    activeLobbies: guild
+                }
             };
             // volatile emit to all sockets that are a member of this guild
             workerSocketServer.in("playing").in("guild" + guild.guildID).volatile.emit(ithilSocketio.eventNames.activeLobbies, eventdata);
@@ -83,8 +86,11 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
         workerCache.publicData = data.publicData;
         // build eventdata
         const eventdata = {
-            onlineScenes: data.publicData.onlineScenes,
-            onlineSprites: data.publicData.onlineSprites
+            event: ithilSocketio.eventNames.onlineSprites,
+            payload: {
+                onlineScenes: data.publicData.onlineScenes,
+                onlineSprites: data.publicData.onlineSprites
+            }
         };
         // volatile emit to all online sockets
         workerSocketServer.volatile.emit(ithilSocketio.eventNames.onlineSprites, eventdata);

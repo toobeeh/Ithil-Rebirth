@@ -62,8 +62,11 @@ portscanner.findAPortNotInUse(
             data.activeLobbies.forEach(guild => {
 
                 // build eventdata
-                const eventdata: ithilSocketio.activeLobbiesEventdata = {
-                    activeLobbies: guild
+                const eventdata: ithilSocketio.eventBase<ithilSocketio.activeLobbiesEventdata> = {
+                    event: ithilSocketio.eventNames.activeLobbies,
+                    payload: {
+                        activeLobbies: guild
+                    }
                 };
 
                 // volatile emit to all sockets that are a member of this guild
@@ -79,9 +82,12 @@ portscanner.findAPortNotInUse(
             workerCache.publicData = data.publicData;
 
             // build eventdata
-            const eventdata: ithilSocketio.onlineSpritesEventdata = {
-                onlineScenes: data.publicData.onlineScenes,
-                onlineSprites: data.publicData.onlineSprites
+            const eventdata: ithilSocketio.eventBase<ithilSocketio.onlineSpritesEventdata> = {
+                event: ithilSocketio.eventNames.onlineSprites,
+                payload: {
+                    onlineScenes: data.publicData.onlineScenes,
+                    onlineSprites: data.publicData.onlineSprites
+                }
             }
 
             // volatile emit to all online sockets
