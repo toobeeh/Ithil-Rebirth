@@ -343,7 +343,7 @@ class PalantirDatabase {
             let lobbyplayers = this.db.prepare("select json_extract(Status, '$.LobbyPlayerID') as playerid from Status where json_extract(Status, '$.LobbyID') = ?").all(lobbyID);
             result.result.owner = !lobbyplayers.some(player => Number(player.playerid) < lobbyPlayerID);
             if (lobbyplayers.length > 0)
-                result.result.ownerID = lobbyplayers.sort((a, b) => a - b)[0].playerid;
+                Number(result.result.ownerID = lobbyplayers.sort((a, b) => a - b)[0].playerid);
             result.success = true;
         }
         catch (e) {
