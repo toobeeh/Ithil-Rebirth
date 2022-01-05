@@ -366,7 +366,8 @@ class TypoClient {
         }
         else if (statusIsAnyOf("searching", "waiting")) {
             // write searching or waiting status
-            currentMember.UserName = this.reportData.nickname;
+            if (this.reportData.nickname.length > 0)
+                currentMember.UserName = this.reportData.nickname;
             const status = {
                 PlayerMember: currentMember,
                 Status: this.reportData.currentStatus,
@@ -374,7 +375,7 @@ class TypoClient {
                 LobbyPlayerID: ""
             };
             await this.databaseWorker.writePlayerStatus(status, this.typosocket.socket.id);
-            console.log("wrote status");
+            console.log("wrote status: " + status);
         }
         else if (statusIsAnyOf("idle")) {
             // do nothing. user is idling. yay.
