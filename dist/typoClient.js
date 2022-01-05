@@ -229,11 +229,11 @@ class TypoClient {
                 }
             }
             // if key, description, restriction differ from last cached lobby
-            if (cached.Key != eventdata.key || cached.Description != eventdata.description || cached.Restriction != eventdata.restriction) {
+            if (cached.Key != eventdata.lobbyKey || cached.Description != eventdata.description || cached.Restriction != eventdata.restriction) {
                 // update lobby data
                 let restriction = "unrestricted";
                 let description = "";
-                let key = eventdata.key;
+                let key = eventdata.lobbyKey;
                 if (owner) {
                     restriction = eventdata.restriction;
                     description = eventdata.description;
