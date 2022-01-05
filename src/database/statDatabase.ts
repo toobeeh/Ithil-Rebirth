@@ -35,7 +35,6 @@ class StatDatabase {
         catch(e) {
             console.warn("Error updating client contact: ", e);
         }
-        this.close()
     }
 }
 
