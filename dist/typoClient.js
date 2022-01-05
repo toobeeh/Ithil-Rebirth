@@ -33,7 +33,7 @@ class TypoClient {
             reportLobby: undefined,
             updateInterval: setInterval(this.updateStatus.bind(this), 2500)
         };
-        console.log("logged in");
+        console.log(this.username + " logged in");
     }
     /** Get the authentificated member */
     get member() {
@@ -191,6 +191,7 @@ class TypoClient {
                 // if new lobby was successfully added, get it
                 if (newLobbyResult) {
                     const createdLobbyResult = await this.databaseWorker.getLobby(key, "key");
+                    console.log(createdLobbyResult);
                     if (createdLobbyResult.success && createdLobbyResult.result.found && createdLobbyResult.result.lobby) {
                         lobby = createdLobbyResult.result.lobby;
                         this.reportData.joinedLobby = lobby;
