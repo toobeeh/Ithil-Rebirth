@@ -191,7 +191,6 @@ class TypoClient {
                 // if new lobby was successfully added, get it
                 if (newLobbyResult) {
                     const createdLobbyResult = await this.databaseWorker.getLobby(key, "key");
-                    console.log(createdLobbyResult);
                     if (createdLobbyResult.success && createdLobbyResult.result.found && createdLobbyResult.result.lobby) {
                         lobby = createdLobbyResult.result.lobby;
                         this.reportData.joinedLobby = lobby;
@@ -219,6 +218,7 @@ class TypoClient {
         if (this.reportData.joinedLobby) {
             this.reportData.reportLobby = eventdata.lobby;
             const cached = this.reportData.joinedLobby;
+            console.log(cached);
             // get owner 
             const senderID = eventdata.lobby.Players.find(player => player.Sender)?.LobbyPlayerID;
             if (senderID) {
@@ -245,6 +245,7 @@ class TypoClient {
                         description = currentLobby.Description;
                     }
                 }
+                console.log(this.reportData.joinedLobby.ID, key, restriction, description);
                 await this.databaseWorker.setLobby(this.reportData.joinedLobby.ID, key, restriction, description);
             }
             const updatedLobbyResult = (await this.databaseWorker.getLobby(this.reportData.joinedLobby.ID, "id")).result.lobby;
@@ -256,7 +257,6 @@ class TypoClient {
                 this.reportData.joinedLobby = updatedLobby;
             }
         }
-        console.log(updatedLobby);
         // return updated lobby
         const response = {
             lobbyData: {
