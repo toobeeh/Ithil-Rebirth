@@ -245,7 +245,6 @@ class TypoClient {
                         description = currentLobby.Description;
                     }
                 }
-                console.log(this.reportData.joinedLobby.ID, key, restriction, description);
                 await this.databaseWorker.setLobby(this.reportData.joinedLobby.ID, key, restriction, description);
             }
             const updatedLobbyResult = (await this.databaseWorker.getLobby(this.reportData.joinedLobby.ID, "id")).result.lobby;
@@ -291,7 +290,7 @@ class TypoClient {
      * - **playing**: write status in db, write lobby report in db
      */
     async updateStatus() {
-        const statusIsAnyOf = (...statusNames) => statusNames.indexOf(this.reportData.currentStatus) > 0;
+        const statusIsAnyOf = (...statusNames) => statusNames.indexOf(this.reportData.currentStatus) >= 0;
         const currentMember = (await this.member).member;
         // set playing room definitely only if currently playing
         if (this.reportData.currentStatus == "playing") {
