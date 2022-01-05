@@ -360,7 +360,7 @@ class PalantirDatabase {
       * @param lobbyPlayerID The ID of the target player in the skribbl lobby
       * @returns Indicator if the passed id is the owner as well as the actual owner id
       */
-    isPalantirLobbyOwner(lobbyID: string, lobbyPlayerID: string) {
+    isPalantirLobbyOwner(lobbyID: string, lobbyPlayerID: number) {
         let result = this.emptyResult<{owner: boolean | null, ownerID: number | null}>();
         try {
             let lobbyplayers = this.db.prepare("select json_extract(Status, '$.LobbyPlayerID') as playerid from Status where json_extract(Status, '$.LobbyID') = ?").all(lobbyID);
