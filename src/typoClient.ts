@@ -2,8 +2,6 @@ import { palantirDatabaseWorker } from './database/palantirDatabaseWorker';
 import { ModuleThread, spawn, Thread, Worker } from "threads";
 import * as types from "./database/types";
 import * as ithilSocket from "./ithilSocketio";
-import type { Socket } from 'socket.io';
-import { resolve } from 'path/posix';
 
 /**
  * Manage dataflow and interactions with a client accessing from typo
@@ -17,14 +15,14 @@ export default class TypoClient {
     typosocket: ithilSocket.TypoSocketioClient;
 
 
-    /** The authentificated member */
+    /** Get the authentificated member */
     get member() {
         return new Promise<types.member>(async resolve => {
             resolve((await this.databaseWorker.getUserByLogin(Number(this.login))).result);
         });
     }
 
-    /** The member's current sprite slots */
+    /** Get the member's current sprite slots */
     get spriteSlots() {
         return new Promise<number>(async resolve => {
             const member = await this.member;
@@ -39,7 +37,7 @@ export default class TypoClient {
         });
     }
 
-    /** The member's current sprite inventory */
+    /** Get the member's current sprite inventory */
     get spriteInventory() {
         return new Promise<types.spriteProperty[]>(async resolve => {
             const inv = await this.member;
@@ -53,7 +51,7 @@ export default class TypoClient {
         });
     }
 
-    /** The authentificated member's flags */
+    /** Get the authentificated member's flags */
     get flags() {
         return new Promise<types.memberFlags>(async resolve => {
 
@@ -85,6 +83,28 @@ export default class TypoClient {
     /** The worker's cached data */
     workerCache: types.workerCache;
 
+    /** The interval in which the current playing status is processed */
+    updateStatusInterval?: TimerHandler = undefined;
+
+    /** Object that represents the state of the socket for reporting playing status */
+    reportData: {
+
+        /** The socket's current status: idle, searching, waiting, playing */
+        currentStatus: string,
+
+        /** The nickname the player is playing as */
+        nickname: string,
+
+        /** The currently joined lobby */
+        joinedLobby?: types.palantirLobby,
+
+        /** The last reported lobbydata */
+        reportLobby?: types.lobby,
+
+        /** The interval in which the reports are written */
+        updateInterval: NodeJS.Timer
+    };
+
     /** 
      * Init a new client with all member-related data and bound events 
      */
@@ -99,14 +119,36 @@ export default class TypoClient {
         this.typosocket.subscribeDisconnect(this.onDisconnect.bind(this));
         this.typosocket.subscribeGetUserEvent(this.getUser.bind(this));
         this.typosocket.subscribeSetSlotEvent(this.setSpriteSlot.bind(this));
+        this.typosocket.subscribeSetComboEvent(this.setSpriteCombo.bind(this));
+        this.typosocket.subscribeJoinLobbyEvent(this.joinLobby.bind(this));
+        this.typosocket.subscribeSetLobbyEvent(this.setLobby.bind(this));
+        this.typosocket.subscribeLeaveLobbyEvent(this.leaveLobby.bind(this));
+        this.typosocket.subscribeSearchLobbyEvent(this.searchLobby.bind(this));
+
+        // init report data 
+        this.reportData = {
+            currentStatus: "idle",
+            nickname: this.username,
+            joinedLobby: undefined,
+            reportLobby: undefined,
+            updateInterval: setInterval(this.updateStatus, 2500)
+        }
 
         console.log("logged in");
     }
 
+    /**
+     * Handler for a disconnect event
+     * @param reason Socketio disconnect reason
+     */
     async onDisconnect(reason: string) {
         await Thread.terminate(this.databaseWorker);
     }
 
+    /**
+     * Handler for get user event
+     * @returns Event response data containing user, flags and slots
+     */
     async getUser() {
         const data: ithilSocket.getUserResponseEventdata = {
             user: await this.member,
@@ -116,6 +158,11 @@ export default class TypoClient {
         return data;
     }
 
+    /**
+     * Handler for set slot event
+     * @param eventdata Eventdata conaining slot and sprite id
+     * @returns Response data containing updated user, flags and slots
+     */
     async setSpriteSlot(eventdata: ithilSocket.setSlotEventdata) {
         const slots = await this.spriteSlots;
         const currentInv = await this.spriteInventory;
@@ -145,6 +192,11 @@ export default class TypoClient {
         return data;
     }
 
+    /**
+     * Handler for set combo event
+     * @param eventdata Eventdata containing combo string comma-separated and dots indicating slot
+     * @returns Response data containing updated user, flags and slots
+     */
     async setSpriteCombo(eventdata: ithilSocket.setComboEventdata) {
         const combo = eventdata.combostring.split(",").map(slot => {
             return {
@@ -182,6 +234,202 @@ export default class TypoClient {
         return data;
     }
 
+    async joinLobby(eventdata: ithilSocket.joinLobbyEventdata) {
+        this.reportData.currentStatus = "playing";
+        const key = eventdata.key;
+        let success = false;
+        let lobby = {} as types.palantirLobby;
+        const lobbyResult = await this.databaseWorker.getLobby(key, "key");
+        
+        // create new lobby if none found for key, but query succeeded
+        if(!lobbyResult.result.found || !lobbyResult.result.lobby){
+            if(lobbyResult.success){
+                const newLobbyResult = await this.databaseWorker.setLobby(Date.now().toString(), key);
+
+                // if new lobby was successfully added, get it
+                if(newLobbyResult){
+                    const createdLobbyResult = await this.databaseWorker.getLobby(key, "key");
+                    if(createdLobbyResult.success && createdLobbyResult.result.found && createdLobbyResult.result.lobby){
+                        lobby = createdLobbyResult.result.lobby;
+                        success = true;
+                    }
+                }
+            }
+        }
+        else {
+            lobby = lobbyResult.result.lobby;
+            success = true;
+        }
+
+        // return found or created lobby
+        const response: ithilSocket.joinLobbyResponseEventdata = {
+            lobbyData: lobby,
+            valid: success
+        }
+        return response;
+    }
+
+    async setLobby(eventdata: ithilSocket.setLobbyEventdata) {
+        let owner = false;
+        let ownerID = 0;
+        let updatedLobby = {} as types.reportLobby;
+
+        if(this.reportData.joinedLobby){
+            this.reportData.reportLobby = eventdata.lobby;
+            const cached = this.reportData.joinedLobby;
+                
+            // get owner 
+            const senderID = eventdata.lobby.Players.find(player => player.Sender)?.LobbyPlayerID;
+            if(senderID){
+                const ownerResult = await this.databaseWorker.isPalantirLobbyOwner(eventdata.lobby.ID, senderID);
+                if(ownerResult.success && ownerResult.result.owner != null && ownerResult.result.ownerID != null){
+                    owner = ownerResult.result.owner;
+                    ownerID = ownerResult.result.ownerID;
+                }
+            }
+
+            // if key, description, restriction differ from last cached lobby
+            if(cached.Key != eventdata.key || cached.Description != eventdata.description || cached.Restriction != eventdata.restriction)
+            {
+
+                // update lobby data
+                let restriction = "unrestricted";
+                let description = "";
+                let key = eventdata.key;
+
+                if(owner){
+                    restriction = eventdata.restriction;
+                    description = eventdata.description;
+                }
+                else {
+                    const currentLobby = (await this.databaseWorker.getLobby(this.reportData.joinedLobby.ID, "id")).result.lobby;
+                    if(currentLobby){
+                        restriction = currentLobby.Restriction;
+                        description = currentLobby.Description;
+                    }
+                }
+
+                await this.databaseWorker.setLobby(this.reportData.joinedLobby.ID, key, restriction, description);
+            }
+
+            const updatedLobbyResult = (await this.databaseWorker.getLobby(this.reportData.joinedLobby.ID, "id")).result.lobby;
+            if(updatedLobbyResult){
+                updatedLobby.ID = updatedLobbyResult.ID;
+                updatedLobby.Key = updatedLobbyResult.Key;
+                updatedLobby.Restriction = updatedLobbyResult.Restriction;
+                updatedLobby.Description = updatedLobbyResult.Description;
+                this.reportData.joinedLobby = updatedLobby;
+            } 
+        }
+
+        // return updated lobby
+        const response: ithilSocket.setLobbyResponseEventdata = {
+            lobbyData: updatedLobby,
+            owner: owner,
+            ownerID: ownerID
+        }
+        return response;
+    }
+
+    async searchLobby(eventdata: ithilSocket.searchLobbyEventdata) {
+        if(eventdata.waiting) this.reportData.currentStatus = "waiting";
+        else this.reportData.currentStatus = "searching";
+        this.reportData.nickname = eventdata.userName;
+    }
+
+    async leaveLobby() {
+        this.reportData.currentStatus = "idle";
+        this.reportData.joinedLobby = undefined;
+        this.reportData.reportLobby = undefined;
+
+        const guilds = (await this.member).memberDiscordDetails.Guilds;
+        const response: ithilSocket.leaveLobbyResponseEventdata = {
+            activeLobbies: this.workerCache.activeLobbies.filter(guildLobby => guilds.some(guild => guild.GuildID == guildLobby.guildID))
+        }
+        return response;
+    }
+
+    /**
+     * Write a report for the socket's current report data:
+     * - **idle**: nothing
+     * - **searching, playing**: write status in db
+     * - **playing**: write status in db, write lobby report in db
+     */
+    async updateStatus() {
+        const statusIsAnyOf = (...statusNames: string[]) => statusNames.indexOf(this.reportData.currentStatus) > 0;
+        const currentMember = (await this.member).memberDiscordDetails;
+
+        // set playing room definitely only if currently playing
+        if(this.reportData.currentStatus == "playing") {
+            if(!this.typosocket.socket.rooms.has("playing")) this.typosocket.socket.join("palying");
+        }
+        else {
+            if(this.typosocket.socket.rooms.has("playing")) this.typosocket.socket.leave("palying");
+        }
+
+        if (statusIsAnyOf("playing")) {
+
+            // write lobby report for each guild and set playing status
+            if (this.reportData.reportLobby && this.reportData.joinedLobby) {
+
+                // create a template report lobby where only ID and observe token have to be changed per guild
+                const guildReportTemplate: types.guildLobby = {
+                    GuildID: "",
+                    ObserveToken: 0,
+                    Description: this.reportData.joinedLobby.Description,
+                    Key: this.reportData.joinedLobby.Key,
+                    ID: this.reportData.joinedLobby.ID,
+                    Restriction: this.reportData.joinedLobby.Restriction,
+                    Players: this.reportData.reportLobby.Players,
+                    Language: this.reportData.reportLobby.Language,
+                    Private: this.reportData.reportLobby.Private,
+                    Link: this.reportData.reportLobby.Link
+                };
+
+                // create guild-specific lobby and write to db
+                const guildReportLobbies: types.guildLobby[] = [];
+                (await this.member).memberDiscordDetails.Guilds.forEach(guild => {
+                    const templateClone: types.guildLobby = { ...guildReportTemplate };
+                    templateClone.ObserveToken = guild.ObserveToken;
+                    templateClone.GuildID = guild.GuildID;
+                    guildReportLobbies.push(templateClone);
+                });
+                await this.databaseWorker.writeReport(guildReportLobbies);
+
+                // write player status to db
+                const lobbyPlayerID = guildReportTemplate.Players.find(player => player.Sender)?.LobbyPlayerID;
+                const status: types.playerStatus = {
+                    PlayerMember: currentMember,
+                    Status: this.reportData.currentStatus,
+                    LobbyID: guildReportTemplate.ID,
+                    LobbyPlayerID: (lobbyPlayerID ? lobbyPlayerID : 0).toString()
+                }
+                await this.databaseWorker.writePlayerStatus(status, this.typosocket.socket.id);
+            }
+
+        }
+        else if (statusIsAnyOf("searching", "waiting")) {
+
+            // write searching or waiting status
+            currentMember.UserName = this.reportData.nickname;
+            const status: types.playerStatus = {
+                PlayerMember: currentMember,
+                Status: this.reportData.currentStatus,
+                LobbyID: "",
+                LobbyPlayerID: ""
+            }
+            await this.databaseWorker.writePlayerStatus(status, this.typosocket.socket.id);
+        }
+        else if (statusIsAnyOf("idle")) {
+            // do nothing. user is idling. yay.
+        }
+    }
+
+    /**
+     * Check if a sprite is special (replaces avatar)
+     * @param spriteID The id of the target sprite
+     * @returns Indicator if the sprite is special
+     */
     isSpecialSprite(spriteID: number) {
         const result = this.workerCache.publicData.sprites.find(sprite => sprite.ID == spriteID);
         if (result && result.Special) return true;

@@ -9,6 +9,8 @@ class TypoClient {
      * Init a new client with all member-related data and bound events
      */
     constructor(socket, dbWorker, memberInit, workerCache) {
+        /** The interval in which the current playing status is processed */
+        this.updateStatusInterval = undefined;
         this.typosocket = socket;
         this.databaseWorker = dbWorker;
         this.workerCache = workerCache;
@@ -17,7 +19,14 @@ class TypoClient {
         // init events 
         this.typosocket.subscribeDisconnect(this.onDisconnect.bind(this));
         this.typosocket.subscribeGetUserEvent(this.getUser.bind(this));
-        this.typosocket.subscribeSetSlotEvent(this.setSpriteSlot.bind(this));
+        // init report data 
+        this.reportData = {
+            currentStatus: "idle",
+            nickname: this.username,
+            joinedLobby: undefined,
+            reportLobby: undefined,
+            updateInterval: setInterval(this.updateStatus, 2500)
+        };
         console.log("logged in");
     }
     /** The authentificated member */
@@ -144,6 +153,35 @@ class TypoClient {
             slots: slots
         };
         return data;
+    }
+    async joinLobby() {
+        this.reportData.currentStatus = "playing";
+    }
+    async searchLobby() {
+        this.reportData.currentStatus = "searching";
+    }
+    async leaveLobby() {
+        this.reportData.currentStatus = "idle";
+    }
+    async updateStatus() {
+        const currentMember = (await this.member).memberDiscordDetails;
+        if (this.reportData.currentStatus == "playing") {
+            // write lobby report for each guild and set playing status
+        }
+        else if (["searching", "waiting"].indexOf(this.reportData.currentStatus) > 0) {
+            // write searching or waiting status
+            currentMember.UserName = this.reportData.nickname;
+            const status = {
+                PlayerMember: currentMember,
+                Status: this.reportData.currentStatus,
+                LobbyID: "",
+                LobbyPlayerID: ""
+            };
+            await this.databaseWorker.writePlayerStatus(status, this.typosocket.socket.id);
+        }
+        else if ("idle") {
+            // do nothing. user is idling. yay.
+        }
     }
     isSpecialSprite(spriteID) {
         const result = this.workerCache.publicData.sprites.find(sprite => sprite.ID == spriteID);
