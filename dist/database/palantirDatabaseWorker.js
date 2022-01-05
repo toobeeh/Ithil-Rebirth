@@ -14,6 +14,12 @@ const palantirDatabaseWorker = {
     init(path) {
         database = new palantirDatabase_1.default(path);
     },
+    /** Closes a {@link PalantirDatabase} in a worker*/
+    close() {
+        if (!database)
+            throw new Error("Database is not initialized.");
+        database.close();
+    },
     /** Executes {@link PalantirDatabase.clearVolatile} in a worker*/
     clearVolatile() {
         if (!database)

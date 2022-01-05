@@ -116,9 +116,10 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
         // listen for login event
         clientSocket.subscribeLoginEvent(async (loginData) => {
             // create database worker and check access token - prepare empty event response
-            const id = "PDB thread " + Date.now();
-            console.log("spawning thread: " + id);
-            const asyncDb = await (0, threads_1.spawn)(new threads_1.Worker("./database/palantirDatabaseWorker", { name: id }));
+            const id = "thread " + Date.now();
+            console.log("spawning worker threads: " + id);
+            const asyncDb = await (0, threads_1.spawn)(new threads_1.Worker("./database/palantirDatabaseWorker", { name: "PDB " + id }));
+            const asyncImageDb = await (0, threads_1.spawn)(new threads_1.Worker("./database/imageDatabaseWorker", { name: "IDB " + id }));
             await asyncDb.init(config.palantirDbPath);
             const loginResult = await asyncDb.getLoginFromAccessToken(loginData.accessToken);
             const response = {
@@ -129,7 +130,7 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
             // if login succeeded, create a typo client and enable further events
             if (loginResult.success) {
                 const memberResult = await asyncDb.getUserByLogin(loginResult.result.login);
-                const client = new typoClient_1.default(clientSocket, asyncDb, memberResult.result, workerCache);
+                const client = new typoClient_1.default(clientSocket, asyncDb, asyncImageDb, memberResult.result, workerCache);
                 // fill login response data
                 response.authorized = true;
                 response.member = memberResult.result;

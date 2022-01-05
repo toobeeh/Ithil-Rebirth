@@ -8,11 +8,12 @@ class TypoClient {
     /**
      * Init a new client with all member-related data and bound events
      */
-    constructor(socket, dbWorker, memberInit, workerCache) {
+    constructor(socket, dbWorker, imageDbWorker, memberInit, workerCache) {
         /** The interval in which the current playing status is processed */
         this.updateStatusInterval = undefined;
         this.typosocket = socket;
-        this.databaseWorker = dbWorker;
+        this.palantirDatabaseWorker = dbWorker;
+        this.imageDatabaseWorker = imageDbWorker;
         this.workerCache = workerCache;
         this.username = memberInit.member.UserName;
         this.login = memberInit.member.UserLogin;
@@ -38,7 +39,7 @@ class TypoClient {
     /** Get the authentificated member */
     get member() {
         return new Promise(async (resolve) => {
-            resolve((await this.databaseWorker.getUserByLogin(Number(this.login))).result);
+            resolve((await this.palantirDatabaseWorker.getUserByLogin(Number(this.login))).result);
         });
     }
     /** Get the member's current sprite slots */
@@ -93,7 +94,8 @@ class TypoClient {
      * @param reason Socketio disconnect reason
      */
     async onDisconnect(reason) {
-        await threads_1.Thread.terminate(this.databaseWorker);
+        await this.palantirDatabaseWorker.close();
+        await threads_1.Thread.terminate(this.palantirDatabaseWorker);
     }
     /**
      * Handler for get user event
@@ -129,7 +131,7 @@ class TypoClient {
                     prop.slot = eventdata.slot;
             });
             const newInv = currentInv.map(prop => ".".repeat(prop.slot) + prop.id).join(",");
-            await this.databaseWorker.setUserSprites(Number(this.login), newInv);
+            await this.palantirDatabaseWorker.setUserSprites(Number(this.login), newInv);
         }
         // return updated data
         const data = {
@@ -168,7 +170,7 @@ class TypoClient {
                     newInv.push({ id: sprite.id, slot: 0 });
             });
             const newInvString = newInv.map(prop => ".".repeat(prop.slot) + prop.id).join(",");
-            await this.databaseWorker.setUserSprites(Number(this.login), newInvString);
+            await this.palantirDatabaseWorker.setUserSprites(Number(this.login), newInvString);
         }
         // return updated data
         const data = {
@@ -189,14 +191,14 @@ class TypoClient {
         const key = eventdata.key;
         let success = false;
         let lobby = {};
-        const lobbyResult = await this.databaseWorker.getLobby(key, "key");
+        const lobbyResult = await this.palantirDatabaseWorker.getLobby(key, "key");
         // create new lobby if none found for key, but query succeeded
         if (!lobbyResult.result.found || !lobbyResult.result.lobby) {
             if (lobbyResult.success) {
-                const newLobbyResult = await this.databaseWorker.setLobby(Date.now().toString(), key);
+                const newLobbyResult = await this.palantirDatabaseWorker.setLobby(Date.now().toString(), key);
                 // if new lobby was successfully added, get it
                 if (newLobbyResult) {
-                    const createdLobbyResult = await this.databaseWorker.getLobby(key, "key");
+                    const createdLobbyResult = await this.palantirDatabaseWorker.getLobby(key, "key");
                     if (createdLobbyResult.success && createdLobbyResult.result.found && createdLobbyResult.result.lobby) {
                         lobby = createdLobbyResult.result.lobby;
                         this.reportData.joinedLobby = lobby;
@@ -232,7 +234,7 @@ class TypoClient {
             // get owner 
             const senderID = eventdata.lobby.Players.find(player => player.Sender)?.LobbyPlayerID;
             if (senderID) {
-                const ownerResult = await this.databaseWorker.isPalantirLobbyOwner(this.reportData.joinedLobby.ID, senderID);
+                const ownerResult = await this.palantirDatabaseWorker.isPalantirLobbyOwner(this.reportData.joinedLobby.ID, senderID);
                 if (ownerResult.success && ownerResult.result.owner != null && ownerResult.result.ownerID != null) {
                     owner = ownerResult.result.owner;
                     ownerID = ownerResult.result.ownerID;
@@ -249,15 +251,15 @@ class TypoClient {
                     description = eventdata.description;
                 }
                 else {
-                    const currentLobby = (await this.databaseWorker.getLobby(this.reportData.joinedLobby.ID, "id")).result.lobby;
+                    const currentLobby = (await this.palantirDatabaseWorker.getLobby(this.reportData.joinedLobby.ID, "id")).result.lobby;
                     if (currentLobby) {
                         restriction = currentLobby.Restriction;
                         description = currentLobby.Description;
                     }
                 }
-                await this.databaseWorker.setLobby(this.reportData.joinedLobby.ID, key, description, restriction);
+                await this.palantirDatabaseWorker.setLobby(this.reportData.joinedLobby.ID, key, description, restriction);
             }
-            const updatedLobbyResult = (await this.databaseWorker.getLobby(this.reportData.joinedLobby.ID, "id")).result.lobby;
+            const updatedLobbyResult = (await this.palantirDatabaseWorker.getLobby(this.reportData.joinedLobby.ID, "id")).result.lobby;
             if (updatedLobbyResult) {
                 updatedLobby.ID = updatedLobbyResult.ID;
                 updatedLobby.Key = updatedLobbyResult.Key;
@@ -352,7 +354,7 @@ class TypoClient {
                     templateClone.GuildID = guild.GuildID;
                     guildReportLobbies.push(templateClone);
                 });
-                await this.databaseWorker.writeReport(guildReportLobbies);
+                await this.palantirDatabaseWorker.writeReport(guildReportLobbies);
                 // write player status to db
                 const lobbyPlayerID = guildReportTemplate.Players.find(player => player.Sender)?.LobbyPlayerID;
                 const status = {
@@ -361,7 +363,7 @@ class TypoClient {
                     LobbyID: guildReportTemplate.ID,
                     LobbyPlayerID: (lobbyPlayerID ? lobbyPlayerID : 0).toString()
                 };
-                await this.databaseWorker.writePlayerStatus(status, this.typosocket.socket.id);
+                await this.palantirDatabaseWorker.writePlayerStatus(status, this.typosocket.socket.id);
             }
         }
         else if (statusIsAnyOf("searching", "waiting")) {
@@ -374,7 +376,7 @@ class TypoClient {
                 LobbyID: "",
                 LobbyPlayerID: ""
             };
-            await this.databaseWorker.writePlayerStatus(status, this.typosocket.socket.id);
+            await this.palantirDatabaseWorker.writePlayerStatus(status, this.typosocket.socket.id);
         }
         else if (statusIsAnyOf("idle")) {
             // do nothing. user is idling. yay.

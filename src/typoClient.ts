@@ -2,6 +2,7 @@ import { palantirDatabaseWorker } from './database/palantirDatabaseWorker';
 import { ModuleThread, spawn, Thread, Worker } from "threads";
 import * as types from "./database/types";
 import * as ithilSocket from "./ithilSocketio";
+import { imageDatabaseWorker } from './database/imageDatabaseWorker';
 
 /**
  * Manage dataflow and interactions with a client accessing from typo
@@ -9,7 +10,10 @@ import * as ithilSocket from "./ithilSocketio";
 export default class TypoClient {
 
     /** Async database access in separate worker */
-    databaseWorker: ModuleThread<palantirDatabaseWorker>;
+    palantirDatabaseWorker: ModuleThread<palantirDatabaseWorker>;
+
+    /** Async image database access in separate worker */
+    imageDatabaseWorker: ModuleThread<imageDatabaseWorker>;
 
     /** Socketio client socket instance */
     typosocket: ithilSocket.TypoSocketioClient;
@@ -18,7 +22,7 @@ export default class TypoClient {
     /** Get the authentificated member */
     get member() {
         return new Promise<types.member>(async resolve => {
-            resolve((await this.databaseWorker.getUserByLogin(Number(this.login))).result);
+            resolve((await this.palantirDatabaseWorker.getUserByLogin(Number(this.login))).result);
         });
     }
 
@@ -108,9 +112,10 @@ export default class TypoClient {
     /** 
      * Init a new client with all member-related data and bound events 
      */
-    constructor(socket: ithilSocket.TypoSocketioClient, dbWorker: ModuleThread<palantirDatabaseWorker>, memberInit: types.member, workerCache: types.workerCache) {
+    constructor(socket: ithilSocket.TypoSocketioClient, dbWorker: ModuleThread<palantirDatabaseWorker>, imageDbWorker: ModuleThread<imageDatabaseWorker>, memberInit: types.member, workerCache: types.workerCache) {
         this.typosocket = socket;
-        this.databaseWorker = dbWorker;
+        this.palantirDatabaseWorker = dbWorker;
+        this.imageDatabaseWorker = imageDbWorker;
         this.workerCache = workerCache;
         this.username = memberInit.member.UserName;
         this.login = memberInit.member.UserLogin;
@@ -142,7 +147,8 @@ export default class TypoClient {
      * @param reason Socketio disconnect reason
      */
     async onDisconnect(reason: string) {
-        await Thread.terminate(this.databaseWorker);
+        await this.palantirDatabaseWorker.close();
+        await Thread.terminate(this.palantirDatabaseWorker);
     }
 
     /**
@@ -180,7 +186,7 @@ export default class TypoClient {
             });
 
             const newInv = currentInv.map(prop => ".".repeat(prop.slot) + prop.id).join(",");
-            await this.databaseWorker.setUserSprites(Number(this.login), newInv);
+            await this.palantirDatabaseWorker.setUserSprites(Number(this.login), newInv);
         }
 
         // return updated data
@@ -222,7 +228,7 @@ export default class TypoClient {
             });
 
             const newInvString = newInv.map(prop => ".".repeat(prop.slot) + prop.id).join(",");
-            await this.databaseWorker.setUserSprites(Number(this.login), newInvString);
+            await this.palantirDatabaseWorker.setUserSprites(Number(this.login), newInvString);
         }
 
         // return updated data
@@ -246,16 +252,16 @@ export default class TypoClient {
         const key = eventdata.key;
         let success = false;
         let lobby = {} as types.palantirLobby;
-        const lobbyResult = await this.databaseWorker.getLobby(key, "key");
+        const lobbyResult = await this.palantirDatabaseWorker.getLobby(key, "key");
         
         // create new lobby if none found for key, but query succeeded
         if(!lobbyResult.result.found || !lobbyResult.result.lobby){
             if(lobbyResult.success){
-                const newLobbyResult = await this.databaseWorker.setLobby(Date.now().toString(), key);
+                const newLobbyResult = await this.palantirDatabaseWorker.setLobby(Date.now().toString(), key);
 
                 // if new lobby was successfully added, get it
                 if(newLobbyResult){
-                    const createdLobbyResult = await this.databaseWorker.getLobby(key, "key");
+                    const createdLobbyResult = await this.palantirDatabaseWorker.getLobby(key, "key");
                     if(createdLobbyResult.success && createdLobbyResult.result.found && createdLobbyResult.result.lobby){
                         lobby = createdLobbyResult.result.lobby;
                         this.reportData.joinedLobby = lobby;
@@ -295,7 +301,7 @@ export default class TypoClient {
             // get owner 
             const senderID = eventdata.lobby.Players.find(player => player.Sender)?.LobbyPlayerID;
             if(senderID){
-                const ownerResult = await this.databaseWorker.isPalantirLobbyOwner(this.reportData.joinedLobby.ID, senderID);
+                const ownerResult = await this.palantirDatabaseWorker.isPalantirLobbyOwner(this.reportData.joinedLobby.ID, senderID);
                 if(ownerResult.success && ownerResult.result.owner != null && ownerResult.result.ownerID != null){
                     owner = ownerResult.result.owner;
                     ownerID = ownerResult.result.ownerID;
@@ -315,16 +321,16 @@ export default class TypoClient {
                     description = eventdata.description;
                 }
                 else {
-                    const currentLobby = (await this.databaseWorker.getLobby(this.reportData.joinedLobby.ID, "id")).result.lobby;
+                    const currentLobby = (await this.palantirDatabaseWorker.getLobby(this.reportData.joinedLobby.ID, "id")).result.lobby;
                     if(currentLobby){
                         restriction = currentLobby.Restriction;
                         description = currentLobby.Description;
                     }
                 }
-                await this.databaseWorker.setLobby(this.reportData.joinedLobby.ID, key, description, restriction);
+                await this.palantirDatabaseWorker.setLobby(this.reportData.joinedLobby.ID, key, description, restriction);
             }
 
-            const updatedLobbyResult = (await this.databaseWorker.getLobby(this.reportData.joinedLobby.ID, "id")).result.lobby;
+            const updatedLobbyResult = (await this.palantirDatabaseWorker.getLobby(this.reportData.joinedLobby.ID, "id")).result.lobby;
             if(updatedLobbyResult){
                 updatedLobby.ID = updatedLobbyResult.ID;
                 updatedLobby.Key = updatedLobbyResult.Key;
@@ -428,7 +434,7 @@ export default class TypoClient {
                     templateClone.GuildID = guild.GuildID;
                     guildReportLobbies.push(templateClone);
                 });
-                await this.databaseWorker.writeReport(guildReportLobbies);
+                await this.palantirDatabaseWorker.writeReport(guildReportLobbies);
 
                 // write player status to db
                 const lobbyPlayerID = guildReportTemplate.Players.find(player => player.Sender)?.LobbyPlayerID;
@@ -438,7 +444,7 @@ export default class TypoClient {
                     LobbyID: guildReportTemplate.ID,
                     LobbyPlayerID: (lobbyPlayerID ? lobbyPlayerID : 0).toString()
                 }
-                await this.databaseWorker.writePlayerStatus(status, this.typosocket.socket.id);
+                await this.palantirDatabaseWorker.writePlayerStatus(status, this.typosocket.socket.id);
             }
         }
         else if (statusIsAnyOf("searching", "waiting")) {
@@ -451,7 +457,7 @@ export default class TypoClient {
                 LobbyID: "",
                 LobbyPlayerID: ""
             }
-            await this.databaseWorker.writePlayerStatus(status, this.typosocket.socket.id);
+            await this.palantirDatabaseWorker.writePlayerStatus(status, this.typosocket.socket.id);
         }
         else if (statusIsAnyOf("idle")) {
             // do nothing. user is idling. yay.

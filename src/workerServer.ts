@@ -20,6 +20,7 @@
 import * as types from "./database/types";
 import * as ithilSocketio from './ithilSocketio';
 import { palantirDatabaseWorker } from './database/palantirDatabaseWorker';
+import { imageDatabaseWorker } from './database/imageDatabaseWorker';
 import { ModuleThread, spawn, Thread, Worker } from "threads";
 import { IthilIPCClient } from './ipc';
 import TypoClient from "./typoClient";
@@ -125,9 +126,10 @@ portscanner.findAPortNotInUse(
             clientSocket.subscribeLoginEvent(async (loginData) => {
 
                 // create database worker and check access token - prepare empty event response
-                const id = "PDB thread " + Date.now();
-                console.log("spawning thread: " + id);
-                const asyncDb = await spawn<palantirDatabaseWorker>(new Worker("./database/palantirDatabaseWorker", {name: id}));
+                const id = "thread " + Date.now();
+                console.log("spawning worker threads: " + id);
+                const asyncDb = await spawn<palantirDatabaseWorker>(new Worker("./database/palantirDatabaseWorker", {name: "PDB " + id}));
+                const asyncImageDb = await spawn<imageDatabaseWorker>(new Worker("./database/imageDatabaseWorker", {name: "IDB " + id}));
                 await asyncDb.init(config.palantirDbPath);
                 const loginResult = await asyncDb.getLoginFromAccessToken(loginData.accessToken);
                 const response: ithilSocketio.loginResponseEventdata = {
@@ -139,7 +141,7 @@ portscanner.findAPortNotInUse(
                 // if login succeeded, create a typo client and enable further events
                 if (loginResult.success) {
                     const memberResult = await asyncDb.getUserByLogin(loginResult.result.login);
-                    const client = new TypoClient(clientSocket, asyncDb, memberResult.result, workerCache);
+                    const client = new TypoClient(clientSocket, asyncDb, asyncImageDb, memberResult.result, workerCache);
 
                     // fill login response data
                     response.authorized = true;

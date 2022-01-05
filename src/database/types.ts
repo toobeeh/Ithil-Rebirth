@@ -556,3 +556,67 @@ export interface memberFlags{
     */
     patronizer: boolean;
 }
+
+/**
+ * Metadata of a drawing in the image db
+ */
+export interface imageMeta{
+
+    /**
+     * The drawing's title
+     */
+    name: string;
+
+    /**
+     * The person that created the drawing
+     */
+    author:string;
+
+    /**
+     * Indicates if the drawing was made by the owner of the image db
+     */
+    own:boolean;
+
+    /**
+     * The language of the lobby where the drawing was made
+     */
+    language:string;
+
+    /**
+     * Indicates if the drawing was made in a public lobby
+     */
+    private:boolean;
+
+    /**
+     * Data url of the image thumbnail in base64 ong format; including *data:image/png;base64,*
+     */
+    thumbnail:string;
+
+    /**
+     * Date of the image upload, in default JS Date.toString() format
+     */
+    date:string;
+
+    /**
+     * Login of the image db owner
+     */
+    login:string;
+}
+
+export interface imageData{
+
+    /**
+     * The drawing's metadata
+     */
+    meta: imageMeta;
+
+    /**
+     * Data url of the image in base64 ong format; including *data:image/png;base64,* 
+     */
+    uri: string;
+
+    /**
+     * Jagged array of commands: either old action-format (commands[action[command[data]]]) or new flat ([commands[command[data]]])
+     */
+    commands: Array<Array<Array<number> | number>>;
+}
