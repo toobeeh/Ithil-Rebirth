@@ -53,7 +53,7 @@ export class TypoSocketioClient {
     socket: Socket;
 
     /** Init wrapper class */
-    constructor(socket: Socket){
+    constructor(socket: Socket) {
         this.socket = socket;
     }
 
@@ -64,12 +64,12 @@ export class TypoSocketioClient {
      * @param withResponse Indicates wether a response should be made
      * @param once Indicates wether the listener is once or permanent
      */
-    subscribeEventAsync<TIncoming, TResponse>(eventName: string, handler: (incomingData: TIncoming) => Promise<TResponse>, withResponse: boolean = true, once: boolean = false){
-        const callback = async (incoming: eventBase<TIncoming>, socket: Socket)=>{
-            
+    subscribeEventAsync<TIncoming, TResponse>(eventName: string, handler: (incomingData: TIncoming) => Promise<TResponse>, withResponse: boolean = true, once: boolean = false) {
+        const callback = async (incoming: eventBase<TIncoming>, socket: Socket) => {
+
             // get the payload from the event data consisting of eventname and payload
             const response = await handler(incoming.payload);
-            if(withResponse) {
+            if (withResponse) {
 
                 // build a response of the handler's result and emit it
                 const base: eventBase<TResponse> = {
@@ -79,7 +79,7 @@ export class TypoSocketioClient {
                 this.socket.emit(eventName + " response", base);
             }
         };
-        if(once) this.socket.once(eventName, callback);
+        if (once) this.socket.once(eventName, callback);
         else this.socket.on(eventName, callback);
     }
 
@@ -92,21 +92,21 @@ export class TypoSocketioClient {
      * @param timeout The max timeout when the promise gets rejected
      * @returns A promise of the expected return data
      */
-    async emitEventAsync<TOutgoing, TResponse>(eventName: string, outgoingData: TOutgoing, withResponse: boolean = true, unique: boolean = false, timeout: number = 15000){
-        
+    async emitEventAsync<TOutgoing, TResponse>(eventName: string, outgoingData: TOutgoing, withResponse: boolean = true, unique: boolean = false, timeout: number = 15000) {
+
         // generate unique event name if set
         let uniqueName = eventName;
-        if(unique) uniqueName = uniqueName + "@" + Date.now();
+        if (unique) uniqueName = uniqueName + "@" + Date.now();
 
         // create promise that holds response data
         const promise = new Promise<TResponse>((resolve, reject) => {
 
             // if resopnse is awaited, add a listener that will resolve on the event - else resolve instantly with empty data
-            if(withResponse){
+            if (withResponse) {
 
                 // a event handler that removes itself and resolves the promise as soon as the right unique event was received
                 const handler = (data: eventBase<TResponse>) => {
-                    if(unique && data.event == uniqueName || !unique)  {
+                    if (unique && data.event == uniqueName || !unique) {
                         resolve(data.payload);
                         this.socket.off(eventName, handler);
                     }
@@ -114,7 +114,7 @@ export class TypoSocketioClient {
                 this.socket.on(eventName + " response", handler);
 
                 // set timeout to reject promise
-                setTimeout(()=>reject("Timed out"), timeout);
+                setTimeout(() => reject("Timed out"), timeout);
             }
             else resolve({} as TResponse);
         });
@@ -138,7 +138,7 @@ export class TypoSocketioClient {
      * Subscribe to the disconnect event
      * @param handler Handler that is fired on the socket disconnect
      */
-    subscribeDisconnect(handler: (reason: string) => Promise<void>){
+    subscribeDisconnect(handler: (reason: string) => Promise<void>) {
         this.socket.on("disconnect", handler);
     }
 
@@ -146,7 +146,7 @@ export class TypoSocketioClient {
      * Subscribe to the login event - client is trying to log in
      * @param handler Handler that should process login data and respond state
      */
-    subscribeLoginEvent(handler: (incoming: loginEventdata) => Promise<loginResponseEventdata>){
+    subscribeLoginEvent(handler: (incoming: loginEventdata) => Promise<loginResponseEventdata>) {
         this.subscribeEventAsync<loginEventdata, loginResponseEventdata>(eventNames.login, handler, true, true);
     }
 
@@ -154,7 +154,7 @@ export class TypoSocketioClient {
      * Subscribe to the get user event - client is requesting user data
      * @param handler Handler that fetches and returns user data
      */
-    subscribeGetUserEvent(handler: () => Promise<getUserResponseEventdata>){
+    subscribeGetUserEvent(handler: () => Promise<getUserResponseEventdata>) {
         this.subscribeEventAsync<void, getUserResponseEventdata>(eventNames.getUser, handler, true, false);
     }
 
@@ -162,7 +162,7 @@ export class TypoSocketioClient {
      * Subscribe to the set slot event - client is requesting to set a sprite on one of their slots
      * @param handler Handler that processes the request and responds with the new member data
      */
-    subscribeSetSlotEvent(handler: (incoming: setSlotEventdata) => Promise<getUserResponseEventdata>){
+    subscribeSetSlotEvent(handler: (incoming: setSlotEventdata) => Promise<getUserResponseEventdata>) {
         this.subscribeEventAsync<setSlotEventdata, getUserResponseEventdata>(eventNames.setSlot, handler, true, false);
     }
 
@@ -170,8 +170,40 @@ export class TypoSocketioClient {
      * Subscribe to the set combo event - client is requesting to activate a sprite combo
      * @param handler Handler that processes the combo data and responds with the new member data
      */
-     subscribeSetComboEvent(handler: (incoming: setComboEventdata) => Promise<getUserResponseEventdata>){
-        this.subscribeEventAsync<setComboEventdata, getUserResponseEventdata>(eventNames.setSlot, handler, true, false);
+    subscribeSetComboEvent(handler: (incoming: setComboEventdata) => Promise<getUserResponseEventdata>) {
+        this.subscribeEventAsync<setComboEventdata, getUserResponseEventdata>(eventNames.setCombo, handler, true, false);
+    }
+
+    /**
+     * Subscribe to the join lobby event - client has joined a lobby and requests status update
+     * @param handler Handler that processes the lobby key and eventually adds a db entry, returns corresponding lobby data
+     */
+    subscribeJoinLobbyEvent(handler: (incoming: joinLobbyEventdata) => Promise<joinLobbyResponseEventdata>) {
+        this.subscribeEventAsync<joinLobbyEventdata, joinLobbyResponseEventdata>(eventNames.joinLobby, handler, true, false);
+    }
+
+    /**
+     * Subscribe to the set lobby event - client observed lobby change and reports new data
+     * @param handler Handler that processes the lobby data and responds with verified new data
+     */
+    subscribeSetLobbyEvent(handler: (incoming: setLobbyEventdata) => Promise<setLobbyResponseEventdata>) {
+        this.subscribeEventAsync<setLobbyEventdata, setLobbyResponseEventdata>(eventNames.setLobby, handler, true, false);
+    }
+
+    /**
+     * Subscribe to the leave lobby event - client leaves a lobby
+     * @param handler Handler returns currently active lobbies 
+     */
+    subscribeLeaveLobbyEvent(handler: (incoming: void) => Promise<leaveLobbyResponseEventdata>) {
+        this.subscribeEventAsync<void, leaveLobbyResponseEventdata>(eventNames.leaveLobby, handler, true, false);
+    }
+
+    /**
+     * Subscribe to the search lobby event - client searches for a lobby
+     * @param handler Handler processes search data
+     */
+     subscribeSearchLobbyEvent(handler: (incoming: searchLobbyEventdata) => Promise<void>) {
+        this.subscribeEventAsync<searchLobbyEventdata, void>(eventNames.searchLobby, handler, true, false);
     }
 
 }
@@ -188,13 +220,17 @@ export const eventNames = Object.freeze({
     login: "login",
     getUser: "get user",
     setSlot: "set slot",
-    setCombo: "set combo"
+    setCombo: "set combo",
+    joinLobby: "join lobby",
+    setLobby: "set lobby",
+    searchLobby: "search lobby",
+    leaveLobby: "leave lobby"
 });
 
 /** 
  * Interface for all typo client communication - extra event name property 
  */
-export interface eventBase<TEventdata>{
+export interface eventBase<TEventdata> {
     /**
      * The event's name
      */
@@ -209,7 +245,7 @@ export interface eventBase<TEventdata>{
 /**
  * Socketio eventdata for the online sprites event
  */
-export interface onlineSpritesEventdata{
+export interface onlineSpritesEventdata {
     /**
      * Currently online sprites array
      */
@@ -224,7 +260,7 @@ export interface onlineSpritesEventdata{
 /**
  * Socketio eventdata for the active lobbies event
  */
-export interface activeLobbiesEventdata{
+export interface activeLobbiesEventdata {
     /**
      * Currently active guildlobbies
      */
@@ -244,7 +280,7 @@ export interface publicDataEventdata {
 /**
  * Socketio eventdata for the login event
  */
- export interface loginEventdata{
+export interface loginEventdata {
     /**
      * The user's access token
      */
@@ -259,7 +295,7 @@ export interface publicDataEventdata {
 /**
  * Socketio eventdata for the login event response
  */
-export interface loginResponseEventdata{
+export interface loginResponseEventdata {
     /**
      * Signalizes wether the login attempt was successful
      */
@@ -269,7 +305,7 @@ export interface loginResponseEventdata{
      * Currently active lobbies of all guilds the authenticated member is conencted to
      */
     activeLobbies: Array<types.activeGuildLobbies>;
-    
+
     /**
      * The authenticated member
      */
@@ -309,16 +345,125 @@ export interface setSlotEventdata {
     /**
      * The target sprite id
      */
-    sprite:number;
+    sprite: number;
 }
 
 /**
  * Socketio eventdata for the set combo event:
  * User requests to activate a sprite combo
  */
- export interface setComboEventdata {
+export interface setComboEventdata {
     /**
      * The sprite combo string - as inventory sprite IDs spearated with , and . to indicate slot ID
      */
     combostring: string;
 }
+
+/**
+ * Socketio eventdata for the join lobby event:
+ * User joined a lobby and requests their status update
+ */
+export interface joinLobbyEventdata {
+
+    /**
+     * The lobby key of the joined lobby
+     */
+    key: string;
+}
+
+/**
+ * Socketio eventdata for the join lobby event response
+ */
+export interface joinLobbyResponseEventdata {
+
+    /**
+     * The lobby data of the joined lobby
+     */
+    lobbyData: types.palantirLobby;
+
+    /**
+     * Indicator wether the lobby could be found/added
+     */
+    valid: boolean;
+}
+
+/**
+ * Socketio eventdata for the set lobby event:
+ * User observed a change in their current lobby and reports the data
+ */
+export interface setLobbyEventdata {
+
+    /**
+     * The lobby key of the lobby
+     */
+    key: string;
+
+    /**
+     * The new lobby data
+     */
+    lobby: types.reportLobby;
+
+    /**
+     * The new lobby description
+     */
+    description: string;
+
+    /**
+     * The new lobby restriction
+     */
+    restriction: string;
+}
+
+/**
+ * Socketio eventdata for the set lobby event response
+ */
+export interface setLobbyResponseEventdata {
+
+    /**
+     * The updated lobby data of the target lobby
+     */
+    lobbyData: types.palantirLobby;
+
+    /**
+     * Indicator if the client is the palantir lobby owner
+     */
+    owner: boolean;
+
+    /**
+     * The actual owner's lobby player ID
+     */
+    ownerID: number;
+}
+
+/**
+ * Socketio eventdata for the search lobby event:
+ * User searchs for a lobby and requests their status update
+ */
+export interface searchLobbyEventdata {
+
+    /**
+     * The user's current ingame nickname
+     */
+    userName: string;
+
+    /**
+     * Indicator if the search is paused due to a full lobby
+     */
+    waiting: boolean;
+}
+
+/**
+ * Socketio eventdata for the leave lobby event response
+ */
+export interface leaveLobbyResponseEventdata {
+
+    /**
+     * Currently active lobbies of all guilds the authenticated member is conencted to
+     * Sent to instantly update the current lobbies because client wouldn't receive updates while playing
+     */
+    activeLobbies: Array<types.activeGuildLobbies>;
+}
+
+
+
+

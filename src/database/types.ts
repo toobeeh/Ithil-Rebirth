@@ -175,7 +175,8 @@ export interface accessToken{
         Name: string,
         Score: number,
         Sender: boolean,
-        Drawing: boolean
+        Drawing: boolean,
+        LobbyPlayerID: number
     }>
 }
 
@@ -220,18 +221,9 @@ export interface guildLobby extends lobby, palantirLobby{
 }
 
 /**
-* Lobby data containing skribbl and additional target related data
+* Lobby data containing skribbl and palantir data
 */
-export interface reportLobby extends lobby{
-    /**
-    * The palantir lobby ID
-    */
-    ID: string,
-
-    /**
-    * Observe token of the guild
-    */
-    ObserveToken: string
+export interface reportLobby extends lobby, palantirLobby{
 }
 
 /**
@@ -453,9 +445,14 @@ export interface playerStatus {
     Status: string,
 
     /**
-    * The id od the player's lobby
+    * The id of the player's lobby
     */
     LobbyID: string
+
+    /**
+    * The id of the layer in the lobby
+    */
+    LobbyPlayerID: string
 }
 
 /**
