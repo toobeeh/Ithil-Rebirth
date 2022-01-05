@@ -344,6 +344,11 @@ class PalantirDatabase {
             result.result.owner = !lobbyplayers.some(player => Number(player.playerid) < lobbyPlayerID);
             if (lobbyplayers.length > 0)
                 Number(result.result.ownerID = lobbyplayers.sort((a, b) => a - b)[0].playerid);
+            else {
+                // if there are no online players for this lobby, user is most likely owner and the status was not yet written 
+                result.result.owner = true;
+                result.result.ownerID = lobbyPlayerID;
+            }
             result.success = true;
         }
         catch (e) {
