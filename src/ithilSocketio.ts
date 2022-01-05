@@ -396,7 +396,7 @@ export interface setLobbyEventdata {
     /**
      * The lobby key of the lobby
      */
-    key: string;
+    lobbyKey: string;
 
     /**
      * The new lobby data
