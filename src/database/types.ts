@@ -100,7 +100,7 @@
     /**
      * The member's discord details
      */
-    memberDiscordDetails: memberDiscordDetails,
+    member: memberDiscordDetails,
 
     /**
      * The member's amount of bubbles

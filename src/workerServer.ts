@@ -143,7 +143,7 @@ portscanner.findAPortNotInUse(
                     response.authorized = true;
                     response.member = memberResult.result;
                     response.activeLobbies = workerCache.activeLobbies.filter(
-                        guild => memberResult.result.memberDiscordDetails.Guilds.some(connectedGuild => connectedGuild.GuildID == guild.guildID)
+                        guild => memberResult.result.member.Guilds.some(connectedGuild => connectedGuild.GuildID == guild.guildID)
                     );
                 }
 

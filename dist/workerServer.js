@@ -131,7 +131,7 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
                 // fill login response data
                 response.authorized = true;
                 response.member = memberResult.result;
-                response.activeLobbies = workerCache.activeLobbies.filter(guild => memberResult.result.memberDiscordDetails.Guilds.some(connectedGuild => connectedGuild.GuildID == guild.guildID));
+                response.activeLobbies = workerCache.activeLobbies.filter(guild => memberResult.result.member.Guilds.some(connectedGuild => connectedGuild.GuildID == guild.guildID));
             }
             return response;
         });

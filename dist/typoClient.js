@@ -14,8 +14,8 @@ class TypoClient {
         this.typosocket = socket;
         this.databaseWorker = dbWorker;
         this.workerCache = workerCache;
-        this.username = memberInit.memberDiscordDetails.UserName;
-        this.login = memberInit.memberDiscordDetails.UserLogin;
+        this.username = memberInit.member.UserName;
+        this.login = memberInit.member.UserLogin;
         // init events 
         this.typosocket.subscribeDisconnect(this.onDisconnect.bind(this));
         this.typosocket.subscribeGetUserEvent(this.getUser.bind(this));
@@ -272,7 +272,7 @@ class TypoClient {
         this.reportData.currentStatus = "idle";
         this.reportData.joinedLobby = undefined;
         this.reportData.reportLobby = undefined;
-        const guilds = (await this.member).memberDiscordDetails.Guilds;
+        const guilds = (await this.member).member.Guilds;
         const response = {
             activeLobbies: this.workerCache.activeLobbies.filter(guildLobby => guilds.some(guild => guild.GuildID == guildLobby.guildID))
         };
@@ -286,7 +286,7 @@ class TypoClient {
      */
     async updateStatus() {
         const statusIsAnyOf = (...statusNames) => statusNames.indexOf(this.reportData.currentStatus) > 0;
-        const currentMember = (await this.member).memberDiscordDetails;
+        const currentMember = (await this.member).member;
         // set playing room definitely only if currently playing
         if (this.reportData.currentStatus == "playing") {
             if (!this.typosocket.socket.rooms.has("playing"))
@@ -314,7 +314,7 @@ class TypoClient {
                 };
                 // create guild-specific lobby and write to db
                 const guildReportLobbies = [];
-                (await this.member).memberDiscordDetails.Guilds.forEach(guild => {
+                (await this.member).member.Guilds.forEach(guild => {
                     const templateClone = { ...guildReportTemplate };
                     templateClone.ObserveToken = guild.ObserveToken;
                     templateClone.GuildID = guild.GuildID;

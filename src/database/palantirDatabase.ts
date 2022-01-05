@@ -48,7 +48,7 @@ class PalantirDatabase {
         try {
             let row = this.db.prepare("SELECT * FROM Members WHERE Login = ?").get(login);
             result.result = {
-                memberDiscordDetails: JSON.parse(row.Member),
+                member: JSON.parse(row.Member),
                 bubbles: Number(row.Bubbles),
                 sprites: row.Sprites,
                 drops: Number(row.Drops),
