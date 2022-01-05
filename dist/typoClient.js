@@ -255,6 +255,7 @@ class TypoClient {
                 this.reportData.joinedLobby = updatedLobby;
             }
         }
+        console.log(updatedLobby);
         // return updated lobby
         const response = {
             lobbyData: {
