@@ -363,10 +363,10 @@ export default class TypoClient {
 
         // set playing room definitely only if currently playing
         if(this.reportData.currentStatus == "playing") {
-            if(!this.typosocket.socket.rooms.has("playing")) this.typosocket.socket.join("palying");
+            if(!this.typosocket.socket.rooms.has("playing")) this.typosocket.socket.join("playing");
         }
         else {
-            if(this.typosocket.socket.rooms.has("playing")) this.typosocket.socket.leave("palying");
+            if(this.typosocket.socket.rooms.has("playing")) this.typosocket.socket.leave("playing");
         }
 
         if (statusIsAnyOf("playing")) {
