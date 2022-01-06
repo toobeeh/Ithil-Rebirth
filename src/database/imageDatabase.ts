@@ -17,7 +17,7 @@ class ImageDatabase {
      */
     constructor(login: string, parentPath: string) {
         this.path = parentPath + login + ".db";
-
+        console.log(this.path);
         // check if db exists, if not create new db
         const exists = fs.existsSync(this.path);
         this.db = new sqlite3(this.path);
