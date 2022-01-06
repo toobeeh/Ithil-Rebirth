@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const threads_1 = require("threads");
 /**
- * Manage dataflow and interactions with a client accessing from typo
+ * Manage dataflow and interactions with a client socket accessing from skribbl.io using typo
  */
 class TypoClient {
     /**
@@ -26,6 +26,11 @@ class TypoClient {
         this.typosocket.subscribeSetLobbyEvent(this.setLobby.bind(this));
         this.typosocket.subscribeLeaveLobbyEvent(this.leaveLobby.bind(this));
         this.typosocket.subscribeSearchLobbyEvent(this.searchLobby.bind(this));
+        this.typosocket.subscribeStoreDrawingEvent(this.storeDrawing.bind(this));
+        this.typosocket.subscribeFetchDrawingEvent(this.fetchDrawing.bind(this));
+        this.typosocket.subscribeRemoveDrawingEvent(this.removeDrawing.bind(this));
+        this.typosocket.subscribeGetCommandsEvent(this.getCommands.bind(this));
+        this.typosocket.subscribeGetMetaEvent(this.getMeta.bind(this));
         // init report data 
         this.reportData = {
             currentStatus: "idle",
@@ -95,7 +100,10 @@ class TypoClient {
      */
     async onDisconnect(reason) {
         await this.palantirDatabaseWorker.close();
+        await this.imageDatabaseWorker.close();
         await threads_1.Thread.terminate(this.palantirDatabaseWorker);
+        await threads_1.Thread.terminate(this.imageDatabaseWorker);
+        console.log(this.username + " disconnected and closed threads/dbs.");
     }
     /**
      * Handler for get user event
@@ -381,6 +389,79 @@ class TypoClient {
         else if (statusIsAnyOf("idle")) {
             // do nothing. user is idling. yay.
         }
+    }
+    /**
+     * Handler for store drawing event
+     * @param eventdata Eventdata containing drawing meta, uri and commands
+     * @returns Response data containing the stored drawing's id
+     */
+    async storeDrawing(eventdata) {
+        // fill missing meta
+        const sanitizedMeta = {
+            author: eventdata.meta.author ? eventdata.meta.author : "Unknown artist",
+            date: eventdata.meta.date ? eventdata.meta.date : (new Date).toString(),
+            language: eventdata.meta.language ? eventdata.meta.language : "Unknown language",
+            login: this.login,
+            name: eventdata.meta.name ? eventdata.meta.name : "Unknown name",
+            own: eventdata.meta.own ? eventdata.meta.own : false,
+            private: eventdata.meta.private ? eventdata.meta.private : true,
+            thumbnail: eventdata.meta.thumbnail ? eventdata.meta.thumbnail : ""
+        };
+        // add content to tables
+        const id = Date.now().toString();
+        await this.imageDatabaseWorker.addDrawing(this.login, id, sanitizedMeta);
+        await this.imageDatabaseWorker.addDrawCommands(id, eventdata.commands);
+        await this.imageDatabaseWorker.addURI(id, eventdata.uri);
+        const response = {
+            id: id
+        };
+        return response;
+    }
+    /**
+     * Handler for fetch drawing event
+     * @param eventdata Eventdata containing the target drawing's id and wether the commands should be sent
+     * @returns Response data containing image data
+     */
+    async fetchDrawing(eventdata) {
+        const dbRes = await this.imageDatabaseWorker.getDrawing(eventdata.id);
+        if (!eventdata.withCommands)
+            dbRes.result.commands = [];
+        const response = {
+            drawing: dbRes.result
+        };
+        return response;
+    }
+    /**
+     * Handler for delete drawing event
+     * @param eventdata Eventdata containing the target drawing's id
+     */
+    async removeDrawing(eventdata) {
+        await this.imageDatabaseWorker.removeDrawing(this.login, eventdata.id);
+    }
+    /**
+     * Handler for get commands event
+     * @param eventdata Eventdata containing the target drawing's id
+     * @returns The array of commands
+     */
+    async getCommands(eventdata) {
+        const dbResult = await this.imageDatabaseWorker.getDrawing(eventdata.id);
+        const response = {
+            commands: dbResult.result.commands
+        };
+        return response;
+    }
+    /**
+     * Handler for get meta event
+     * @param eventdata Eventdata containing the search metadata
+     * @returns The array of drawings
+     */
+    async getMeta(eventdata) {
+        const limit = eventdata.limit ? eventdata.limit : -1;
+        const dbResult = await this.imageDatabaseWorker.getUserMeta(this.login, limit, eventdata.meta);
+        const response = {
+            drawings: dbResult.result
+        };
+        return response;
     }
     /**
      * Check if a sprite is special (replaces avatar)

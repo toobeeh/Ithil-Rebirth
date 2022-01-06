@@ -126,7 +126,7 @@ class ImageDatabase {
      * @param query optional meta properties to match meta entries
      * @returns an array of all found meta entries and their corresponding image IDs 
      */
-    getUserMeta(login: string, limit: -1, query: Partial<types.imageMeta> = {}) {
+    getUserMeta(login: string, limit: number = -1, query: Partial<types.imageMeta> = {}) {
         let result = this.emptyResult<Array<{ id: string, meta: types.imageMeta }>>();
         try {
 
@@ -178,7 +178,7 @@ class ImageDatabase {
      * @param id id of the drawing to delete
      * @returns indicator if the query succeeded
      */
-    removeDrawing(login: string, id: number) {
+    removeDrawing(login: string, id: string) {
         let success = false;
         try {
             // delete from all tables

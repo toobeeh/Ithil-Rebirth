@@ -206,6 +206,46 @@ export class TypoSocketioClient {
         this.subscribeEventAsync<searchLobbyEventdata, void>(eventNames.searchLobby, handler, true, false);
     }
 
+    /**
+     * Subscribe to the store drawing event - client wants to store a drawing in their image db
+     * @param handler Handler that saves the drawing and returns its id
+     */
+    subscribeStoreDrawingEvent(handler: (incoming: storeDrawingEventdata) => Promise<drawingIDEventdata>) {
+        this.subscribeEventAsync<storeDrawingEventdata, drawingIDEventdata>(eventNames.storeDrawing, handler, true, false);
+    }
+
+    /**
+     * Subscribe to the fetch drawing event - client wants to retrieve a drawing from their image db
+     * @param handler Handler gets the drawing by id and returns its data
+     */
+    subscribeFetchDrawingEvent(handler: (incoming: fetchDrawingEventdata) => Promise<fetchDrawingResponseEventdata>) {
+        this.subscribeEventAsync<fetchDrawingEventdata, fetchDrawingResponseEventdata>(eventNames.fetchDrawing, handler, true, false);
+    }
+
+    /**
+     * Subscribe to the remove drawing event - client wants to remove a drawing from their image db
+     * @param handler Handler that removes the drawing
+     */
+    subscribeRemoveDrawingEvent(handler: (incoming: drawingIDEventdata) => Promise<void>) {
+        this.subscribeEventAsync<drawingIDEventdata, void>(eventNames.removeDrawing, handler, true, false);
+    }
+
+    /**
+     * Subscribe to the get commands event - client wants to fetch draw commands of an image
+     * @param handler Handler that returns the draw commands
+     */
+    subscribeGetCommandsEvent(handler: (incoming: drawingIDEventdata) => Promise<getCommandsResponseEventdata>) {
+        this.subscribeEventAsync<drawingIDEventdata, getCommandsResponseEventdata>(eventNames.getCommands, handler, true, false);
+    }
+
+    /**
+     * Subscribe to the get meta event - client wants to get all drawings that match search meta
+     * @param handler Handler that returns the drawing results
+     */
+    subscribeGetMetaEvent(handler: (incoming: getMetaEventdata) => Promise<getMetaResponseEventdata>) {
+        this.subscribeEventAsync<getMetaEventdata, getMetaResponseEventdata>(eventNames.getMeta, handler, true, false);
+    }
+
 }
 
 //interfaces and event names for socketio communication
@@ -224,7 +264,12 @@ export const eventNames = Object.freeze({
     joinLobby: "join lobby",
     setLobby: "set lobby",
     searchLobby: "search lobby",
-    leaveLobby: "leave lobby"
+    leaveLobby: "leave lobby",
+    storeDrawing: "store drawing",
+    fetchDrawing: "fetch drawing",
+    removeDrawing: "remove drawing",
+    getCommands: "get commands",
+    getMeta: "get meta"
 });
 
 /** 
@@ -468,6 +513,106 @@ export interface leaveLobbyResponseEventdata {
     activeLobbies: Array<types.activeGuildLobbies>;
 }
 
+/**
+ * Socketio eventdata for the store drawing event
+ */
+export interface storeDrawingEventdata {
+
+    /**
+     * The image's meta, not necessarily complete, see {@link types.imageData.meta}
+     */
+    meta: Partial<types.imageMeta>;
+
+    /**
+     * The image's uri, see {@link types.imageData.uri}
+     */
+    uri: string;
+
+    /**
+     * The image's draw commands, see {@link types.imageData.commands}
+     */
+    commands: Array<Array<Array<number> | number>>;
+}
+
+/**
+ * Socketio eventdata containing a drawing's id, used for:
+ * - store drawing response
+ * - remove drawing
+ * - fetch drawing
+ * - get commands
+ */
+export interface drawingIDEventdata {
+
+    /**
+     * The id of an image
+     */
+    id: string;
+}
+
+/**
+ * Socketio eventdata for the fetch drawing event
+ */
+export interface fetchDrawingEventdata {
+
+    /**
+     * The id of an image
+     */
+    id: string;
+
+    /**
+     * Indicates wether commands should be included in the response
+     */
+    withCommands: boolean;
+}
+
+/**
+ * Socketio eventdata for the fetch drawing event response
+ */
+export interface fetchDrawingResponseEventdata {
+
+    /**
+     * The image result
+     */
+    drawing: types.imageData;
+}
+
+/**
+ * Socketio eventdata for the get commands event response
+ */
+export interface getCommandsResponseEventdata {
+
+    /**
+     * The image's draw commands, see {@link types.imageData.commands}
+     */
+    commands: Array<Array<Array<number> | number>>;
+}
+
+/**
+ * Socketio eventdata for the get meta event
+ */
+export interface getMetaEventdata {
+
+    /**
+     * The search meta, containing only desired properties, see {@link types.imageData.meta}
+     */
+    meta: Partial<types.imageMeta>;
+
+    /**
+    * The search result limitor
+    */
+    limit?: number;
+}
+
+/**
+ * Socketio eventdata for the get meta event response
+ */
+export interface getMetaResponseEventdata {
+
+    /**
+     * The image results
+     */
+    drawings: Array<{id:string, meta: types.imageMeta}>;
+}
 
 
 

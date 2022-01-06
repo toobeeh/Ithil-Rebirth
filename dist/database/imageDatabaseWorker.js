@@ -45,7 +45,7 @@ const imageDatabaseWorker = {
         return database.getDrawing(id);
     },
     /** Executes {@link ImageDatabase.getUserMeta} in a worker*/
-    getUserMeta(login, limit, query = {}) {
+    getUserMeta(login, limit = -1, query = {}) {
         if (!database)
             throw new Error("Database is not initialized.");
         return database.getUserMeta(login, limit, query);

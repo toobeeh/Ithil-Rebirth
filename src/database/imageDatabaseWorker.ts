@@ -1,7 +1,6 @@
 
 import * as types from "./types";
 import { expose } from "threads";
-import PalantirDatabase from "./imageDatabase";
 import ImageDatabase from "./imageDatabase";
 
 /**
@@ -47,7 +46,7 @@ const imageDatabaseWorker = {
     },
 
     /** Executes {@link ImageDatabase.getUserMeta} in a worker*/
-    getUserMeta(login: string, limit: -1, query: Partial<types.imageMeta> = {}) {
+    getUserMeta(login: string, limit: number = -1, query: Partial<types.imageMeta> = {}) {
         if(!database) throw new Error("Database is not initialized.");
         return database.getUserMeta(login, limit, query);
     },
@@ -59,7 +58,7 @@ const imageDatabaseWorker = {
     },
 
     /** Executes {@link ImageDatabase.removeDrawing} in a worker*/
-    removeDrawing(login: string, id: number) {
+    removeDrawing(login: string, id: string) {
         if(!database) throw new Error("Database is not initialized.");
         return database.removeDrawing(login, id);
     }

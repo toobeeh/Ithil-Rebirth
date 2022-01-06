@@ -116,7 +116,7 @@ class ImageDatabase {
      * @param query optional meta properties to match meta entries
      * @returns an array of all found meta entries and their corresponding image IDs
      */
-    getUserMeta(login, limit, query = {}) {
+    getUserMeta(login, limit = -1, query = {}) {
         let result = this.emptyResult();
         try {
             // build a where statement based on meta search

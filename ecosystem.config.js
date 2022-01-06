@@ -31,6 +31,6 @@ module.exports = {
         certificatePath: '/etc/letsencrypt/live/typo.rip',
         palantirDbPath: '../debugDB/palantir.db',
         statDbPath: '../debugDB/typoStats.db',
-        imageDbParentPath: '/etc/letsencrypt/live/typo.rip',
+        imageDbParentPath: '/home/pi/Database/imagedb/',
     }
 };

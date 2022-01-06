@@ -181,6 +181,41 @@ class TypoSocketioClient {
     subscribeSearchLobbyEvent(handler) {
         this.subscribeEventAsync(exports.eventNames.searchLobby, handler, true, false);
     }
+    /**
+     * Subscribe to the store drawing event - client wants to store a drawing in their image db
+     * @param handler Handler that saves the drawing and returns its id
+     */
+    subscribeStoreDrawingEvent(handler) {
+        this.subscribeEventAsync(exports.eventNames.storeDrawing, handler, true, false);
+    }
+    /**
+     * Subscribe to the fetch drawing event - client wants to retrieve a drawing from their image db
+     * @param handler Handler gets the drawing by id and returns its data
+     */
+    subscribeFetchDrawingEvent(handler) {
+        this.subscribeEventAsync(exports.eventNames.fetchDrawing, handler, true, false);
+    }
+    /**
+     * Subscribe to the remove drawing event - client wants to remove a drawing from their image db
+     * @param handler Handler that removes the drawing
+     */
+    subscribeRemoveDrawingEvent(handler) {
+        this.subscribeEventAsync(exports.eventNames.removeDrawing, handler, true, false);
+    }
+    /**
+     * Subscribe to the get commands event - client wants to fetch draw commands of an image
+     * @param handler Handler that returns the draw commands
+     */
+    subscribeGetCommandsEvent(handler) {
+        this.subscribeEventAsync(exports.eventNames.getCommands, handler, true, false);
+    }
+    /**
+     * Subscribe to the get meta event - client wants to get all drawings that match search meta
+     * @param handler Handler that returns the drawing results
+     */
+    subscribeGetMetaEvent(handler) {
+        this.subscribeEventAsync(exports.eventNames.getMeta, handler, true, false);
+    }
 }
 exports.TypoSocketioClient = TypoSocketioClient;
 //interfaces and event names for socketio communication
@@ -198,6 +233,11 @@ exports.eventNames = Object.freeze({
     joinLobby: "join lobby",
     setLobby: "set lobby",
     searchLobby: "search lobby",
-    leaveLobby: "leave lobby"
+    leaveLobby: "leave lobby",
+    storeDrawing: "store drawing",
+    fetchDrawing: "fetch drawing",
+    removeDrawing: "remove drawing",
+    getCommands: "get commands",
+    getMeta: "get meta"
 });
 //# sourceMappingURL=ithilSocketio.js.map
