@@ -9,17 +9,10 @@ module.exports = {
             name: "Ithil-Rebirth Worker Server",
             script: "./dist/workerServer.js",
             exec_mode: "cluster",
-            instances: 7,
+            instances: 8,
             wait_ready: true,
             listen_timeout: 10000,
             time: true
-        }, {
-            name: "Ithil-Rebirth Worker Debug Server",
-            script: "./dist/workerServer.js",
-            wait_ready: true,
-            listen_timeout: 10000,
-            time: true,
-            node_args: "--inspect=9228"
         }
     ],
     config: {
@@ -29,8 +22,8 @@ module.exports = {
         workerRange: [4102, 4110],
         minAvailableWorker: 7,
         certificatePath: '/etc/letsencrypt/live/typo.rip',
-        palantirDbPath: '../debugDB/palantir.db',
-        statDbPath: '../debugDB/typoStats.db',
+        palantirDbPath: '/home/pi/Database/imagedb/palantir.db',
+        statDbPath: '/home/pi/Database/imagedb/typoStats.db',
         imageDbParentPath: '/home/pi/Database/imagedb/',
     }
 };
