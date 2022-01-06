@@ -15,8 +15,7 @@ class ImageDatabase {
      * @param parentPath The path to the aprent imagedb fodler, **with** trailing / at the end
      */
     constructor(login, parentPath) {
-        this.path = parentPath + login + ".db";
-        console.log(this.path);
+        this.path = parentPath + "udb" + login + ".db";
         // check if db exists, if not create new db
         const exists = fs_1.default.existsSync(this.path);
         this.db = new better_sqlite3_1.default(this.path);
