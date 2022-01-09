@@ -17,7 +17,7 @@ class ImageDatabase {
      */
     constructor(login: string, parentPath: string) {
         this.path = parentPath + "udb" + login + ".db";
-        
+
         // check if db exists, if not create new db
         const exists = fs.existsSync(this.path);
         this.db = new sqlite3(this.path);
@@ -110,7 +110,7 @@ class ImageDatabase {
         try {
             result.result.meta = this.db.prepare("SELECT * FROM Drawings WHERE id = ?").get(id).meta;
             result.result.commands = JSON.parse(this.db.prepare("SELECT * FROM Commands WHERE id = ?").get(id).commands);
-            result.result.uri = JSON.parse(this.db.prepare("SELECT * FROM BaseURI WHERE id = ?").get(id).uri);
+            result.result.uri = this.db.prepare("SELECT * FROM BaseURI WHERE id = ?").get(id).uri;
             result.success = true;
         }
         catch (e) {
