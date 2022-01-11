@@ -2,7 +2,8 @@ import { palantirDatabaseWorker } from './database/palantirDatabaseWorker';
 import { imageDatabaseWorker } from './database/imageDatabaseWorker';
 import { ModuleThread, spawn, Thread, Worker } from "threads";
 import * as types from "./database/types";
-import * as ithilSocket from "./ithilSocketio";
+import * as ithilSocketServer from "./ithilSocketServer";
+import { dropClaimEventdata } from './ipc';
 
 /**
  * Manage dataflow and interactions with a client socket accessing from skribbl.io using typo
@@ -16,7 +17,7 @@ export default class TypoClient {
     imageDatabaseWorker: ModuleThread<imageDatabaseWorker>;
 
     /** Socketio client socket instance */
-    typosocket: ithilSocket.TypoSocketioClient;
+    typosocket: ithilSocketServer.TypoSocketioClient;
 
 
     /** Get the authentificated member */
@@ -84,11 +85,17 @@ export default class TypoClient {
     /** The authentificated member's login */
     login: string;
 
+    /** The ms timestamp of login */
+    loginDate: number;
+
     /** The worker's cached data */
     workerCache: types.workerCache;
 
     /** The interval in which the current playing status is processed */
     updateStatusInterval?: TimerHandler = undefined;
+
+    /** The interval in which the current playing status is processed */
+    claimDropCallback?: (eventdata: dropClaimEventdata) => void = undefined;
 
     /** Object that represents the state of the socket for reporting playing status */
     reportData: {
@@ -112,13 +119,14 @@ export default class TypoClient {
     /** 
      * Init a new client with all member-related data and bound events 
      */
-    constructor(socket: ithilSocket.TypoSocketioClient, dbWorker: ModuleThread<palantirDatabaseWorker>, imageDbWorker: ModuleThread<imageDatabaseWorker>, memberInit: types.member, workerCache: types.workerCache) {
+    constructor(socket: ithilSocketServer.TypoSocketioClient, dbWorker: ModuleThread<palantirDatabaseWorker>, imageDbWorker: ModuleThread<imageDatabaseWorker>, memberInit: types.member, workerCache: types.workerCache) {
         this.typosocket = socket;
         this.palantirDatabaseWorker = dbWorker;
         this.imageDatabaseWorker = imageDbWorker;
         this.workerCache = workerCache;
         this.username = memberInit.member.UserName;
         this.login = memberInit.member.UserLogin;
+        this.loginDate = Date.now();
 
         // init events 
         this.typosocket.subscribeDisconnect(this.onDisconnect.bind(this));
@@ -134,6 +142,7 @@ export default class TypoClient {
         this.typosocket.subscribeRemoveDrawingEvent(this.removeDrawing.bind(this));
         this.typosocket.subscribeGetCommandsEvent(this.getCommands.bind(this));
         this.typosocket.subscribeGetMetaEvent(this.getMeta.bind(this));
+        this.typosocket.subscribeClaimDropEvent(this.claimDrop.bind(this));
 
         // init report data 
         this.reportData = {
@@ -152,6 +161,11 @@ export default class TypoClient {
      * @param reason Socketio disconnect reason
      */
     async onDisconnect(reason: string) {
+        const flags = await this.flags
+        if(!flags.admin || !flags.patron || !flags.unlimitedCloud) {
+            await this.imageDatabaseWorker.removeEntries(this.login, this.loginDate - 1000 * 60 * 60 * 24 * 30);
+        }
+
         await this.palantirDatabaseWorker.close();
         await this.imageDatabaseWorker.close();
         await Thread.terminate(this.palantirDatabaseWorker);
@@ -165,7 +179,7 @@ export default class TypoClient {
      * @returns Event response data containing user, flags and slots
      */
     async getUser() {
-        const data: ithilSocket.getUserResponseEventdata = {
+        const data: ithilSocketServer.getUserResponseEventdata = {
             user: await this.member,
             flags: await this.flags,
             slots: await this.spriteSlots
@@ -178,7 +192,7 @@ export default class TypoClient {
      * @param eventdata Eventdata conaining slot and sprite id
      * @returns Response data containing updated user, flags and slots
      */
-    async setSpriteSlot(eventdata: ithilSocket.setSlotEventdata) {
+    async setSpriteSlot(eventdata: ithilSocketServer.setSlotEventdata) {
         const slots = await this.spriteSlots;
         const currentInv = await this.spriteInventory;
         const flags = await this.flags;
@@ -199,7 +213,7 @@ export default class TypoClient {
         }
 
         // return updated data
-        const data: ithilSocket.getUserResponseEventdata = {
+        const data: ithilSocketServer.getUserResponseEventdata = {
             user: await this.member,
             flags: flags,
             slots: slots
@@ -212,7 +226,7 @@ export default class TypoClient {
      * @param eventdata Eventdata containing combo string comma-separated and dots indicating slot
      * @returns Response data containing updated user, flags and slots
      */
-    async setSpriteCombo(eventdata: ithilSocket.setComboEventdata) {
+    async setSpriteCombo(eventdata: ithilSocketServer.setComboEventdata) {
         const combo = eventdata.combostring.split(",").map(slot => {
             return {
                 id: Number(slot.replace(".", "")),
@@ -241,7 +255,7 @@ export default class TypoClient {
         }
 
         // return updated data
-        const data: ithilSocket.getUserResponseEventdata = {
+        const data: ithilSocketServer.getUserResponseEventdata = {
             user: await this.member,
             flags: flags,
             slots: slots
@@ -254,7 +268,7 @@ export default class TypoClient {
      * @param eventdata Eventdata containing the joined lobby's key
      * @returns Response data containing the joined lobby data
      */
-    async joinLobby(eventdata: ithilSocket.joinLobbyEventdata) {
+    async joinLobby(eventdata: ithilSocketServer.joinLobbyEventdata) {
         console.log(this.username + " joined a lobby.");
 
         this.reportData.currentStatus = "playing";
@@ -286,7 +300,7 @@ export default class TypoClient {
         }
 
         // return found or created lobby
-        const response: ithilSocket.joinLobbyResponseEventdata = {
+        const response: ithilSocketServer.joinLobbyResponseEventdata = {
             lobbyData: lobby,
             valid: success
         }
@@ -298,7 +312,7 @@ export default class TypoClient {
      * @param eventdata Eventdata containing lobby details as well as key, restriction, description
      * @returns Response data containing the new lobby data and owner information
      */
-    async setLobby(eventdata: ithilSocket.setLobbyEventdata) {
+    async setLobby(eventdata: ithilSocketServer.setLobbyEventdata) {
         let owner = false;
         let ownerID = 0;
         let updatedLobby = {} as types.reportLobby;
@@ -350,7 +364,7 @@ export default class TypoClient {
         }
 
         // return updated lobby
-        const response: ithilSocket.setLobbyResponseEventdata = {
+        const response: ithilSocketServer.setLobbyResponseEventdata = {
             lobbyData: {
                 lobby: updatedLobby
             },
@@ -364,7 +378,7 @@ export default class TypoClient {
      * Handler for search lobby event
      * @param eventdata Eventdata conatining search nickname of the client
      */
-    async searchLobby(eventdata: ithilSocket.searchLobbyEventdata) {
+    async searchLobby(eventdata: ithilSocketServer.searchLobbyEventdata) {
         if(eventdata.searchData.waiting) this.reportData.currentStatus = "waiting";
         else this.reportData.currentStatus = "searching";
         this.reportData.nickname = eventdata.searchData.userName;
@@ -390,7 +404,7 @@ export default class TypoClient {
             activeLobbies = this.workerCache.activeLobbies.filter(guildLobby => guilds.some(guild => guild.GuildID == guildLobby.guildID));
         }
 
-        const response: ithilSocket.leaveLobbyResponseEventdata = {
+        const response: ithilSocketServer.leaveLobbyResponseEventdata = {
             activeLobbies: activeLobbies
         }
         return response;
@@ -478,7 +492,7 @@ export default class TypoClient {
      * @param eventdata Eventdata containing drawing meta, uri and commands
      * @returns Response data containing the stored drawing's id
      */
-    async storeDrawing(eventdata: ithilSocket.storeDrawingEventdata){
+    async storeDrawing(eventdata: ithilSocketServer.storeDrawingEventdata){
         
         // fill missing meta
         const sanitizedMeta: types.imageMeta = {
@@ -498,7 +512,7 @@ export default class TypoClient {
         await this.imageDatabaseWorker.addDrawCommands(id, eventdata.commands);
         await this.imageDatabaseWorker.addURI(id, eventdata.uri);
 
-        const response: ithilSocket.drawingIDEventdata = {
+        const response: ithilSocketServer.drawingIDEventdata = {
             id: id
         }
         return response;
@@ -509,11 +523,11 @@ export default class TypoClient {
      * @param eventdata Eventdata containing the target drawing's id and wether the commands should be sent 
      * @returns Response data containing image data
      */
-     async fetchDrawing(eventdata: ithilSocket.fetchDrawingEventdata){
+     async fetchDrawing(eventdata: ithilSocketServer.fetchDrawingEventdata){
         const dbRes = await this.imageDatabaseWorker.getDrawing(eventdata.id);
         if(!eventdata.withCommands) dbRes.result.commands = [];
 
-        const response: ithilSocket.fetchDrawingResponseEventdata = {
+        const response: ithilSocketServer.fetchDrawingResponseEventdata = {
             drawing: dbRes.result
         }
         return response;
@@ -523,7 +537,7 @@ export default class TypoClient {
      * Handler for delete drawing event
      * @param eventdata Eventdata containing the target drawing's id 
      */
-     async removeDrawing(eventdata: ithilSocket.drawingIDEventdata){
+     async removeDrawing(eventdata: ithilSocketServer.drawingIDEventdata){
         await this.imageDatabaseWorker.removeDrawing(this.login, eventdata.id);
     }
 
@@ -532,10 +546,10 @@ export default class TypoClient {
      * @param eventdata Eventdata containing the target drawing's id 
      * @returns The array of commands
      */
-     async getCommands(eventdata: ithilSocket.drawingIDEventdata){
+     async getCommands(eventdata: ithilSocketServer.drawingIDEventdata){
         const dbResult = await this.imageDatabaseWorker.getDrawing(eventdata.id);
 
-        const response: ithilSocket.getCommandsResponseEventdata = {
+        const response: ithilSocketServer.getCommandsResponseEventdata = {
             commands: dbResult.result.commands
         }
         return response;
@@ -546,14 +560,42 @@ export default class TypoClient {
      * @param eventdata Eventdata containing the search metadata
      * @returns The array of drawings
      */
-     async getMeta(eventdata: ithilSocket.getMetaEventdata){
+     async getMeta(eventdata: ithilSocketServer.getMetaEventdata){
         const limit = eventdata.limit ? eventdata.limit : -1;
         const dbResult = await this.imageDatabaseWorker.getUserMeta(this.login, limit, eventdata.meta);
 
-        const response: ithilSocket.getMetaResponseEventdata = {
+        const response: ithilSocketServer.getMetaResponseEventdata = {
             drawings: dbResult.result
         }
         return response;
+    }
+
+    /**
+     * Handler for the claim drop event
+     * @param eventdata Eventdata containing the claim details
+     */
+     async claimDrop(eventdata: ithilSocketServer.claimDropEventdata){
+        const flags = await this.flags;
+        const claimTimestamp = Date.now();
+        if(flags.dropBan || eventdata.timedOut 
+            || !this.claimDropCallback || !this.reportData.joinedLobby 
+            || !this.reportData.reportLobby) throw new Error("Unauthorized drop claim");
+
+        const username = this.reportData.reportLobby.Players.find(p=> p.Sender)?.Name;
+        const lobbyKey = this.reportData.joinedLobby.Key;
+        const userID = (await this.member).member.UserID;
+
+        const claimData: dropClaimEventdata = {
+            dropID: eventdata.dropID,
+            login: this.login,
+            username: username ? username :  "Someone else",
+            lobbyKey: lobbyKey,
+            userID: userID,
+            claimTicket: eventdata.claimTicket,
+            claimTimestamp: claimTimestamp,
+            claimVerifyDelay: Date.now() - claimTimestamp
+        };
+        this.claimDropCallback(claimData);
     }
 
     /**

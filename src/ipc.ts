@@ -1,5 +1,4 @@
-import {IPC} from 'node-ipc';
-import { eventNames } from 'process';
+import { IPC } from 'node-ipc';
 import * as types from "./database/types";
 
 // extract the type of an ipc client... yeah, ugly hack
@@ -11,27 +10,62 @@ export const ipcEvents = Object.freeze({
     workerDisconnect: "socket.disconnected",
     updateBalance: "updatePortBalance",
     publicData: "publicData",
-    activeLobbies: "activeLobbies"
+    activeLobbies: "activeLobbies",
+    nextDrop: "nextDrop",
+    dropDispatched: "dropDispatched",
+    dropClaim: "dropClaim",
+    clearDrop: "clearDrop",
+    rankDrop: "rankDrop"
 });
 
-namespace EventdataInterfaces{
+export interface workerConnectEventdata {
+    port: number;
+}
 
-    export interface workerConnectEventdata{
-        port: number;
-    }
-    
-    export interface updatePortBalanceEventdata{
-        clients: number;
-        port: number;
-    }
+export interface updatePortBalanceEventdata {
+    clients: number;
+    port: number;
+}
 
-    export interface publicDataEventdata {
-        publicData: types.publicData;
-    }
+export interface publicDataEventdata {
+    publicData: types.publicData;
+}
 
-    export interface activeLobbiesEventdata{
-        activeLobbies: Array<types.activeGuildLobbies>;
-    }
+export interface activeLobbiesEventdata {
+    activeLobbies: Array<types.activeGuildLobbies>;
+}
+
+export interface nextDropEventdata {
+    dropID: string;
+    eventDropID: string;
+}
+
+export interface dispatchedDropEventdata {
+    dispatchTimestamp: number;
+    dispatchDelays: Array<{ claimTicket: number, delay: number }>;
+}
+
+export interface dropClaimEventdata {
+    dropID: string;
+    login: string;
+    username: string;
+    userID: string;
+    lobbyKey: string;
+    claimTimestamp: number;
+    claimTicket: number;
+    claimVerifyDelay: number;
+}
+
+export interface clearDropEventdata {
+    dropID: string;
+    caughtPlayer: string;
+    caughtLobbyKey: string;
+    claimTicket: number;
+}
+
+export interface rankDropEventdata {
+    dropID: string;
+    ranks: Array<string>;
 }
 
 
@@ -45,7 +79,7 @@ abstract class IthilIPC {
      * The core ipc object
      */
     ipc;
-    
+
     /**
      * All IPC events
      */
@@ -69,7 +103,7 @@ export class IthilIPCServer extends IthilIPC {
      * @param data {@link EventdataInterfaces.workerConnectEventdata}
      * @param socket The worker's ipc socket
      */
-    onWorkerConnected?: (data: EventdataInterfaces.workerConnectEventdata, socket: IpcClient) => void;
+    onWorkerConnected?: (data: workerConnectEventdata, socket: IpcClient) => void;
 
     /**
      * Callback when the IPC connection to a worker crashes, most likely due to a crash on the worker
@@ -83,19 +117,51 @@ export class IthilIPCServer extends IthilIPC {
      * @param data {@link EventdataInterfaces.updatePortBalanceEventdata}
      * @param socket The worker's ipc socket
      */
-    onBalanceChanged?: (data: EventdataInterfaces.updatePortBalanceEventdata, socket: IpcClient) => void;
+    onBalanceChanged?: (data: updatePortBalanceEventdata, socket: IpcClient) => void;
+
+    /**
+     * Callback when a drop was dispatched by the drop server
+     * @param data {@link EventdataInterfaces.dispatchedDropEventdata}
+     * @param socket The worker's ipc socket
+     */
+    onDropDispatched?: (data: dispatchedDropEventdata, socket: IpcClient) => void;
+
+    /**
+     * Callback when a drop was claimed by a client on a worker server
+     * @param data {@link EventdataInterfaces.dropClaimedEventdata}
+     * @param socket The worker's ipc socket
+     */
+    onDropClaim?: (data: dropClaimEventdata, socket: IpcClient) => void;
 
     /**
      * Broadcast public data to all connected workers
      * @param data The public data object {@link EventdataInterfaces.publicDataEventdata}
      */
-    broadcastPublicData: (data:EventdataInterfaces.publicDataEventdata) => void;
+    broadcastPublicData: (data: publicDataEventdata) => void;
 
     /**
      * Broadcast active lobbies to all connected workers
      * @param data The active lobbies array {@link EventdataInterfaces.activeLobbiesEventdata}
      */
-    broadcastActiveLobbies: (data:EventdataInterfaces.activeLobbiesEventdata) => void;
+    broadcastActiveLobbies: (data: activeLobbiesEventdata) => void;
+
+    /**
+     * Broadcast next drop
+     * @param data The next drop properties {@link EventdataInterfaces.nextDropEventdata}
+     */
+    broadcastNextDrop: (data: nextDropEventdata) => void;
+
+    /**
+     * Broadcast clear drop
+     * @param data Drop result data {@link EventdataInterfaces.clearDropEventdata}
+     */
+    broadcastClearDrop: (data: clearDropEventdata) => void;
+
+    /**
+     * Broadcast rank drop
+     * @param data Drop rank data {@link EventdataInterfaces.rankDropEventdata}
+     */
+    broadcastRankDrop: (data: rankDropEventdata) => void;
 
 
     /**
@@ -108,28 +174,38 @@ export class IthilIPCServer extends IthilIPC {
 
             // listen to disconnect event
             this.ipc.server.on(ipcEvents.workerDisconnect, (socket: IpcClient, socketID: string) => {
-                
+
                 // execute with timeout because of reasons i simply forgot
                 setTimeout(() => {
                     if (this.onWorkerDisconnected) this.onWorkerDisconnected(socket, socketID);
-                },100);
+                }, 100);
             });
 
             // listen to predefined events and make callbacks easy to set
-            this.on(ipcEvents.workerConnect, (data: EventdataInterfaces.workerConnectEventdata, socket: IpcClient) => {
+            this.on(ipcEvents.workerConnect, (data: workerConnectEventdata, socket: IpcClient) => {
                 if (this.onWorkerConnected) this.onWorkerConnected(data, socket);
             });
 
-            this.on(ipcEvents.updateBalance, (data: EventdataInterfaces.updatePortBalanceEventdata, socket: IpcClient) => {
+            this.on(ipcEvents.updateBalance, (data: updatePortBalanceEventdata, socket: IpcClient) => {
                 if (this.onBalanceChanged) this.onBalanceChanged(data, socket);
+            });
+
+            this.on(ipcEvents.dropDispatched, (data: dispatchedDropEventdata, socket: IpcClient) => {
+                if (this.onDropDispatched) this.onDropDispatched(data, socket);
+            });
+
+            this.on(ipcEvents.dropClaim, (data: dropClaimEventdata, socket: IpcClient) => {
+                if (this.onDropClaim) this.onDropClaim(data, socket);
             });
         });
         this.ipc.server.start();
 
         // init predefined broadcast functions
         this.broadcastPublicData = (data) => this.broadcast(ipcEvents.publicData, data);
-
         this.broadcastActiveLobbies = (data) => this.broadcast(ipcEvents.activeLobbies, data);
+        this.broadcastNextDrop = (data) => this.broadcast(ipcEvents.nextDrop, data);
+        this.broadcastClearDrop = (data) => this.broadcast(ipcEvents.clearDrop, data);
+        this.broadcastRankDrop = (data) => this.broadcast(ipcEvents.rankDrop, data);
     }
 
     /**
@@ -163,19 +239,49 @@ export class IthilIPCClient extends IthilIPC {
      * Is null when the server isn't connected yet.
      * @param data Event data containing the current client load and worker port
      */
-    updatePortBalance?: (data: EventdataInterfaces.updatePortBalanceEventdata) => void;
+    updatePortBalance?: (data: updatePortBalanceEventdata) => void;
+
+    /**
+     * Emit an event to the main server containing data about an dispatched drop. 
+     * @param data Event data containing the dispatch data
+     */
+    sendDispatchedDropData?: (data: dispatchedDropEventdata) => void;
+
+    /**
+     * Emit an event to the main server containing a drop claim request.
+     * @param data Event data containing the dro pclaim
+     */
+    claimDrop?: (data: dropClaimEventdata) => void;
 
     /**
      * Callback when new active lobbies data is received from the ipc socket
      * @param data {@link EventdataInterfaces.activeLobbiesEventdata}
      */
-    onActiveLobbiesChanged?: (data: EventdataInterfaces.activeLobbiesEventdata) => void;
+    onActiveLobbiesChanged?: (data: activeLobbiesEventdata) => void;
 
     /**
      * Callback when new public data is received from the ipc socket
      * @param data {@link EventdataInterfaces.publicDataEventdata}
      */
-    onPublicDataChanged?: (data: EventdataInterfaces.publicDataEventdata) => void;
+    onPublicDataChanged?: (data: publicDataEventdata) => void;
+
+    /**
+     * Callback when the server has a new drop ready to dispatch
+     * @param data {@link EventdataInterfaces.nextDropEventdata}
+     */
+    onNextDropReceived?: (data: nextDropEventdata) => void;
+
+    /**
+     * Callback when the server clears a drop
+     * @param data {@link EventdataInterfaces.clearDropEventdata}
+     */
+    onDropClear?: (data: clearDropEventdata) => void;
+
+    /**
+     * Callback when the server ranks a drop
+     * @param data {@link EventdataInterfaces.rankDropEventdata}
+     */
+    onDropRank?: (data: rankDropEventdata) => void;
 
     /**
      * Create a new ithil client ipc socket
@@ -187,25 +293,27 @@ export class IthilIPCClient extends IthilIPC {
     }
 
     /**
-     * Connects thsi socket to the ipc main server
+     * Connects this socket to the ipc main server
      * @param serverID The ID of the ipc server to connect
      * @param workerPort The socketio port of this worker
      * @returns A promise that resolves as soon as the ipc socket is connected
      */
-    async connect(serverID: string, workerPort: number){
+    async connect(serverID: string, workerPort: number) {
         return new Promise<void>((resolve, reject) => {
-            setTimeout(()=>reject(), 15000);
+            setTimeout(() => reject(), 15000);
 
             // connect to server
-            this.ipc.connectTo(serverID, ()=>{
+            this.ipc.connectTo(serverID, () => {
                 this.server = this.ipc.of[serverID];
 
                 // say hello and tell server which port is in use
-                const eventdata: EventdataInterfaces.workerConnectEventdata = {port: workerPort};
+                const eventdata: workerConnectEventdata = { port: workerPort };
                 this.emit(ipcEvents.workerConnect, eventdata);
 
                 // init predefined emits
                 this.updatePortBalance = (data) => this.emit(ipcEvents.updateBalance, data);
+                this.sendDispatchedDropData = (data) => this.emit(ipcEvents.dropDispatched, data);
+                this.claimDrop = (data) => this.emit(ipcEvents.dropClaim, data);
 
                 // init predefined events
                 this.on(ipcEvents.activeLobbies, (data, socket) => {
@@ -214,6 +322,18 @@ export class IthilIPCClient extends IthilIPC {
 
                 this.on(ipcEvents.publicData, (data, socket) => {
                     this.onPublicDataChanged?.(data);
+                });
+
+                this.on(ipcEvents.nextDrop, (data, socket) => {
+                    this.onNextDropReceived?.(data);
+                });
+
+                this.on(ipcEvents.clearDrop, (data, socket) => {
+                    this.onDropClear?.(data);
+                });
+
+                this.on(ipcEvents.rankDrop, (data, socket) => {
+                    this.onDropRank?.(data);
                 });
 
                 resolve();
@@ -226,11 +346,11 @@ export class IthilIPCClient extends IthilIPC {
      * @param event The event name
      * @param data The event data
      */
-    emit(event: string, data: any){
-        if(this.server){
+    emit(event: string, data: any) {
+        if (this.server) {
             this.server.emit(event, data);
         }
-        else throw new Error("IPC client is not connected to any server.");        
+        else throw new Error("IPC client is not connected to any server.");
     }
 
     /**
@@ -238,10 +358,10 @@ export class IthilIPCClient extends IthilIPC {
      * @param event The event name
      * @param callback The event callback, arguments being the received event data and the event source socket
      */
-    on(event: string, callback: (data: any, socket: IpcClient) => void){
-        if(this.server){
+    on(event: string, callback: (data: any, socket: IpcClient) => void) {
+        if (this.server) {
             this.server.on(event, callback);
         }
-        else throw new Error("IPC client is not connected to any server.");        
+        else throw new Error("IPC client is not connected to any server.");
     }
 }

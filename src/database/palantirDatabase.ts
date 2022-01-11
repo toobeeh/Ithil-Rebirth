@@ -293,11 +293,11 @@ class PalantirDatabase {
       * @param id ID of the drop; if -1 the current drop is returned
       * @returns The drop
       */
-    getDrop(id: number = -1) {
+    getDrop(id: string = "") {
         let result = this.emptyResult<types.drop | null>();
         try {
             // get drop
-            let drop = id > -1 ? this.db.prepare("SELECT * FROM 'Drop' WHERE DropID = ?").get(id) :
+            let drop = id == "" ? this.db.prepare("SELECT * FROM 'Drop' WHERE DropID = ?").get(id) :
                 this.db.prepare("SELECT * FROM 'Drop'").get();
             result.success = true;
             result.result = drop as types.drop;
@@ -310,8 +310,8 @@ class PalantirDatabase {
 
     /**
       * Claim a drop for a user
-      * @param userid Lobby key of the claiming user
-      * @param palyerName Skribbl name of the claiming user
+      * @param lobbyKey Lobby key of the claiming user
+      * @param playerName Skribbl name of the claiming user
       * @param dropID ID of the drop to claim, must be valid for successful claim
       * @param userid Discord ID of the claiming user
       * @returns Indicator if the query succeeded
