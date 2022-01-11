@@ -41,6 +41,7 @@ export default class Drops {
     
                 // poll for next drop
                 while (!nextTimeout || nextTimeout < 0 || !nextDrop) {
+                    console.log(nextTimeout, nextDrop);
                     await this.idle(100);
                     nextDrop = (await this.db.getDrop()).result;
     
