@@ -2,13 +2,68 @@ import https from 'https';
 import fs from 'fs';
 import cors from 'cors';
 import express from "express";
+import * as ws from "ws";
 import { Server as SocketioServer, Socket } from "socket.io";
 import * as types from "./database/types";
 
 /**
+ * A https server with certs loaded and cors enabled
+ */
+class IthilHttpsServer{
+
+    /**
+     * The https server
+     */
+    httpsServer: https.Server;
+
+    /**
+     * Init https & express server
+     * @param certPath The path to the SSL certificate
+     */
+    constructor(certPath: string){
+
+        // Start the https server with cors on main port
+        const serverExpress = express();
+        serverExpress.use(cors());
+        const server = https.createServer({
+            key: fs.readFileSync(certPath + '/privkey.pem', 'utf8'),
+            cert: fs.readFileSync(certPath + '/cert.pem', 'utf8'),
+            ca: fs.readFileSync(certPath + '/chain.pem', 'utf8')
+        }, serverExpress);
+
+        this.httpsServer = server;
+    }
+}
+
+/**
+ * A wrapper class for all required websocket server initialization
+ */
+export class IthilWebsocketServer extends IthilHttpsServer {
+    /**
+     * The websocket server instance
+     */
+    server: ws.WebSocketServer;
+
+    /**
+     * Init https & express and start the websocket server
+     * @param port The socketio port 
+     * @param certPath The path to the SSL certificate
+     */
+     constructor(port: number, certPath: string) {
+
+        // Call base constructor
+        super(certPath);
+
+        // start websocket server and listen
+        this.server = new ws.WebSocketServer({server: this.httpsServer});
+        this.httpsServer.listen(port);
+     }
+}
+
+/**
  * A wrapper class for all required socketio server initialization
  */
-export class IthilSocketioServer {
+export class IthilSocketioServer extends IthilHttpsServer {
     /**
      * The socketio server instance
      */
@@ -21,17 +76,12 @@ export class IthilSocketioServer {
      */
     constructor(port: number, certPath: string) {
 
-        // Start the https server with cors on main port
-        const mainExpress = express();
-        mainExpress.use(cors());
-        const mainServer = https.createServer({
-            key: fs.readFileSync(certPath + '/privkey.pem', 'utf8'),
-            cert: fs.readFileSync(certPath + '/cert.pem', 'utf8'),
-            ca: fs.readFileSync(certPath + '/chain.pem', 'utf8')
-        }, mainExpress);
+        // Call base constructor
+        super(certPath);
 
+        // Start the socketio server
         this.server = new SocketioServer(
-            mainServer, {
+            this.httpsServer, {
             cors: {
                 origin: "*",
                 methods: ["GET", "POST", "OPTIONS"]
@@ -40,7 +90,7 @@ export class IthilSocketioServer {
         });
 
         // start listening 
-        mainServer.listen(port);
+        this.httpsServer.listen(port);
     }
 }
 
@@ -203,7 +253,7 @@ export class TypoSocketioClient {
      * @param handler Handler processes search data
      */
     subscribeSearchLobbyEvent(handler: (incoming: searchLobbyEventdata) => Promise<void>) {
-        this.subscribeEventAsync<searchLobbyEventdata, void>(eventNames.searchLobby, handler, true, false);
+        this.subscribeEventAsync<searchLobbyEventdata, void>(eventNames.searchLobby, handler, false, false);
     }
 
     /**
@@ -227,7 +277,7 @@ export class TypoSocketioClient {
      * @param handler Handler that removes the drawing
      */
     subscribeRemoveDrawingEvent(handler: (incoming: drawingIDEventdata) => Promise<void>) {
-        this.subscribeEventAsync<drawingIDEventdata, void>(eventNames.removeDrawing, handler, true, false);
+        this.subscribeEventAsync<drawingIDEventdata, void>(eventNames.removeDrawing, handler, false, false);
     }
 
     /**
@@ -246,6 +296,14 @@ export class TypoSocketioClient {
         this.subscribeEventAsync<getMetaEventdata, getMetaResponseEventdata>(eventNames.getMeta, handler, true, false);
     }
 
+    /**
+     * Subscribe to the claim drop event - client wants to claim a drop
+     * @param handler Handler that processes claim data and sends an ipc message to the main server
+     */
+    subscribeClaimDropEvent(handler: (incoming: claimDropEventdata) => Promise<void>) {
+        this.subscribeEventAsync<claimDropEventdata, void>(eventNames.claimDrop, handler, false, false);
+    }
+
 }
 
 //interfaces and event names for socketio communication
@@ -254,7 +312,7 @@ export const eventNames = Object.freeze({
     onlineSprites: "online sprites",
     activeLobbies: "active lobbies",
     publicData: "public data",
-    newDrop: "new drop",
+    claimDrop: "claim drop",
     clearDrop: "clear drop",
     rankDrop: "rank drop",
     login: "login",
@@ -613,6 +671,102 @@ export interface getMetaResponseEventdata {
      */
     drawings: Array<{id:string, meta: types.imageMeta}>;
 }
+
+/**
+ * Socketio eventdata for the get meta event response
+ */
+ export interface getMetaResponseEventdata {
+
+    /**
+     * The image results
+     */
+    drawings: Array<{id:string, meta: types.imageMeta}>;
+}
+
+/**
+ * Socketio eventdata for the get meta event response
+ */
+ export interface claimDropEventdata {
+     
+    /**
+     * The target drop ID
+     */
+    dropID: string;
+
+    /**
+     * The drop claim ticket provided by the drop server
+     */
+    claimTicket: number;
+}
+
+/**
+ * Socketio eventdata for the get claim drop event
+ */
+ export interface claimDropEventdata {
+     
+    /**
+     * The target drop ID
+     */
+    dropID: string;
+
+    /**
+     * The drop claim ticket provided by the drop server
+     */
+    claimTicket: number;
+
+    /**
+     * Details about the claim
+     */
+    claimDetails: string;
+
+    /**
+     * Indicates if the claim was an automated timeout collection
+     */
+    timedOut: boolean;
+}
+
+/**
+ * Socketio eventdata for the get rank drop event
+ */
+ export interface rankDropEventdata {
+     
+    /**
+     * The target drop ID
+     */
+    dropID: string;
+
+    /**
+     * The array of rank strings
+     */
+    ranks: Array<string>;
+}
+
+/**
+ * Socketio eventdata for the clear drop event
+ */
+ export interface clearDropEventdata {
+     
+    /**
+     * The target drop ID
+     */
+    dropID: string;
+
+    /**
+     * The caught player message
+     */
+    caughtPlayer: string;
+
+    /**
+     * The lobby key where the drop was caught
+     */
+    caughtLobbyKey: string;
+
+    /**
+     * The ticket of the person that caught the drop; to identify and customize message
+     */
+    claimTicket: number;
+}
+
 
 
 
