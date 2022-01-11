@@ -27,13 +27,14 @@ export default class Drops {
         this.ipcServer = ipcServer;
 
         // start async loop
-        setTimeout(this.loop.bind(this), 0);
+        setImmediate(this.loop.bind(this));
     }
 
     /**
      *The loop that contains all drop processing 
      */
     private async loop() {
+        console.log(this);
         while (true) {
             let nextTimeout: number | null = null;
             let nextDrop: types.drop | null = null;
@@ -107,13 +108,14 @@ export default class Drops {
                 ranks.push(firstRank);
 
                 claimBuffer.forEach(claim => {
-                    let otherRankRank = `<abbr title="
+                    let otherRank = `<abbr title="
                             - individual socket dispatch delay: "> ${dispatchStats?.dispatchDelays.find(d => d.claimTicket == claim.claimTicket)?.delay}ms&#013;&#010;
                             - dispatch position: #${dispatchStats?.dispatchDelays.find(d => d.claimTicket == claim.claimTicket)?.claimTicket}&#013;&#010;
                             - claim verify delay: ${claim.claimVerifyDelay}ms
                     ">
                         ${claim.username} (+${Math.round(claim.claimTimestamp - lastClaim!.claimTimestamp)}ms)
                     </abbr>`;
+                    ranks.push(otherRank);
                 });
 
                 this.ipcServer.broadcastRankDrop({
