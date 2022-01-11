@@ -89,7 +89,7 @@ async function setup() {
         });
     });
     // start drops
-    const dropDbWorker = await (0, threads_1.spawn)(new threads_1.Worker("./database/imageDatabaseWorker"));
+    const dropDbWorker = await (0, threads_1.spawn)(new threads_1.Worker("./database/palantirDatabaseWorker"));
     /** Drop handler that conatisn all drop logic and handling */
     const dropHandler = new drops_1.default(dropDbWorker, ipcServer);
     console.log("all done");
