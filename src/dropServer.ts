@@ -22,6 +22,7 @@ const wsServer = new ithilSocketServer.IthilWebsocketServer(config.dropPort, con
 
 /** IPC Client to listen for new drops */
 const ipcClient = new IthilIPCClient("dropserver");
+ipcClient.connect(config.mainIpcID);
 
 // listen for drops and dispatch them to the clients
 ipcClient.onNextDropReceived = async data => {

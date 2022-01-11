@@ -39,6 +39,7 @@ const config = require("../ecosystem.config").config;
 const wsServer = new ithilSocketServer.IthilWebsocketServer(config.dropPort, config.certificatePath);
 /** IPC Client to listen for new drops */
 const ipcClient = new ipc_1.IthilIPCClient("dropserver");
+ipcClient.connect(config.mainIpcID);
 // listen for drops and dispatch them to the clients
 ipcClient.onNextDropReceived = async (data) => {
     const msgTemplate = data.dropID + ":" + data.eventDropID + ":";

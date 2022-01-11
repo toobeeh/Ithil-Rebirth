@@ -113,15 +113,17 @@ class IthilIPCClient extends IthilIPC {
      * @param workerPort The socketio port of this worker
      * @returns A promise that resolves as soon as the ipc socket is connected
      */
-    async connect(serverID, workerPort) {
+    async connect(serverID, workerPort = -1) {
         return new Promise((resolve, reject) => {
             setTimeout(() => reject(), 15000);
             // connect to server
             this.ipc.connectTo(serverID, () => {
                 this.server = this.ipc.of[serverID];
-                // say hello and tell server which port is in use
-                const eventdata = { port: workerPort };
-                this.emit(exports.ipcEvents.workerConnect, eventdata);
+                // if client has a port, say hello and tell server which port is in use
+                if (workerPort >= 0) {
+                    const eventdata = { port: workerPort };
+                    this.emit(exports.ipcEvents.workerConnect, eventdata);
+                }
                 // init predefined emits
                 this.updatePortBalance = (data) => this.emit(exports.ipcEvents.updateBalance, data);
                 this.sendDispatchedDropData = (data) => this.emit(exports.ipcEvents.dropDispatched, data);
