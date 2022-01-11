@@ -41,7 +41,6 @@ export default class Drops {
     
                 // poll for next drop
                 while (!nextTimeout || nextTimeout < 0 || !nextDrop) {
-                    console.log(nextTimeout, nextDrop);
                     await this.idle(100);
                     nextDrop = (await this.db.getDrop()).result;
     
@@ -65,10 +64,10 @@ export default class Drops {
                 this.ipcServer.broadcastNextDrop({ dropID: nextDrop.DropID, eventDropID: nextDrop.EventDropID.toString() });
     
                 // poll claim buffer while drop is not timed out
+                console.log("Processing claims...");
                 const dropTimeout = 5000;
                 const bufferPoll = 50;
                 let lastClaim: ipc.dropClaimEventdata | undefined;
-                console.log("Processing claims...");
                 while (!dispatchStats || Date.now() - dispatchStats.dispatchTimestamp < dropTimeout) {
     
                     // get the first claim and process it
