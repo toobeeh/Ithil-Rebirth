@@ -297,7 +297,7 @@ class PalantirDatabase {
         let result = this.emptyResult<types.drop | null>();
         try {
             // get drop
-            let drop = id == "" ? this.db.prepare("SELECT * FROM 'Drop' WHERE DropID = ?").get(id) :
+            let drop = id != "" ? this.db.prepare("SELECT * FROM 'Drop' WHERE DropID = ?").get(id) :
                 this.db.prepare("SELECT * FROM 'Drop'").get();
             result.success = true;
             result.result = drop as types.drop;
