@@ -13,6 +13,10 @@ module.exports = {
             wait_ready: true,
             listen_timeout: 10000,
             time: true
+        }, {
+            name: "Ithil-Rebirth Drop Server",
+            script: "./dist/dropServer.js",
+            time: true
         }
     ],
     config: {
