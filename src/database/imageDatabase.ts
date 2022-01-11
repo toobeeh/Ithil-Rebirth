@@ -1,5 +1,4 @@
 import sqlite3 from "better-sqlite3";
-import { response } from "express";
 import fs from "fs";
 import * as types from "./types";
 
