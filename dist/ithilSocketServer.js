@@ -1,33 +1,86 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.eventNames = exports.TypoSocketioClient = exports.IthilSocketioServer = void 0;
+exports.eventNames = exports.TypoSocketioClient = exports.IthilSocketioServer = exports.IthilWebsocketServer = void 0;
 const https_1 = __importDefault(require("https"));
 const fs_1 = __importDefault(require("fs"));
 const cors_1 = __importDefault(require("cors"));
 const express_1 = __importDefault(require("express"));
+const ws = __importStar(require("ws"));
 const socket_io_1 = require("socket.io");
+/**
+ * A https server with certs loaded and cors enabled
+ */
+class IthilHttpsServer {
+    /**
+     * Init https & express server
+     * @param certPath The path to the SSL certificate
+     */
+    constructor(certPath) {
+        // Start the https server with cors on main port
+        const serverExpress = (0, express_1.default)();
+        serverExpress.use((0, cors_1.default)());
+        const server = https_1.default.createServer({
+            key: fs_1.default.readFileSync(certPath + '/privkey.pem', 'utf8'),
+            cert: fs_1.default.readFileSync(certPath + '/cert.pem', 'utf8'),
+            ca: fs_1.default.readFileSync(certPath + '/chain.pem', 'utf8')
+        }, serverExpress);
+        this.httpsServer = server;
+    }
+}
+/**
+ * A wrapper class for all required websocket server initialization
+ */
+class IthilWebsocketServer extends IthilHttpsServer {
+    /**
+     * Init https & express and start the websocket server
+     * @param port The socketio port
+     * @param certPath The path to the SSL certificate
+     */
+    constructor(port, certPath) {
+        // Call base constructor
+        super(certPath);
+        // start websocket server and listen
+        this.server = new ws.WebSocketServer({ server: this.httpsServer });
+        this.httpsServer.listen(port);
+    }
+}
+exports.IthilWebsocketServer = IthilWebsocketServer;
 /**
  * A wrapper class for all required socketio server initialization
  */
-class IthilSocketioServer {
+class IthilSocketioServer extends IthilHttpsServer {
     /**
      * Init https & express and start the socketio server
      * @param port The socketio port
      * @param certPath The path to the SSL certificate
      */
     constructor(port, certPath) {
-        // Start the https server with cors on main port
-        const mainExpress = (0, express_1.default)();
-        mainExpress.use((0, cors_1.default)());
-        const mainServer = https_1.default.createServer({
-            key: fs_1.default.readFileSync(certPath + '/privkey.pem', 'utf8'),
-            cert: fs_1.default.readFileSync(certPath + '/cert.pem', 'utf8'),
-            ca: fs_1.default.readFileSync(certPath + '/chain.pem', 'utf8')
-        }, mainExpress);
-        this.server = new socket_io_1.Server(mainServer, {
+        // Call base constructor
+        super(certPath);
+        // Start the socketio server
+        this.server = new socket_io_1.Server(this.httpsServer, {
             cors: {
                 origin: "*",
                 methods: ["GET", "POST", "OPTIONS"]
@@ -35,7 +88,7 @@ class IthilSocketioServer {
             pingTimeout: 20000
         });
         // start listening 
-        mainServer.listen(port);
+        this.httpsServer.listen(port);
     }
 }
 exports.IthilSocketioServer = IthilSocketioServer;
@@ -179,7 +232,7 @@ class TypoSocketioClient {
      * @param handler Handler processes search data
      */
     subscribeSearchLobbyEvent(handler) {
-        this.subscribeEventAsync(exports.eventNames.searchLobby, handler, true, false);
+        this.subscribeEventAsync(exports.eventNames.searchLobby, handler, false, false);
     }
     /**
      * Subscribe to the store drawing event - client wants to store a drawing in their image db
@@ -200,7 +253,7 @@ class TypoSocketioClient {
      * @param handler Handler that removes the drawing
      */
     subscribeRemoveDrawingEvent(handler) {
-        this.subscribeEventAsync(exports.eventNames.removeDrawing, handler, true, false);
+        this.subscribeEventAsync(exports.eventNames.removeDrawing, handler, false, false);
     }
     /**
      * Subscribe to the get commands event - client wants to fetch draw commands of an image
@@ -216,6 +269,13 @@ class TypoSocketioClient {
     subscribeGetMetaEvent(handler) {
         this.subscribeEventAsync(exports.eventNames.getMeta, handler, true, false);
     }
+    /**
+     * Subscribe to the claim drop event - client wants to claim a drop
+     * @param handler Handler that processes claim data and sends an ipc message to the main server
+     */
+    subscribeClaimDropEvent(handler) {
+        this.subscribeEventAsync(exports.eventNames.claimDrop, handler, false, false);
+    }
 }
 exports.TypoSocketioClient = TypoSocketioClient;
 //interfaces and event names for socketio communication
@@ -223,7 +283,7 @@ exports.eventNames = Object.freeze({
     onlineSprites: "online sprites",
     activeLobbies: "active lobbies",
     publicData: "public data",
-    newDrop: "new drop",
+    claimDrop: "claim drop",
     clearDrop: "clear drop",
     rankDrop: "rank drop",
     login: "login",
@@ -240,4 +300,4 @@ exports.eventNames = Object.freeze({
     getCommands: "get commands",
     getMeta: "get meta"
 });
-//# sourceMappingURL=ithilSocketio.js.map
+//# sourceMappingURL=ithilSocketServer.js.map

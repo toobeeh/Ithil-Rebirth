@@ -11,12 +11,15 @@ class TypoClient {
     constructor(socket, dbWorker, imageDbWorker, memberInit, workerCache) {
         /** The interval in which the current playing status is processed */
         this.updateStatusInterval = undefined;
+        /** The interval in which the current playing status is processed */
+        this.claimDropCallback = undefined;
         this.typosocket = socket;
         this.palantirDatabaseWorker = dbWorker;
         this.imageDatabaseWorker = imageDbWorker;
         this.workerCache = workerCache;
         this.username = memberInit.member.UserName;
         this.login = memberInit.member.UserLogin;
+        this.loginDate = Date.now();
         // init events 
         this.typosocket.subscribeDisconnect(this.onDisconnect.bind(this));
         this.typosocket.subscribeGetUserEvent(this.getUser.bind(this));
@@ -31,6 +34,7 @@ class TypoClient {
         this.typosocket.subscribeRemoveDrawingEvent(this.removeDrawing.bind(this));
         this.typosocket.subscribeGetCommandsEvent(this.getCommands.bind(this));
         this.typosocket.subscribeGetMetaEvent(this.getMeta.bind(this));
+        this.typosocket.subscribeClaimDropEvent(this.claimDrop.bind(this));
         // init report data 
         this.reportData = {
             currentStatus: "idle",
@@ -99,6 +103,10 @@ class TypoClient {
      * @param reason Socketio disconnect reason
      */
     async onDisconnect(reason) {
+        const flags = await this.flags;
+        if (!flags.admin || !flags.patron || !flags.unlimitedCloud) {
+            await this.imageDatabaseWorker.removeEntries(this.login, this.loginDate - 1000 * 60 * 60 * 24 * 30);
+        }
         await this.palantirDatabaseWorker.close();
         await this.imageDatabaseWorker.close();
         await threads_1.Thread.terminate(this.palantirDatabaseWorker);
@@ -462,6 +470,32 @@ class TypoClient {
             drawings: dbResult.result
         };
         return response;
+    }
+    /**
+     * Handler for the claim drop event
+     * @param eventdata Eventdata containing the claim details
+     */
+    async claimDrop(eventdata) {
+        const flags = await this.flags;
+        const claimTimestamp = Date.now();
+        if (flags.dropBan || eventdata.timedOut
+            || !this.claimDropCallback || !this.reportData.joinedLobby
+            || !this.reportData.reportLobby)
+            throw new Error("Unauthorized drop claim");
+        const username = this.reportData.reportLobby.Players.find(p => p.Sender)?.Name;
+        const lobbyKey = this.reportData.joinedLobby.Key;
+        const userID = (await this.member).member.UserID;
+        const claimData = {
+            dropID: eventdata.dropID,
+            login: this.login,
+            username: username ? username : "Someone else",
+            lobbyKey: lobbyKey,
+            userID: userID,
+            claimTicket: eventdata.claimTicket,
+            claimTimestamp: claimTimestamp,
+            claimVerifyDelay: Date.now() - claimTimestamp
+        };
+        this.claimDropCallback(claimData);
     }
     /**
      * Check if a sprite is special (replaces avatar)

@@ -33,7 +33,7 @@ const palantirDatabaseWorker = {
         return database.getActiveLobbies();
     },
     /** Executes {@link PalantirDatabase.getDrop} in a worker*/
-    getDrop(id = 0) {
+    getDrop(id = "") {
         if (!database)
             throw new Error("Database is not initialized.");
         return database.getDrop(id);
@@ -73,6 +73,12 @@ const palantirDatabaseWorker = {
         if (!database)
             throw new Error("Database is not initialized.");
         return database.rewardDrop(login, eventdrop);
+    },
+    /** Executes {@link PalantirDatabase.claimDrop} in a worker*/
+    claimDrop(lobbyKey, playerName, dropID, userid) {
+        if (!database)
+            throw new Error("Database is not initialized.");
+        return database.claimDrop(lobbyKey, playerName, dropID, userid);
     },
     /** Executes {@link PalantirDatabase.setLobby} in a worker*/
     setLobby(id, key, description, restriction) {

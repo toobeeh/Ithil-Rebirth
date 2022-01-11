@@ -19,70 +19,80 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 // import libs and local modules
-const ithilSocketio_1 = require("./ithilSocketio");
+const ithilSocketServer_1 = require("./ithilSocketServer");
 const balancer_1 = __importDefault(require("./balancer"));
-const palantirDatabase_1 = __importDefault(require("./database/palantirDatabase"));
+const drops_1 = __importDefault(require("./drops"));
 const ipc_1 = require("./ipc");
 const dataObserver_1 = __importDefault(require("./dataObserver"));
 const statDatabase_1 = __importDefault(require("./database/statDatabase"));
+const palantirDatabase_1 = __importDefault(require("./database/palantirDatabase"));
+const threads_1 = require("threads");
 const config = require("../ecosystem.config").config;
-/**
- * Palantir main database connection
- */
-const palantirDb = new palantirDatabase_1.default(config.palantirDbPath);
-/**
- * Statistics database for logging user count
- */
-const statDb = new statDatabase_1.default(config.statDbPath);
-/**
- * Ithil workers load balancer
- */
-const balancer = new balancer_1.default(config);
-/**
- * Ithil IPC coordination server
- */
-const ipcServer = new ipc_1.IthilIPCServer(config.mainIpcID);
-/**
- * Data observer that broadcasts shared data to all workers os they dont have to fetch from the db
- */
-const dataObserver = new dataObserver_1.default(palantirDb);
-dataObserver.observe();
-// add callbacks to ipc balancer events
-ipcServer.onWorkerConnected = (data, socket) => {
-    balancer.addWorker(data.port, socket);
-    ipcServer.broadcastActiveLobbies({ activeLobbies: dataObserver.activeLobbies });
-    ipcServer.broadcastPublicData({ publicData: dataObserver.publicData });
-};
-ipcServer.onWorkerDisconnected = (socket, socketID) => {
-    balancer.updateOnlineWorker();
-    console.log("Worker disconnected: ", socketID);
-};
-ipcServer.onBalanceChanged = (data, socket) => {
-    balancer.updateClients(data.port, data.clients);
-    console.log(balancer.currentBalancing());
-};
-// add callbacks to data observer events
-dataObserver.onActiveLobbiesChanged = (lobbies) => {
-    ipcServer.broadcastActiveLobbies({ activeLobbies: lobbies });
-};
-dataObserver.onPublicDataChanged = (data) => {
-    ipcServer.broadcastPublicData({ publicData: data });
-};
-/**
- * The balancer socketio server
- */
-const mainSocketServer = new ithilSocketio_1.IthilSocketioServer(config.mainPort, config.certificatePath).server;
-// listen for socket connection events
-mainSocketServer.on("connection", socket => {
-    // create listener for port request
-    socket.on("request port", async (data) => {
-        // find and respond the least busy port, log client and close socket
-        const port = (await balancer.getBalancedWorker()).port;
-        statDb.updateClientContact(data.client);
-        socket.emit("balanced port", { port: port });
-        socket.disconnect();
-        console.log("Sent client to port " + port);
+// async setup
+async function setup() {
+    /**
+     * Palantir main database connection
+     */
+    const palantirDb = new palantirDatabase_1.default(config.palantirDbPath);
+    /**
+     * Statistics database for logging user count
+     */
+    const statDb = new statDatabase_1.default(config.statDbPath);
+    /**
+     * Ithil workers load balancer
+     */
+    const balancer = new balancer_1.default(config);
+    /**
+     * Ithil IPC coordination server
+     */
+    const ipcServer = new ipc_1.IthilIPCServer(config.mainIpcID);
+    /**
+     * Data observer that broadcasts shared data to all workers os they dont have to fetch from the db
+     */
+    const dataObserver = new dataObserver_1.default(palantirDb);
+    dataObserver.observe();
+    // add callbacks to ipc balancer events
+    ipcServer.onWorkerConnected = (data, socket) => {
+        balancer.addWorker(data.port, socket);
+        ipcServer.broadcastActiveLobbies({ activeLobbies: dataObserver.activeLobbies });
+        ipcServer.broadcastPublicData({ publicData: dataObserver.publicData });
+    };
+    ipcServer.onWorkerDisconnected = (socket, socketID) => {
+        balancer.updateOnlineWorker();
+        console.log("Worker disconnected: ", socketID);
+    };
+    ipcServer.onBalanceChanged = (data, socket) => {
+        balancer.updateClients(data.port, data.clients);
+        console.log(balancer.currentBalancing());
+    };
+    // add callbacks to data observer events
+    dataObserver.onActiveLobbiesChanged = (lobbies) => {
+        ipcServer.broadcastActiveLobbies({ activeLobbies: lobbies });
+    };
+    dataObserver.onPublicDataChanged = (data) => {
+        ipcServer.broadcastPublicData({ publicData: data });
+    };
+    /**
+     * The balancer socketio server
+     */
+    const mainSocketServer = new ithilSocketServer_1.IthilSocketioServer(config.mainPort, config.certificatePath).server;
+    // listen for socket connection events
+    mainSocketServer.on("connection", socket => {
+        // create listener for port request
+        socket.on("request port", async (data) => {
+            // find and respond the least busy port, log client and close socket
+            const port = (await balancer.getBalancedWorker()).port;
+            statDb.updateClientContact(data.client);
+            socket.emit("balanced port", { port: port });
+            socket.disconnect();
+            console.log("Sent client to port " + port);
+        });
     });
-});
-console.log("all done");
+    // start drops
+    const dropDbWorker = await (0, threads_1.spawn)(new threads_1.Worker("./database/imageDatabaseWorker"));
+    /** Drop handler that conatisn all drop logic and handling */
+    const dropHandler = new drops_1.default(dropDbWorker, ipcServer);
+    console.log("all done");
+}
+setup();
 //# sourceMappingURL=mainServer.js.map

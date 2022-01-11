@@ -9,7 +9,12 @@ exports.ipcEvents = Object.freeze({
     workerDisconnect: "socket.disconnected",
     updateBalance: "updatePortBalance",
     publicData: "publicData",
-    activeLobbies: "activeLobbies"
+    activeLobbies: "activeLobbies",
+    nextDrop: "nextDrop",
+    dropDispatched: "dropDispatched",
+    dropClaim: "dropClaim",
+    clearDrop: "clearDrop",
+    rankDrop: "rankDrop"
 });
 /**
  * Abstract IPC class with common config
@@ -55,11 +60,22 @@ class IthilIPCServer extends IthilIPC {
                 if (this.onBalanceChanged)
                     this.onBalanceChanged(data, socket);
             });
+            this.on(exports.ipcEvents.dropDispatched, (data, socket) => {
+                if (this.onDropDispatched)
+                    this.onDropDispatched(data, socket);
+            });
+            this.on(exports.ipcEvents.dropClaim, (data, socket) => {
+                if (this.onDropClaim)
+                    this.onDropClaim(data, socket);
+            });
         });
         this.ipc.server.start();
         // init predefined broadcast functions
         this.broadcastPublicData = (data) => this.broadcast(exports.ipcEvents.publicData, data);
         this.broadcastActiveLobbies = (data) => this.broadcast(exports.ipcEvents.activeLobbies, data);
+        this.broadcastNextDrop = (data) => this.broadcast(exports.ipcEvents.nextDrop, data);
+        this.broadcastClearDrop = (data) => this.broadcast(exports.ipcEvents.clearDrop, data);
+        this.broadcastRankDrop = (data) => this.broadcast(exports.ipcEvents.rankDrop, data);
     }
     /**
      * Broadcast an event to all connected ipc sockets
@@ -92,7 +108,7 @@ class IthilIPCClient extends IthilIPC {
         this.server = null;
     }
     /**
-     * Connects thsi socket to the ipc main server
+     * Connects this socket to the ipc main server
      * @param serverID The ID of the ipc server to connect
      * @param workerPort The socketio port of this worker
      * @returns A promise that resolves as soon as the ipc socket is connected
@@ -108,12 +124,23 @@ class IthilIPCClient extends IthilIPC {
                 this.emit(exports.ipcEvents.workerConnect, eventdata);
                 // init predefined emits
                 this.updatePortBalance = (data) => this.emit(exports.ipcEvents.updateBalance, data);
+                this.sendDispatchedDropData = (data) => this.emit(exports.ipcEvents.dropDispatched, data);
+                this.claimDrop = (data) => this.emit(exports.ipcEvents.dropClaim, data);
                 // init predefined events
                 this.on(exports.ipcEvents.activeLobbies, (data, socket) => {
                     this.onActiveLobbiesChanged?.(data);
                 });
                 this.on(exports.ipcEvents.publicData, (data, socket) => {
                     this.onPublicDataChanged?.(data);
+                });
+                this.on(exports.ipcEvents.nextDrop, (data, socket) => {
+                    this.onNextDropReceived?.(data);
+                });
+                this.on(exports.ipcEvents.clearDrop, (data, socket) => {
+                    this.onDropClear?.(data);
+                });
+                this.on(exports.ipcEvents.rankDrop, (data, socket) => {
+                    this.onDropRank?.(data);
                 });
                 resolve();
             });

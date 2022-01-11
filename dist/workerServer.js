@@ -39,12 +39,24 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const ithilSocketio = __importStar(require("./ithilSocketio"));
+const ithilSocketServer = __importStar(require("./ithilSocketServer"));
 const threads_1 = require("threads");
 const ipc_1 = require("./ipc");
 const typoClient_1 = __importDefault(require("./typoClient"));
 const portscanner_1 = __importDefault(require("portscanner"));
 const config = require("../ecosystem.config").config;
+// measure eventloop latency
+let eventLoopLatency = 0;
+setInterval(() => {
+    const last = process.hrtime.bigint();
+    setImmediate(function () {
+        const now = process.hrtime.bigint();
+        const delta = Number((last - now) / BigInt(1000));
+        eventLoopLatency = delta;
+        if (delta > 50)
+            console.log("Eventloop latency: " + delta + "ms");
+    });
+}, 200);
 // find a free worker port and proceed startup as soon as found / errored
 portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRange[1], "127.0.0.1", async (error, workerPort) => {
     // check if port was found
@@ -55,7 +67,7 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
     /**
      * The worker socketio server
      */
-    const workerSocketServer = new ithilSocketio.IthilSocketioServer(workerPort, config.certificatePath).server;
+    const workerSocketServer = new ithilSocketServer.IthilSocketioServer(workerPort, config.certificatePath).server;
     /**
      * The IPC connection to the main server
      */
@@ -72,13 +84,13 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
         data.activeLobbies.forEach(guild => {
             // build eventdata
             const eventdata = {
-                event: ithilSocketio.eventNames.activeLobbies,
+                event: ithilSocketServer.eventNames.activeLobbies,
                 payload: {
                     activeLobbies: guild
                 }
             };
             // volatile emit to all sockets that are a member of this guild and not playing
-            workerSocketServer.in("guild" + guild.guildID).except("playing").volatile.emit(ithilSocketio.eventNames.activeLobbies, eventdata);
+            workerSocketServer.in("guild" + guild.guildID).except("playing").volatile.emit(ithilSocketServer.eventNames.activeLobbies, eventdata);
         });
     };
     // listen to ipc public data update event
@@ -86,14 +98,30 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
         workerCache.publicData = data.publicData;
         // build eventdata
         const eventdata = {
-            event: ithilSocketio.eventNames.onlineSprites,
+            event: ithilSocketServer.eventNames.onlineSprites,
             payload: {
                 onlineScenes: data.publicData.onlineScenes,
                 onlineSprites: data.publicData.onlineSprites
             }
         };
         // volatile emit to all online sockets
-        workerSocketServer.volatile.emit(ithilSocketio.eventNames.onlineSprites, eventdata);
+        workerSocketServer.volatile.emit(ithilSocketServer.eventNames.onlineSprites, eventdata);
+    };
+    ipcClient.onDropClear = (data) => {
+        const dropClearData = {
+            dropID: data.dropID,
+            claimTicket: data.claimTicket,
+            caughtLobbyKey: data.caughtLobbyKey,
+            caughtPlayer: data.caughtPlayer
+        };
+        workerSocketServer.volatile.to("playing").emit(ithilSocketServer.eventNames.clearDrop, dropClearData);
+    };
+    ipcClient.onDropRank = (data) => {
+        const dropRankData = {
+            dropID: data.dropID,
+            ranks: data.ranks
+        };
+        workerSocketServer.volatile.to("playing").emit(ithilSocketServer.eventNames.rankDrop, dropRankData);
     };
     /**
      * Array of currently connected sockets
@@ -102,7 +130,7 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
     // listen for new socket connections
     workerSocketServer.on("connection", (socket) => {
         // cast socket to enable easier and typesafe event subscribing
-        const clientSocket = new ithilSocketio.TypoSocketioClient(socket);
+        const clientSocket = new ithilSocketServer.TypoSocketioClient(socket);
         // push socket to array and update worker balance
         connectedSockets.push(clientSocket);
         ipcClient.updatePortBalance?.({ port: workerPort, clients: connectedSockets.length });
@@ -132,6 +160,10 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
                 const asyncImageDb = await (0, threads_1.spawn)(new threads_1.Worker("./database/imageDatabaseWorker", { name: "IDB " + id }));
                 await asyncImageDb.init(loginResult.result.login.toString(), config.imageDbParentPath);
                 const client = new typoClient_1.default(clientSocket, asyncDb, asyncImageDb, memberResult.result, workerCache);
+                client.claimDropCallback = (eventdata) => {
+                    ipcClient.claimDrop?.(eventdata);
+                };
+                memberResult.result.member.Guilds.forEach(guild => clientSocket.socket.join("guild" + guild.GuildID));
                 // fill login response data
                 response.authorized = true;
                 response.member = memberResult.result;
