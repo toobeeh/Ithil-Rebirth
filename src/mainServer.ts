@@ -105,6 +105,7 @@ async function setup(){
     
     // start drops
     const dropDbWorker = await spawn<palantirDatabaseWorker>(new Worker("./database/palantirDatabaseWorker"));
+    await dropDbWorker.init(config.palantirDbPath);
 
     /** Drop handler that conatisn all drop logic and handling */
     const dropHandler = new Drops(dropDbWorker, ipcServer);
