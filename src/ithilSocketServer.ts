@@ -367,7 +367,7 @@ export interface activeLobbiesEventdata {
     /**
      * Currently active guildlobbies
      */
-    activeLobbies: types.activeGuildLobbies;
+    activeGuildLobbies: types.activeGuildLobbies;
 }
 
 /**

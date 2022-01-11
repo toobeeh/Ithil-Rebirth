@@ -86,7 +86,7 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
             const eventdata = {
                 event: ithilSocketServer.eventNames.activeLobbies,
                 payload: {
-                    activeLobbies: guild
+                    activeGuildLobbies: guild
                 }
             };
             // volatile emit to all sockets that are a member of this guild and not playing

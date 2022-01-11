@@ -55,6 +55,7 @@ export default class Drops {
                 await this.idle(nextTimeout);
     
                 // dispatch drop and listen for claims
+                console.log("Dispatching drop...");
                 let dispatchStats: ipc.dispatchedDropEventdata | undefined;
                 const claimBuffer: Array<ipc.dropClaimEventdata> = [];
                 const listenStartTimestamp = Date.now();
@@ -67,6 +68,7 @@ export default class Drops {
                 const dropTimeout = 5000;
                 const bufferPoll = 50;
                 let lastClaim: ipc.dropClaimEventdata | undefined;
+                console.log("Processing claims...");
                 while (!dispatchStats || Date.now() - dispatchStats.dispatchTimestamp < dropTimeout) {
     
                     // get the first claim and process it
@@ -97,6 +99,7 @@ export default class Drops {
                 }
     
                 // build leaderboard and result data, if a claim successful and some claims left in buffer
+                console.log("Building ranks...");
                 if(lastClaim && claimBuffer.length > 0 && dispatchStats){
                     const ranks: Array<string> = [];
                     let firstRank = `<abbr title="
