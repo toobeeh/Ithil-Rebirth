@@ -65,7 +65,6 @@ class IthilIPCServer extends IthilIPC {
                     this.onDropDispatched(data, socket);
             });
             this.on(exports.ipcEvents.dropClaim, (data, socket) => {
-                console.log(data);
                 if (this.onDropClaim)
                     this.onDropClaim(data, socket);
             });
