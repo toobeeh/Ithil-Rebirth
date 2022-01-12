@@ -55,6 +55,7 @@ export interface dropClaimEventdata {
     claimTicket: number;
     claimVerifyDelay: number;
     workerEventloopLatency: number;
+    workerPort: number;
 }
 
 export interface clearDropEventdata {

@@ -594,7 +594,8 @@ export default class TypoClient {
             claimTicket: eventdata.claimTicket,
             claimTimestamp: claimTimestamp,
             claimVerifyDelay: Date.now() - claimTimestamp,
-            workerEventloopLatency: 0
+            workerEventloopLatency: 0,
+            workerPort: 0
         };
         this.claimDropCallback(claimData);
     }

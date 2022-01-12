@@ -51,7 +51,7 @@ setInterval(() => {
     const last = process.hrtime.bigint();
     setImmediate(function () {
         const now = process.hrtime.bigint();
-        const delta = Number((last - now) / BigInt(1000));
+        const delta = Number((now - last) / BigInt(1000));
         eventLoopLatency = delta;
         if (delta > 50)
             console.log("Eventloop latency: " + delta + "ms");
@@ -168,6 +168,7 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
                 const client = new typoClient_1.default(clientSocket, asyncDb, asyncImageDb, memberResult.result, workerCache);
                 client.claimDropCallback = (eventdata) => {
                     eventdata.workerEventloopLatency = eventLoopLatency;
+                    eventdata.workerPort = workerPort;
                     ipcClient.claimDrop?.(eventdata);
                 };
                 memberResult.result.member.Guilds.forEach(guild => clientSocket.socket.join("guild" + guild.GuildID));
