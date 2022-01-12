@@ -185,6 +185,7 @@ portscanner.findAPortNotInUse(
                     
                     const client = new TypoClient(clientSocket, asyncDb, asyncImageDb, memberResult.result, workerCache);
                     client.claimDropCallback = (eventdata) => {
+                        console.log(eventdata);
                         ipcClient.claimDrop?.(eventdata);
                     };
                     memberResult.result.member.Guilds.forEach(guild => clientSocket.socket.join("guild" + guild.GuildID));

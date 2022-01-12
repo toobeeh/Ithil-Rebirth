@@ -195,6 +195,7 @@ export class IthilIPCServer extends IthilIPC {
             });
 
             this.on(ipcEvents.dropClaim, (data: dropClaimEventdata, socket: IpcClient) => {
+                console.log(data);
                 if (this.onDropClaim) this.onDropClaim(data, socket);
             });
         });
