@@ -585,6 +585,8 @@ export default class TypoClient {
         const lobbyKey = this.reportData.joinedLobby.Key;
         const userID = (await this.member).member.UserID;
 
+        console.log(username +  "claims a drop:" + eventdata);
+
         const claimData: dropClaimEventdata = {
             dropID: eventdata.dropID,
             login: this.login,

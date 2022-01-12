@@ -485,6 +485,7 @@ class TypoClient {
         const username = this.reportData.reportLobby.Players.find(p => p.Sender)?.Name;
         const lobbyKey = this.reportData.joinedLobby.Key;
         const userID = (await this.member).member.UserID;
+        console.log(username + "claims a drop:" + eventdata);
         const claimData = {
             dropID: eventdata.dropID,
             login: this.login,

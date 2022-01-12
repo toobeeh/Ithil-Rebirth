@@ -42,12 +42,16 @@ class Drops {
                 this.ipcServer.onDropClaim = data => claimBuffer.push(data);
                 this.ipcServer.onDropDispatched = data => dispatchStats = data;
                 this.ipcServer.broadcastNextDrop({ dropID: nextDrop.DropID, eventDropID: nextDrop.EventDropID.toString() });
+                // poll until dispatch data is set
+                while (!dispatchStats)
+                    await this.idle(50);
+                console.log("Dispatched:", dispatchStats);
                 // poll claim buffer while drop is not timed out
-                console.log("Processing claims...");
+                console.log("Waiting for claims...");
                 const dropTimeout = 5000;
                 const bufferPoll = 50;
                 let lastClaim;
-                while (!dispatchStats || Date.now() - dispatchStats.dispatchTimestamp < dropTimeout) {
+                while (Date.now() - dispatchStats.dispatchTimestamp < dropTimeout) {
                     // get the first claim and process it
                     lastClaim = claimBuffer.shift();
                     if (lastClaim && lastClaim.dropID == nextDrop.DropID) {

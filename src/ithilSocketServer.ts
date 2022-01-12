@@ -700,7 +700,7 @@ export interface getMetaResponseEventdata {
 }
 
 /**
- * Socketio eventdata for the get claim drop event
+ * Socketio eventdata for the claim drop event
  */
  export interface claimDropEventdata {
      
