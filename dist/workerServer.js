@@ -109,17 +109,23 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
     };
     ipcClient.onDropClear = (data) => {
         const dropClearData = {
-            dropID: data.dropID,
-            claimTicket: data.claimTicket,
-            caughtLobbyKey: data.caughtLobbyKey,
-            caughtPlayer: data.caughtPlayer
+            event: ithilSocketServer.eventNames.clearDrop,
+            payload: {
+                dropID: data.dropID,
+                claimTicket: data.claimTicket,
+                caughtLobbyKey: data.caughtLobbyKey,
+                caughtPlayer: data.caughtPlayer
+            }
         };
         workerSocketServer.volatile.to("playing").emit(ithilSocketServer.eventNames.clearDrop, dropClearData);
     };
     ipcClient.onDropRank = (data) => {
         const dropRankData = {
-            dropID: data.dropID,
-            ranks: data.ranks
+            event: ithilSocketServer.eventNames.rankDrop,
+            payload: {
+                dropID: data.dropID,
+                ranks: data.ranks
+            }
         };
         workerSocketServer.volatile.to("playing").emit(ithilSocketServer.eventNames.rankDrop, dropRankData);
     };

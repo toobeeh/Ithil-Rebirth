@@ -39,10 +39,7 @@ class Drops {
                 let dispatchStats;
                 const claimBuffer = [];
                 const listenStartTimestamp = Date.now();
-                this.ipcServer.onDropClaim = data => {
-                    claimBuffer.push(data);
-                    console.log(claimBuffer);
-                };
+                this.ipcServer.onDropClaim = data => claimBuffer.push(data);
                 this.ipcServer.onDropDispatched = data => dispatchStats = data;
                 this.ipcServer.broadcastNextDrop({ dropID: nextDrop.DropID, eventDropID: nextDrop.EventDropID.toString() });
                 // poll until dispatch data is set

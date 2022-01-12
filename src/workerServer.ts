@@ -31,12 +31,12 @@ const config = require("../ecosystem.config").config;
 // measure eventloop latency
 let eventLoopLatency = 0;
 setInterval(() => {
-    const last = process.hrtime.bigint();        
-    setImmediate(function() {
-        const now =process.hrtime.bigint();
-        const delta = Number((last - now) / BigInt(1000)); 
+    const last = process.hrtime.bigint();
+    setImmediate(function () {
+        const now = process.hrtime.bigint();
+        const delta = Number((last - now) / BigInt(1000));
         eventLoopLatency = delta;
-        if(delta > 50) console.log("Eventloop latency: " + delta + "ms");
+        if (delta > 50) console.log("Eventloop latency: " + delta + "ms");
     });
 }, 200);
 
@@ -111,11 +111,14 @@ portscanner.findAPortNotInUse(
         };
 
         ipcClient.onDropClear = (data) => {
-            const dropClearData: ithilSocketServer.clearDropEventdata = {
-                dropID: data.dropID,
-                claimTicket: data.claimTicket,
-                caughtLobbyKey: data.caughtLobbyKey,
-                caughtPlayer: data.caughtPlayer
+            const dropClearData: ithilSocketServer.eventBase<ithilSocketServer.clearDropEventdata> = {
+                event: ithilSocketServer.eventNames.clearDrop,
+                payload: {
+                    dropID: data.dropID,
+                    claimTicket: data.claimTicket,
+                    caughtLobbyKey: data.caughtLobbyKey,
+                    caughtPlayer: data.caughtPlayer
+                }
             };
 
             workerSocketServer.volatile.to("playing").emit(
@@ -125,11 +128,14 @@ portscanner.findAPortNotInUse(
         };
 
         ipcClient.onDropRank = (data) => {
-            const dropRankData: ithilSocketServer.rankDropEventdata = {
-                dropID: data.dropID,
-                ranks: data.ranks
+            const dropRankData: ithilSocketServer.eventBase<ithilSocketServer.rankDropEventdata> = {
+                event: ithilSocketServer.eventNames.rankDrop,
+                payload: {
+                    dropID: data.dropID,
+                    ranks: data.ranks
+                }
             };
-            
+
             workerSocketServer.volatile.to("playing").emit(
                 ithilSocketServer.eventNames.rankDrop,
                 dropRankData
@@ -167,7 +173,7 @@ portscanner.findAPortNotInUse(
                 const id = "thread " + Date.now();
                 console.log("spawning worker threads: " + id);
 
-                const asyncDb = await spawn<palantirDatabaseWorker>(new Worker("./database/palantirDatabaseWorker", {name: "PDB " + id}));
+                const asyncDb = await spawn<palantirDatabaseWorker>(new Worker("./database/palantirDatabaseWorker", { name: "PDB " + id }));
                 await asyncDb.init(config.palantirDbPath);
 
                 const loginResult = await asyncDb.getLoginFromAccessToken(loginData.accessToken, true);
@@ -180,9 +186,9 @@ portscanner.findAPortNotInUse(
                 // if login succeeded, create a typo client and enable further events
                 if (loginResult.success) {
                     const memberResult = await asyncDb.getUserByLogin(loginResult.result.login);
-                    const asyncImageDb = await spawn<imageDatabaseWorker>(new Worker("./database/imageDatabaseWorker", {name: "IDB " + id}));
+                    const asyncImageDb = await spawn<imageDatabaseWorker>(new Worker("./database/imageDatabaseWorker", { name: "IDB " + id }));
                     await asyncImageDb.init(loginResult.result.login.toString(), config.imageDbParentPath);
-                    
+
                     const client = new TypoClient(clientSocket, asyncDb, asyncImageDb, memberResult.result, workerCache);
                     client.claimDropCallback = (eventdata) => {
                         ipcClient.claimDrop?.(eventdata);
