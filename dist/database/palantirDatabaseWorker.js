@@ -39,10 +39,10 @@ const palantirDatabaseWorker = {
         return database.getDrop(id);
     },
     /** Executes {@link PalantirDatabase.getLoginFromAccessToken} in a worker*/
-    getLoginFromAccessToken(accessToken) {
+    getLoginFromAccessToken(accessToken, silent) {
         if (!database)
             throw new Error("Database is not initialized.");
-        return database.getLoginFromAccessToken(accessToken);
+        return database.getLoginFromAccessToken(accessToken, silent);
     },
     /** Executes {@link PalantirDatabase.getLobby} in a worker*/
     getLobby(key, indicator = "key") {

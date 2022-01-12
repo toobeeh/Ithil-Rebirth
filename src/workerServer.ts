@@ -21,7 +21,7 @@ import * as types from "./database/types";
 import * as ithilSocketServer from './ithilSocketServer';
 import { palantirDatabaseWorker } from './database/palantirDatabaseWorker';
 import { imageDatabaseWorker } from './database/imageDatabaseWorker';
-import { spawn, Worker } from "threads";
+import { spawn, Thread, Worker } from "threads";
 import { IthilIPCClient } from './ipc';
 import TypoClient from "./typoClient";
 import portscanner from "portscanner";
@@ -163,11 +163,6 @@ portscanner.findAPortNotInUse(
             // listen for login event
             clientSocket.subscribeLoginEvent(async (loginData) => {
 
-                if(!loginData.accessToken || loginData.accessToken == "") {
-                    console.log("Attempting to login without access token: " + loginData.login);
-                    loginData.accessToken = "-";
-                }
-
                 // create database worker and check access token - prepare empty event response
                 const id = "thread " + Date.now();
                 console.log("spawning worker threads: " + id);
@@ -175,7 +170,7 @@ portscanner.findAPortNotInUse(
                 const asyncDb = await spawn<palantirDatabaseWorker>(new Worker("./database/palantirDatabaseWorker", {name: "PDB " + id}));
                 await asyncDb.init(config.palantirDbPath);
 
-                const loginResult = await asyncDb.getLoginFromAccessToken(loginData.accessToken);
+                const loginResult = await asyncDb.getLoginFromAccessToken(loginData.accessToken, true);
                 const response: ithilSocketServer.loginResponseEventdata = {
                     authorized: false,
                     activeLobbies: [],
@@ -201,6 +196,7 @@ portscanner.findAPortNotInUse(
                         guild => memberResult.result.member.Guilds.some(connectedGuild => connectedGuild.GuildID == guild.guildID)
                     );
                 }
+                else await Thread.terminate(asyncDb);
 
                 return response;
             });

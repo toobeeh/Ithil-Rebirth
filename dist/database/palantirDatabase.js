@@ -61,7 +61,7 @@ class PalantirDatabase {
      * @param accessToken The user's access token
      * @returns The user's login token
      */
-    getLoginFromAccessToken(accessToken) {
+    getLoginFromAccessToken(accessToken, silent) {
         let result = this.emptyResult();
         try {
             let row = this.db.prepare("SELECT * FROM AccessTokens WHERE AccessToken = ?").get(accessToken);
@@ -73,7 +73,8 @@ class PalantirDatabase {
             result.success = true;
         }
         catch (e) {
-            console.warn("Error in query: ", e);
+            if (!silent)
+                console.warn("Error in query: ", e);
         }
         return result;
     }
