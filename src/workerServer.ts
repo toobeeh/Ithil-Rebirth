@@ -36,7 +36,6 @@ setInterval(() => {
         const now = process.hrtime.bigint();
         const delta = Number((now - last) / BigInt(1000));
         eventLoopLatency = delta;
-        if (delta > 50) console.log("Eventloop latency: " + delta + "ms");
     });
 }, 200);
 
