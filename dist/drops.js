@@ -35,7 +35,7 @@ class Drops {
                 console.log(`Next drop (${nextDrop.DropID}) in ${nextTimeout / 1000}s`);
                 await this.idle(nextTimeout);
                 // dispatch drop and listen for claims
-                console.log("Dispatching drop...");
+                console.log("Starting drop events...");
                 let dispatchStats;
                 const claimBuffer = [];
                 const listenStartTimestamp = Date.now();
@@ -50,9 +50,9 @@ class Drops {
                 while (!dispatchStats || Date.now() - dispatchStats.dispatchTimestamp < dropTimeout) {
                     // get the first claim and process it
                     lastClaim = claimBuffer.shift();
-                    console.log("Processing claim:", lastClaim);
                     if (lastClaim && lastClaim.dropID == nextDrop.DropID) {
                         // get claimed drop and double-check if drop still valid
+                        console.log("Shifted claim:", lastClaim);
                         const claimTarget = (await this.db.getDrop(nextDrop.DropID)).result;
                         if (claimTarget && claimTarget.CaughtLobbyPlayerID == "") {
                             // claim and reward drop
@@ -68,6 +68,8 @@ class Drops {
                             this.ipcServer.broadcastClearDrop(clearData);
                             break;
                         }
+                        else
+                            console.log("Rejected claim.");
                     }
                     else
                         await this.idle(bufferPoll);
