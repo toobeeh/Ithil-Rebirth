@@ -50,6 +50,7 @@ class Drops {
                 while (!dispatchStats || Date.now() - dispatchStats.dispatchTimestamp < dropTimeout) {
                     // get the first claim and process it
                     lastClaim = claimBuffer.shift();
+                    console.log("Processing claim:", lastClaim);
                     if (lastClaim && lastClaim.dropID == nextDrop.DropID) {
                         // get claimed drop and double-check if drop still valid
                         const claimTarget = (await this.db.getDrop(nextDrop.DropID)).result;
