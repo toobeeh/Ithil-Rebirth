@@ -103,13 +103,14 @@ export default class Drops {
                     lastClaim = undefined;
                 }
     
-                // build leaderboard and result data, if a claim successful and some claims left in buffer
+                // build leaderboard and result data, if a claim successful and some claims left in buffer after 1s
+                await this.idle(1000);
                 console.log("Building ranks...");
                 if(lastClaim && dispatchStats){
                     const ranks: Array<string> = [];
                     let firstRank = `<abbr title="
                             - internal dispatch delay: ${listenStartTimestamp - dispatchStats.dispatchTimestamp}ms&#013;&#010;
-                            - individual socket dispatch delay: "> ${dispatchStats.dispatchDelays.find(d => d.claimTicket == lastClaim?.claimTicket)?.delay}ms&#013;&#010;
+                            - individual socket dispatch delay: ${dispatchStats.dispatchDelays.find(d => d.claimTicket == lastClaim?.claimTicket)?.delay}ms&#013;&#010;
                             - dispatch position: #${dispatchStats.dispatchDelays.find(d => d.claimTicket == lastClaim?.claimTicket)?.claimTicket}&#013;&#010;
                             - claim verify delay: ${lastClaim.claimVerifyDelay}ms
                     ">
@@ -119,7 +120,7 @@ export default class Drops {
     
                     claimBuffer.forEach(claim => {
                         let otherRank = `<abbr title="
-                                - individual socket dispatch delay: "> ${dispatchStats?.dispatchDelays.find(d => d.claimTicket == claim.claimTicket)?.delay}ms&#013;&#010;
+                                - individual socket dispatch delay: ${dispatchStats?.dispatchDelays.find(d => d.claimTicket == claim.claimTicket)?.delay}ms&#013;&#010;
                                 - dispatch position: #${dispatchStats?.dispatchDelays.find(d => d.claimTicket == claim.claimTicket)?.claimTicket}&#013;&#010;
                                 - claim verify delay: ${claim.claimVerifyDelay}ms
                         ">
