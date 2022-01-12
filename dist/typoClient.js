@@ -465,7 +465,7 @@ class TypoClient {
      */
     async getMeta(eventdata) {
         const limit = eventdata.limit ? eventdata.limit : -1;
-        const dbResult = await this.imageDatabaseWorker.getUserMeta(this.login, limit, eventdata.meta);
+        const dbResult = await this.imageDatabaseWorker.getUserMeta(this.login, limit, eventdata.query);
         const response = {
             drawings: dbResult.result
         };

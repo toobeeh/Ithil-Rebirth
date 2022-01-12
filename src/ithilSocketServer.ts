@@ -653,7 +653,7 @@ export interface getMetaEventdata {
     /**
      * The search meta, containing only desired properties, see {@link types.imageData.meta}
      */
-    meta: Partial<types.imageMeta>;
+    query: Partial<types.imageMeta>;
 
     /**
     * The search result limitor

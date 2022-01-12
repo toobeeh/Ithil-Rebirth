@@ -80,7 +80,7 @@ class Drops {
                     lastClaim = undefined;
                 }
                 // build leaderboard and result data, if a claim successful and some claims left in buffer after 1s
-                await this.idle(1000);
+                await this.idle(2000);
                 console.log("Building ranks...");
                 if (lastClaim && dispatchStats) {
                     const ranks = [];

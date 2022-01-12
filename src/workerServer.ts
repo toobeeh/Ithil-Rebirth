@@ -169,10 +169,7 @@ portscanner.findAPortNotInUse(
             clientSocket.subscribeLoginEvent(async (loginData) => {
 
                 // create database worker and check access token - prepare empty event response
-                const id = "thread " + Date.now();
-                console.log("spawning worker threads: " + id);
-
-                const asyncDb = await spawn<palantirDatabaseWorker>(new Worker("./database/palantirDatabaseWorker", { name: "PDB " + id }));
+                const asyncDb = await spawn<palantirDatabaseWorker>(new Worker("./database/palantirDatabaseWorker"));
                 await asyncDb.init(config.palantirDbPath);
 
                 const loginResult = await asyncDb.getLoginFromAccessToken(loginData.accessToken, true);
@@ -185,7 +182,7 @@ portscanner.findAPortNotInUse(
                 // if login succeeded, create a typo client and enable further events
                 if (loginResult.success) {
                     const memberResult = await asyncDb.getUserByLogin(loginResult.result.login);
-                    const asyncImageDb = await spawn<imageDatabaseWorker>(new Worker("./database/imageDatabaseWorker", { name: "IDB " + id }));
+                    const asyncImageDb = await spawn<imageDatabaseWorker>(new Worker("./database/imageDatabaseWorker"));
                     await asyncImageDb.init(loginResult.result.login.toString(), config.imageDbParentPath);
 
                     const client = new TypoClient(clientSocket, asyncDb, asyncImageDb, memberResult.result, workerCache);
