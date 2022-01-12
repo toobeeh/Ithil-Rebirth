@@ -21,9 +21,9 @@ module.exports = {
     ],
     config: {
         mainIpcID: "main",
-        mainPort: 4100,
-        dropPort: 4101,
-        workerRange: [4102, 4110],
+        mainPort: 4000,
+        dropPort: 4001,
+        workerRange: [4002, 4010],
         minAvailableWorker: 7,
         certificatePath: '/etc/letsencrypt/live/typo.rip',
         palantirDbPath: '/home/pi/Database/palantir.db',
