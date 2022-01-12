@@ -85,10 +85,10 @@ class Drops {
                 if (lastClaim && dispatchStats) {
                     const ranks = [];
                     let firstRank = `<abbr title="`
+                        + `- drop server dispatch delay: ${dispatchStats.dispatchTimestamp - listenStartTimestamp}ms&#013;&#010;`
                         + `- individual socket dispatch delay: ${dispatchStats.dispatchDelays.find(d => d.claimTicket == lastClaim?.claimTicket)?.delay}ms&#013;&#010;`
                         + `- individual dispatch position: #${dispatchStats.dispatchDelays.find(d => d.claimTicket == lastClaim?.claimTicket)?.claimTicket}&#013;&#010;`
                         + `- worker port/ID: ${lastClaim.workerPort}&#013;&#010;`
-                        + `- worker dispatch delay: ${dispatchStats.dispatchTimestamp - listenStartTimestamp}ms&#013;&#010;`
                         + `- worker eventloop latency: ${lastClaim.workerEventloopLatency}ms&#013;&#010;`
                         + `- worker claim verify delay: ${lastClaim.claimVerifyDelay}ms
                     ">
@@ -97,10 +97,10 @@ class Drops {
                     ranks.push(firstRank);
                     claimBuffer.forEach(claim => {
                         let otherRank = `<abbr title="`
+                            + `- drop server dispatch delay: ${dispatchStats.dispatchTimestamp - listenStartTimestamp}ms&#013;&#010;`
                             + `- individual socket dispatch delay: ${dispatchStats?.dispatchDelays.find(d => d.claimTicket == claim.claimTicket)?.delay}ms&#013;&#010;`
                             + `- individual dispatch position: #${dispatchStats?.dispatchDelays.find(d => d.claimTicket == claim.claimTicket)?.claimTicket}&#013;&#010;`
                             + `- worker port/ID: ${claim.workerPort}&#013;&#010;`
-                            + `- worker dispatch delay: ${dispatchStats.dispatchTimestamp - listenStartTimestamp}ms&#013;&#010;`
                             + `- worker eventloop latency: ${claim.workerEventloopLatency}ms&#013;&#010;`
                             + `- worker claim verify delay: ${claim.claimVerifyDelay}ms
                         ">

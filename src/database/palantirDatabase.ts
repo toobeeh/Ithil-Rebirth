@@ -157,7 +157,7 @@ class PalantirDatabase {
                 onlineScenes: onlinescenes as Array<types.onlineSprite>,
                 sprites: sprites as Array<types.sprite>,
                 scenes: scenes as Array<types.scene>
-            }
+            };
             result.success = true;
         }
         catch (e) {

@@ -108,7 +108,7 @@ async function setup(){
     await dropDbWorker.init(config.palantirDbPath);
 
     /** Drop handler that conatisn all drop logic and handling */
-    const dropHandler = new Drops(dropDbWorker, ipcServer);
+    const dropHandler = new Drops(dropDbWorker, ipcServer); // lgtm [js/unused-local-variable]
     
     console.log("all done");
 }

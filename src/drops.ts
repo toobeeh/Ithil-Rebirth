@@ -94,7 +94,7 @@ export default class Drops {
                                 claimTicket: lastClaim.claimTicket,
                                 caughtPlayer: "<abbr title='Drop ID: " + nextDrop.DropID + "'>" + lastClaim.username + "</abbr>"
                             };
-                            this.ipcServer.broadcastClearDrop(clearData)
+                            this.ipcServer.broadcastClearDrop(clearData);
                             break;
                         }
                         else console.log("Rejected claim.");
@@ -104,15 +104,15 @@ export default class Drops {
                 }
     
                 // build leaderboard and result data, if a claim successful and some claims left in buffer after 1s
-                await this.idle(1000);
+                await this.idle(2000);
                 console.log("Building ranks...");
                 if(lastClaim && dispatchStats){
                     const ranks: Array<string> = [];
                     let firstRank = `<abbr title="`
+                            + `- drop server dispatch delay: ${dispatchStats.dispatchTimestamp - listenStartTimestamp}ms&#013;&#010;`
                             + `- individual socket dispatch delay: ${dispatchStats.dispatchDelays.find(d => d.claimTicket == lastClaim?.claimTicket)?.delay}ms&#013;&#010;`
                             + `- individual dispatch position: #${dispatchStats.dispatchDelays.find(d => d.claimTicket == lastClaim?.claimTicket)?.claimTicket}&#013;&#010;`
                             + `- worker port/ID: ${lastClaim.workerPort}&#013;&#010;`
-                            + `- worker dispatch delay: ${dispatchStats.dispatchTimestamp - listenStartTimestamp}ms&#013;&#010;`
                             + `- worker eventloop latency: ${lastClaim.workerEventloopLatency}ms&#013;&#010;`
                             + `- worker claim verify delay: ${lastClaim.claimVerifyDelay}ms
                     ">
@@ -122,10 +122,10 @@ export default class Drops {
     
                     claimBuffer.forEach(claim => {
                         let otherRank = `<abbr title="`
+                                + `- drop server dispatch delay: ${dispatchStats!.dispatchTimestamp - listenStartTimestamp}ms&#013;&#010;`
                                 + `- individual socket dispatch delay: ${dispatchStats?.dispatchDelays.find(d => d.claimTicket == claim.claimTicket)?.delay}ms&#013;&#010;`
                                 + `- individual dispatch position: #${dispatchStats?.dispatchDelays.find(d => d.claimTicket == claim.claimTicket)?.claimTicket}&#013;&#010;`
                                 + `- worker port/ID: ${claim.workerPort}&#013;&#010;`
-                                + `- worker dispatch delay: ${dispatchStats!.dispatchTimestamp - listenStartTimestamp}ms&#013;&#010;`
                                 + `- worker eventloop latency: ${claim.workerEventloopLatency}ms&#013;&#010;`
                                 + `- worker claim verify delay: ${claim.claimVerifyDelay}ms
                         ">

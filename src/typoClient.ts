@@ -1,6 +1,6 @@
 import { palantirDatabaseWorker } from './database/palantirDatabaseWorker';
 import { imageDatabaseWorker } from './database/imageDatabaseWorker';
-import { ModuleThread, spawn, Thread, Worker } from "threads";
+import { ModuleThread, Thread } from "threads";
 import * as types from "./database/types";
 import * as ithilSocketServer from "./ithilSocketServer";
 import { dropClaimEventdata } from './ipc';
@@ -151,7 +151,7 @@ export default class TypoClient {
             joinedLobby: undefined,
             reportLobby: undefined,
             updateInterval: setInterval(this.updateStatus.bind(this), 2500)
-        }
+        };
 
         console.log(this.username + " logged in.");
     }
@@ -303,7 +303,7 @@ export default class TypoClient {
         const response: ithilSocketServer.joinLobbyResponseEventdata = {
             lobbyData: lobby,
             valid: success
-        }
+        };
         return response;
     }
 
@@ -370,7 +370,7 @@ export default class TypoClient {
             },
             owner: owner,
             ownerID: ownerID
-        }
+        };
         return response;
     }
 
@@ -406,7 +406,7 @@ export default class TypoClient {
 
         const response: ithilSocketServer.leaveLobbyResponseEventdata = {
             activeLobbies: activeLobbies
-        }
+        };
         return response;
     }
 
