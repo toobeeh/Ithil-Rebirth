@@ -143,6 +143,10 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
         clientSocket.emitPublicData({ publicData: workerCache.publicData });
         // listen for login event
         clientSocket.subscribeLoginEvent(async (loginData) => {
+            if (!loginData.accessToken || loginData.accessToken == "") {
+                console.log("Attempting to login without access token: " + loginData.login);
+                loginData.accessToken = "-";
+            }
             // create database worker and check access token - prepare empty event response
             const id = "thread " + Date.now();
             console.log("spawning worker threads: " + id);
