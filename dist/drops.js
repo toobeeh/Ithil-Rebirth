@@ -84,20 +84,22 @@ class Drops {
                 console.log("Building ranks...");
                 if (lastClaim && dispatchStats) {
                     const ranks = [];
-                    let firstRank = `<abbr title="
-                            - internal dispatch delay: ${listenStartTimestamp - dispatchStats.dispatchTimestamp}ms&#013;&#010;
-                            - individual socket dispatch delay: ${dispatchStats.dispatchDelays.find(d => d.claimTicket == lastClaim?.claimTicket)?.delay}ms&#013;&#010;
-                            - dispatch position: #${dispatchStats.dispatchDelays.find(d => d.claimTicket == lastClaim?.claimTicket)?.claimTicket}&#013;&#010;
-                            - claim verify delay: ${lastClaim.claimVerifyDelay}ms
+                    let firstRank = `<abbr title="`
+                        + `- worker dispatch delay: ${listenStartTimestamp - dispatchStats.dispatchTimestamp}ms&#013;&#010;`
+                        + `- individual socket dispatch delay: ${dispatchStats.dispatchDelays.find(d => d.claimTicket == lastClaim?.claimTicket)?.delay}ms&#013;&#010;`
+                        + `- individual dispatch position: #${dispatchStats.dispatchDelays.find(d => d.claimTicket == lastClaim?.claimTicket)?.claimTicket}&#013;&#010;`
+                        + `- worker eventloop latency: ${lastClaim.workerEventloopLatency}ms&#013;&#010;`
+                        + `- worker claim verify delay: ${lastClaim.claimVerifyDelay}ms
                     ">
                         ${lastClaim.username} (after ${Math.round(lastClaim.claimTimestamp - dispatchStats.dispatchTimestamp)}ms)
                     </abbr>`;
                     ranks.push(firstRank);
                     claimBuffer.forEach(claim => {
-                        let otherRank = `<abbr title="
-                                - individual socket dispatch delay: ${dispatchStats?.dispatchDelays.find(d => d.claimTicket == claim.claimTicket)?.delay}ms&#013;&#010;
-                                - dispatch position: #${dispatchStats?.dispatchDelays.find(d => d.claimTicket == claim.claimTicket)?.claimTicket}&#013;&#010;
-                                - claim verify delay: ${claim.claimVerifyDelay}ms
+                        let otherRank = `<abbr title="`
+                            + `- individual socket dispatch delay: ${dispatchStats?.dispatchDelays.find(d => d.claimTicket == claim.claimTicket)?.delay}ms&#013;&#010;`
+                            + `- dispatch position: #${dispatchStats?.dispatchDelays.find(d => d.claimTicket == claim.claimTicket)?.claimTicket}&#013;&#010;`
+                            + `- worker eventloop latency: ${claim.workerEventloopLatency}ms&#013;&#010;`
+                            + `- claim verify delay: ${claim.claimVerifyDelay}ms
                         ">
                             ${claim.username} (+${Math.round(claim.claimTimestamp - lastClaim.claimTimestamp)}ms)
                         </abbr>`;

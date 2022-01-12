@@ -167,6 +167,7 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
                 await asyncImageDb.init(loginResult.result.login.toString(), config.imageDbParentPath);
                 const client = new typoClient_1.default(clientSocket, asyncDb, asyncImageDb, memberResult.result, workerCache);
                 client.claimDropCallback = (eventdata) => {
+                    eventdata.workerEventloopLatency = eventLoopLatency;
                     ipcClient.claimDrop?.(eventdata);
                 };
                 memberResult.result.member.Guilds.forEach(guild => clientSocket.socket.join("guild" + guild.GuildID));

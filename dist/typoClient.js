@@ -493,7 +493,8 @@ class TypoClient {
             userID: userID,
             claimTicket: eventdata.claimTicket,
             claimTimestamp: claimTimestamp,
-            claimVerifyDelay: Date.now() - claimTimestamp
+            claimVerifyDelay: Date.now() - claimTimestamp,
+            workerEventloopLatency: 0
         };
         this.claimDropCallback(claimData);
     }
