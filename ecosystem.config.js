@@ -3,16 +3,24 @@ module.exports = {
         {
             name: "Ithil-Rebirth Main Server",
             script: "./dist/mainServer.js",
-            time: true,
-            node_args: "--inspect=9229"
+            time: true
         }, {
             name: "Ithil-Rebirth Worker Server",
             script: "./dist/workerServer.js",
             exec_mode: "cluster",
-            instances: 8,
+            instances: 7,
             wait_ready: true,
             listen_timeout: 10000,
             time: true
+        }, {
+            name: "Ithil-Rebirth Worker Debug Server",
+            script: "./dist/workerServer.js",
+            exec_mode: "cluster",
+            instances: 1,
+            wait_ready: true,
+            listen_timeout: 10000,
+            time: true,
+            node_args: "--inspect=9229"
         }, {
             name: "Ithil-Rebirth Drop Server",
             script: "./dist/dropServer.js",
