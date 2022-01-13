@@ -28,6 +28,9 @@ import portscanner from "portscanner";
 
 const config = require("../ecosystem.config").config;
 
+// set default listener limit higher - bug in threads.js described here:https://github.com/andywer/threads.js/issues/312
+require('events').EventEmitter.defaultMaxListeners = 20;
+
 // measure eventloop latency
 let eventLoopLatency = 0;
 setInterval(() => {
@@ -154,9 +157,10 @@ portscanner.findAPortNotInUse(
 
             // push socket to array and update worker balance
             connectedSockets.push(clientSocket);
+            connectedSockets = connectedSockets.filter(clientSocket => clientSocket.socket.connected);
             ipcClient.updatePortBalance?.({ port: workerPort, clients: connectedSockets.length });
 
-            // remove socket from array and update balance on disconnect
+            // remove disconnected sockets from array and update balance on disconnect
             clientSocket.subscribeDisconnect(async (reason) => {
                 connectedSockets = connectedSockets.filter(clientSocket => clientSocket.socket.connected);
                 ipcClient.updatePortBalance?.({ port: workerPort, clients: connectedSockets.length });
