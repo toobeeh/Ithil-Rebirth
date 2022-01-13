@@ -29,7 +29,7 @@ import portscanner from "portscanner";
 const config = require("../ecosystem.config").config;
 
 // disable listener limit - bug in threads.js described here:https://github.com/andywer/threads.js/issues/312
-process.setMaxListeners(0);
+require('events').EventEmitter.defaultMaxListeners = 0;
 
 // measure eventloop latency
 let eventLoopLatency = 0;
