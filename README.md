@@ -7,11 +7,21 @@
 Ithil-Rebirth is the **successor and re-write of toobeeh/Ithil**.  
 This node-js server has the same tasks as its predecessor (see Tasks), while its focus is on improving maintainability, readability and performance boost.  
   
-### ⚡ It features following changes:
+### ⚡ Features following changes:
 - Written in **TypeScript**, using types where possible, and thoroughly commented with JSDoc
 - Separated Drop Server to keep the event loop latency minimal and consistent for **all** drop recipients
 - More asynchronous database execution, results in **noticeable performance boost** eg. in image cloud
 - More modular code - functions like balancer, IPC connections and sockets all moved to **separate module classes**
+
+## Tasks
+The Ithil server is the interface between [a typo user on skribbl](https://github.com/toobeeh/skribbltypo) and all Palantir features.
+The original PHP pseudo-api was replaced with a more and more advancing socketio server, which is now successed by this nodejs application.  
+
+The core functionality is to provide a socketio server which a client on typo connects to.  
+This socketio server has to process all events - to make clustered operation possible, multiple socketio client servers are coordinated by a main server via IPC.  
+A connecting client makes a request to a socketio server on the main instance, which responds with the port of the least loaded worker socketio server.  
+
+However, since drops are specifically time-critical, there is also a dedicated drop server process, consisting of a bare WebSocket server to dispatch drops.
 
 ## Functions & Modules
 ### ▶️ Entry Points 
