@@ -10,6 +10,12 @@ const palantirDatabase_1 = __importDefault(require("./palantirDatabase"));
  */
 let database;
 let debug = false;
+let diffToTsd = Date.now() % 10000;
+setTimeout(() => {
+    setInterval(() => {
+        console.log("Worker of " + process.pid + " with " + (Math.round(process.memoryUsage().heapUsed / 1024 / 1024 * 100) / 100) + "MB heap");
+    });
+}, 10000 - diffToTsd);
 const palantirDatabaseWorker = {
     /** Inits a {@link PalantirDatabase} in a worker*/
     init(path, _debug = false) {

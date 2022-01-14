@@ -9,6 +9,13 @@ import PalantirDatabase from "./palantirDatabase";
 let database: PalantirDatabase | null;
 let debug = false;
 
+let diffToTsd = Date.now() % 10000;
+setTimeout(()=>{
+    setInterval(()=>{
+        console.log("Worker of " + process.pid + " with " + (Math.round(process.memoryUsage().heapUsed / 1024 / 1024 * 100) / 100) + "MB heap");
+    });
+}, 10000 - diffToTsd);
+
 const palantirDatabaseWorker = {
 
     /** Inits a {@link PalantirDatabase} in a worker*/
