@@ -91,7 +91,14 @@ class TypoClient {
         if (cache)
             return Promise.resolve(cache);
         else
-            return new Promise(async (resolve) => {
+            return new Promise(async (resolve, reject) => {
+                setTimeout(() => {
+                    console.log("timed out");
+                    if (cache)
+                        resolve(cache);
+                    else
+                        reject();
+                }, 2000);
                 const result = (await sp(this.palantirDatabaseWorker.getUserByLogin(Number(this.login)))).result;
                 this.setCache(this.memberCache, result);
                 resolve(result);

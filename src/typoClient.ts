@@ -5,6 +5,7 @@ import * as types from "./database/types";
 import * as ithilSocketServer from "./ithilSocketServer";
 import { dropClaimEventdata } from './ipc';
 import { trace } from 'console';
+import { rejects } from 'assert';
 
 
 interface cachedData<TData> {
@@ -72,7 +73,12 @@ export default class TypoClient {
     get member() {
         const cache = this.getCache(this.memberCache);
         if(cache) return Promise.resolve(cache);
-        else return new Promise<types.member>(async resolve => {
+        else return new Promise<types.member>(async (resolve, reject) => {
+            setTimeout(()=>{
+                console.log("timed out");
+                if(cache) resolve(cache);
+                else reject()
+            }, 2000);
             const result = (await sp(this.palantirDatabaseWorker.getUserByLogin(Number(this.login)))).result;
             this.setCache(this.memberCache, result);
             resolve(result);
