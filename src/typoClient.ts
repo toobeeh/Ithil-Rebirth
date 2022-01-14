@@ -18,7 +18,7 @@ function sp<TPromise>(promise: Promise<TPromise>){
     let stack = (new Error()).stack;
     return new Promise<TPromise>(async (resolve, reject) => {
         setTimeout(()=>{
-            reject(new Error("Promise timed out - " + stack));
+            reject("Caught promise after 60s - " + stack);
         },60000);
         const result = await promise;
         resolve(result);
@@ -75,9 +75,11 @@ export default class TypoClient {
         if(cache) return Promise.resolve(cache);
         else return new Promise<types.member>(async (resolve, reject) => {
             setTimeout(()=>{
-                console.log("timed out");
                 if(cache) resolve(cache);
-                else reject()
+                else {
+                    reject();
+                    console.log("timed out");
+                }
             }, 2000);
             const result = (await sp(this.palantirDatabaseWorker.getUserByLogin(Number(this.login)))).result;
             this.setCache(this.memberCache, result);
@@ -225,17 +227,10 @@ export default class TypoClient {
             await sp(this.imageDatabaseWorker.removeEntries(this.login, this.loginDate - 1000 * 60 * 60 * 24 * 30));
         }
 
-        // close threads gently
-        setTimeout(()=>{
-            this.imageDatabaseWorker.close();
-            this.palantirDatabaseWorker.close();
-            Thread.terminate(this.imageDatabaseWorker);
-            Thread.terminate(this.palantirDatabaseWorker);
-
-            global.gc?.();
-
-            console.log("terminated threads");
-        }, 5000);
+        this.imageDatabaseWorker.close();
+        this.palantirDatabaseWorker.close();
+        Thread.terminate(this.imageDatabaseWorker);
+        Thread.terminate(this.palantirDatabaseWorker);
 
         console.log(this.username + " disconnected.");
     }
