@@ -16,8 +16,8 @@ function sp<TPromise>(promise: Promise<TPromise>) {
     let stack = (new Error()).stack;
     return new Promise<TPromise>(async (resolve, reject) => {
         setTimeout(() => {
-            reject("Caught promise after 60s - " + stack);
-        }, 10000);
+            reject("Caught promise after 20s - " + stack);
+        }, 20000);
         const result = await promise;
         resolve(result);
     });
