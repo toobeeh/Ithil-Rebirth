@@ -1,6 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const threads_1 = require("threads");
 /**
  * Manage dataflow and interactions with a client socket accessing from skribbl.io using typo
  */
@@ -8,7 +7,7 @@ class TypoClient {
     /**
      * Init a new client with all member-related data and bound events
      */
-    constructor(socket, dbWorker, imageDbWorker, memberInit, workerCache) {
+    constructor(socket, dbWorker, imageDbWorker, memberInit, workerCache, onClose) {
         this.memberCache = {};
         /** The interval in which the current playing status is processed */
         this.updateStatusInterval = undefined;
@@ -23,6 +22,7 @@ class TypoClient {
         this.loginDate = Date.now();
         // init events 
         this.typosocket.subscribeDisconnect(this.onDisconnect.bind(this));
+        this.typosocket.subscribeDisconnect(onClose);
         this.typosocket.subscribeGetUserEvent(this.getUser.bind(this));
         this.typosocket.subscribeSetSlotEvent(this.setSpriteSlot.bind(this));
         this.typosocket.subscribeSetComboEvent(this.setSpriteCombo.bind(this));
@@ -143,10 +143,6 @@ class TypoClient {
         if (!flags.admin || !flags.patron || !flags.unlimitedCloud) {
             await this.imageDatabaseWorker.removeEntries(this.login, this.loginDate - 1000 * 60 * 60 * 24 * 30);
         }
-        await this.palantirDatabaseWorker.close();
-        await this.imageDatabaseWorker.close();
-        await threads_1.Thread.terminate(this.palantirDatabaseWorker);
-        await threads_1.Thread.terminate(this.imageDatabaseWorker);
         console.log(this.username + " disconnected and closed threads/dbs.");
     }
     /**
