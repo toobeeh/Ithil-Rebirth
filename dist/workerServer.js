@@ -61,7 +61,7 @@ setInterval(() => {
 function securePromise(promise) {
     return new Promise(async (resolve, reject) => {
         setTimeout(() => {
-            reject(new Error("Primise timed out"));
+            reject(new Error("Primise timed out at type: " + (typeof promise)));
         }, 60000);
         const result = await promise;
         resolve(result);
