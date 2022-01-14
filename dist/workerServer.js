@@ -48,6 +48,19 @@ const config = require("../ecosystem.config").config;
 // disable listener limit - bug in threads.js described here:https://github.com/andywer/threads.js/issues/312
 //require('events').EventEmitter.defaultMaxListeners = 0;
 const debug = /--debug|--inspect/.test(process.execArgv.join(' '));
+if (debug) {
+    let maxRecordedRam = 0;
+    let ramCheck = setInterval(() => {
+        let ram = process.memoryUsage();
+        let ramRss = Math.round(ram.rss / 1024 / 1024 * 100) / 100;
+        let ramHeap = Math.round(ram.heapUsed / 1024 / 1024 * 100) / 100;
+        if (maxRecordedRam * 1.05 < ramRss) {
+            // memory load is higher than the last recorded value + 5%
+            maxRecordedRam = ramRss;
+            console.log("RAM: " + ramRss + " MB (Heap: " + ramHeap + " MB)", "INFO");
+        }
+    }, 5000);
+}
 // measure eventloop latency
 let eventLoopLatency = 0;
 setInterval(() => {
@@ -153,7 +166,7 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
         clientSocket.subscribeLoginEvent(async (loginData) => {
             // create database worker and check access token - prepare empty event response
             const asyncDb = await (0, threads_1.spawn)(new threads_1.Worker("./database/palantirDatabaseWorker"));
-            await asyncDb.init(config.palantirDbPath);
+            await asyncDb.init(config.palantirDbPath, debug);
             const loginResult = await asyncDb.getLoginFromAccessToken(loginData.accessToken, true);
             const response = {
                 authorized: false,
