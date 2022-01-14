@@ -169,6 +169,7 @@ export default class TypoClient {
         this.loginDate = Date.now();
 
         // init events 
+        this.typosocket.subscribeDisconnect(this.onDisconnect.bind(this));
         this.typosocket.subscribeGetUserEvent(this.getUser.bind(this));
         this.typosocket.subscribeSetSlotEvent(this.setSpriteSlot.bind(this));
         this.typosocket.subscribeSetComboEvent(this.setSpriteCombo.bind(this));
