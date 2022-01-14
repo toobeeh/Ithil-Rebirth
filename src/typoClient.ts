@@ -31,8 +31,8 @@ export default class TypoClient {
      * @param validMs The validity limit
      * @returns Cached data
      */
-    private getCache<TData>(cache: cachedData<TData>, validMs: number = 5000){
-        if(cache.date && cache.cache && cache.date + validMs < Date.now()) return cache.cache;
+    private getCache<TData>(cache: cachedData<TData>, validMs: number = 30000){
+        if(cache.date && cache.cache && cache.date + validMs > Date.now()) return cache.cache;
         else return undefined;
     }
 
@@ -44,6 +44,15 @@ export default class TypoClient {
     private setCache<TData>(cache: cachedData<TData>, data: TData){
         cache.cache = data;
         cache.date = Date.now();
+    }
+
+    /**
+     * Clears cached data
+     * @param cache The cache object
+     */
+     private clearCache<TData>(cache: cachedData<TData>){
+        cache.cache = undefined;
+        cache.date = 0;
     }
 
     /** Get the authentificated member */
@@ -210,6 +219,7 @@ export default class TypoClient {
      * @returns Event response data containing user, flags and slots
      */
     async getUser() {
+        this.clearCache(this.memberCache);
         const data: ithilSocketServer.getUserResponseEventdata = {
             user: await this.member,
             flags: await this.flags,
@@ -224,6 +234,7 @@ export default class TypoClient {
      * @returns Response data containing updated user, flags and slots
      */
     async setSpriteSlot(eventdata: ithilSocketServer.setSlotEventdata) {
+        this.clearCache(this.memberCache);
         const slots = await this.spriteSlots;
         const currentInv = await this.spriteInventory;
         const flags = await this.flags;
@@ -264,6 +275,8 @@ export default class TypoClient {
                 slot: slot.split(".").length - 1
             } as types.spriteProperty;
         });
+        
+        this.clearCache(this.memberCache);
         const currentInv = await this.spriteInventory;
         const slots = await this.spriteSlots;
         const flags = await this.flags;

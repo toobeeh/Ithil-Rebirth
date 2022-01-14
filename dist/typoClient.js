@@ -52,8 +52,8 @@ class TypoClient {
      * @param validMs The validity limit
      * @returns Cached data
      */
-    getCache(cache, validMs = 5000) {
-        if (cache.date && cache.cache && cache.date + validMs < Date.now())
+    getCache(cache, validMs = 30000) {
+        if (cache.date && cache.cache && cache.date + validMs > Date.now())
             return cache.cache;
         else
             return undefined;
@@ -66,6 +66,14 @@ class TypoClient {
     setCache(cache, data) {
         cache.cache = data;
         cache.date = Date.now();
+    }
+    /**
+     * Clears cached data
+     * @param cache The cache object
+     */
+    clearCache(cache) {
+        cache.cache = undefined;
+        cache.date = 0;
     }
     /** Get the authentificated member */
     get member() {
@@ -146,6 +154,7 @@ class TypoClient {
      * @returns Event response data containing user, flags and slots
      */
     async getUser() {
+        this.clearCache(this.memberCache);
         const data = {
             user: await this.member,
             flags: await this.flags,
@@ -159,6 +168,7 @@ class TypoClient {
      * @returns Response data containing updated user, flags and slots
      */
     async setSpriteSlot(eventdata) {
+        this.clearCache(this.memberCache);
         const slots = await this.spriteSlots;
         const currentInv = await this.spriteInventory;
         const flags = await this.flags;
@@ -197,6 +207,7 @@ class TypoClient {
                 slot: slot.split(".").length - 1
             };
         });
+        this.clearCache(this.memberCache);
         const currentInv = await this.spriteInventory;
         const slots = await this.spriteSlots;
         const flags = await this.flags;
