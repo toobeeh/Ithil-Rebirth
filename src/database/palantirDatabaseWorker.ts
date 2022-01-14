@@ -13,7 +13,7 @@ let diffToTsd = Date.now() % 10000;
 setTimeout(()=>{
     setInterval(()=>{
         console.log("Worker of " + process.pid + " with " + (Math.round(process.memoryUsage().heapUsed / 1024 / 1024 * 100) / 100) + "MB heap");
-    });
+    }, 10000);
 }, 10000 - diffToTsd);
 
 const palantirDatabaseWorker = {
