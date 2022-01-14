@@ -200,7 +200,7 @@ export default class TypoClient {
             joinedLobby: undefined,
             reportLobby: undefined,
             updateLoop: async () => {
-                await this.updateStatus();
+                await sp(this.updateStatus());
                 setTimeout(this.reportData.updateLoop.bind(this), 2500);
             }
         };
