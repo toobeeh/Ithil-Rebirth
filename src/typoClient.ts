@@ -14,12 +14,12 @@ interface cachedData<TData> {
 }
 
 
-function sp<TPromise>(promise: Promise<TPromise>){
+function sp<TPromise>(promise: Promise<TPromise>) {
     let stack = (new Error()).stack;
     return new Promise<TPromise>(async (resolve, reject) => {
-        setTimeout(()=>{
+        setTimeout(() => {
             reject("Caught promise after 60s - " + stack);
-        },60000);
+        }, 60000);
         const result = await promise;
         resolve(result);
     });
@@ -45,8 +45,8 @@ export default class TypoClient {
      * @param validMs The validity limit
      * @returns Cached data
      */
-    private getCache<TData>(cache: cachedData<TData>, validMs: number = 30000){
-        if(cache.date && cache.cache && cache.date + validMs > Date.now()) return cache.cache;
+    private getCache<TData>(cache: cachedData<TData>, validMs: number = 30000) {
+        if (cache.date && cache.cache && cache.date + validMs > Date.now()) return cache.cache;
         else return undefined;
     }
 
@@ -55,7 +55,7 @@ export default class TypoClient {
      * @param cache The cache object
      * @param data The new cache data
      */
-    private setCache<TData>(cache: cachedData<TData>, data: TData){
+    private setCache<TData>(cache: cachedData<TData>, data: TData) {
         cache.cache = data;
         cache.date = Date.now();
     }
@@ -64,7 +64,7 @@ export default class TypoClient {
      * Clears cached data
      * @param cache The cache object
      */
-     private clearCache<TData>(cache: cachedData<TData>){
+    private clearCache<TData>(cache: cachedData<TData>) {
         cache.cache = undefined;
         cache.date = 0;
     }
@@ -72,10 +72,10 @@ export default class TypoClient {
     /** Get the authentificated member */
     get member() {
         const cache = this.getCache(this.memberCache);
-        if(cache) return Promise.resolve(cache);
+        if (cache) return Promise.resolve(cache);
         else return new Promise<types.member>(async (resolve, reject) => {
-            setTimeout(()=>{
-                if(cache) resolve(cache);
+            setTimeout(() => {
+                if (cache) resolve(cache);
                 else {
                     reject();
                     console.log("timed out");
@@ -153,9 +153,6 @@ export default class TypoClient {
     workerCache: types.workerCache;
 
     /** The interval in which the current playing status is processed */
-    updateStatusInterval?: TimerHandler = undefined;
-
-    /** The interval in which the current playing status is processed */
     claimDropCallback?: (eventdata: dropClaimEventdata) => void = undefined;
 
     /** Object that represents the state of the socket for reporting playing status */
@@ -174,7 +171,7 @@ export default class TypoClient {
         reportLobby?: types.lobby,
 
         /** The interval in which the reports are written */
-        updateInterval: NodeJS.Timer
+        updateLoop: () => Promise<void>
     };
 
     /** 
@@ -211,7 +208,10 @@ export default class TypoClient {
             nickname: this.username,
             joinedLobby: undefined,
             reportLobby: undefined,
-            updateInterval: setInterval(this.updateStatus.bind(this), 2500)
+            updateLoop: async () => {
+                await this.updateStatus();
+                setTimeout(this.reportData.updateLoop.bind(this), 2500);
+            }
         };
 
         console.log(this.username + " logged in.");
@@ -223,7 +223,7 @@ export default class TypoClient {
      */
     async onDisconnect(reason: string) {
         const flags = await sp(this.flags);
-        if(!flags.admin || !flags.patron || !flags.unlimitedCloud) {
+        if (!flags.admin || !flags.patron || !flags.unlimitedCloud) {
             await sp(this.imageDatabaseWorker.removeEntries(this.login, this.loginDate - 1000 * 60 * 60 * 24 * 30));
         }
 
@@ -296,7 +296,7 @@ export default class TypoClient {
                 slot: slot.split(".").length - 1
             } as types.spriteProperty;
         });
-        
+
         this.clearCache(this.memberCache);
         const currentInv = await this.spriteInventory;
         const slots = await this.spriteSlots;
@@ -341,16 +341,16 @@ export default class TypoClient {
         let success = false;
         let lobby = {} as types.palantirLobby;
         const lobbyResult = await sp(this.palantirDatabaseWorker.getLobby(key, "key"));
-        
+
         // create new lobby if none found for key, but query succeeded
-        if(!lobbyResult.result.found || !lobbyResult.result.lobby){
-            if(lobbyResult.success){
+        if (!lobbyResult.result.found || !lobbyResult.result.lobby) {
+            if (lobbyResult.success) {
                 const newLobbyResult = await sp(this.palantirDatabaseWorker.setLobby(Date.now().toString(), key));
 
                 // if new lobby was successfully added, get it
-                if(newLobbyResult){
+                if (newLobbyResult) {
                     const createdLobbyResult = await sp(this.palantirDatabaseWorker.getLobby(key, "key"));
-                    if(createdLobbyResult.success && createdLobbyResult.result.found && createdLobbyResult.result.lobby){
+                    if (createdLobbyResult.success && createdLobbyResult.result.found && createdLobbyResult.result.lobby) {
                         lobby = createdLobbyResult.result.lobby;
                         this.reportData.joinedLobby = lobby;
                         success = true;
@@ -382,35 +382,34 @@ export default class TypoClient {
         let ownerID = 0;
         let updatedLobby = {} as types.reportLobby;
 
-        if(this.reportData.joinedLobby){
+        if (this.reportData.joinedLobby) {
             this.reportData.reportLobby = eventdata.lobby;
             const cached = this.reportData.joinedLobby;
 
             // get owner 
             const senderID = eventdata.lobby.Players.find(player => player.Sender)?.LobbyPlayerID;
-            if(senderID){
+            if (senderID) {
                 const ownerResult = await sp(this.palantirDatabaseWorker.isPalantirLobbyOwner(this.reportData.joinedLobby.ID, senderID));
-                if(ownerResult.success && ownerResult.result.owner != null && ownerResult.result.ownerID != null){
+                if (ownerResult.success && ownerResult.result.owner != null && ownerResult.result.ownerID != null) {
                     owner = ownerResult.result.owner;
                     ownerID = ownerResult.result.ownerID;
                 }
             }
 
             // if key, description, restriction differ from last cached lobby
-            if(cached.Key != eventdata.lobbyKey || cached.Description != eventdata.description || cached.Restriction != eventdata.restriction)
-            {
+            if (cached.Key != eventdata.lobbyKey || cached.Description != eventdata.description || cached.Restriction != eventdata.restriction) {
                 // update lobby data
                 let restriction = "unrestricted";
                 let description = "";
                 let key = eventdata.lobbyKey;
 
-                if(owner){
+                if (owner) {
                     restriction = eventdata.restriction;
                     description = eventdata.description;
                 }
                 else {
                     const currentLobby = (await sp(this.palantirDatabaseWorker.getLobby(this.reportData.joinedLobby.ID, "id"))).result.lobby;
-                    if(currentLobby){
+                    if (currentLobby) {
                         restriction = currentLobby.Restriction;
                         description = currentLobby.Description;
                     }
@@ -419,13 +418,13 @@ export default class TypoClient {
             }
 
             const updatedLobbyResult = (await sp(this.palantirDatabaseWorker.getLobby(this.reportData.joinedLobby.ID, "id"))).result.lobby;
-            if(updatedLobbyResult){
+            if (updatedLobbyResult) {
                 updatedLobby.ID = updatedLobbyResult.ID;
                 updatedLobby.Key = updatedLobbyResult.Key;
                 updatedLobby.Restriction = updatedLobbyResult.Restriction;
                 updatedLobby.Description = updatedLobbyResult.Description;
                 this.reportData.joinedLobby = updatedLobby;
-            } 
+            }
         }
 
         // return updated lobby
@@ -444,7 +443,7 @@ export default class TypoClient {
      * @param eventdata Eventdata conatining search nickname of the client
      */
     async searchLobby(eventdata: ithilSocketServer.searchLobbyEventdata) {
-        if(eventdata.searchData.waiting) this.reportData.currentStatus = "waiting";
+        if (eventdata.searchData.waiting) this.reportData.currentStatus = "waiting";
         else this.reportData.currentStatus = "searching";
         this.reportData.nickname = eventdata.searchData.userName;
     }
@@ -460,11 +459,11 @@ export default class TypoClient {
         this.reportData.reportLobby = undefined;
 
         let activeLobbies: types.activeGuildLobbies[] = [];
-        if(previousState == "playing"){
+        if (previousState == "playing") {
 
             // send currently active lobbies if player was in a lobby (playing -> no broadcast of active lobbies)
             console.log(this.username + " left a lobby.");
-        
+
             const guilds = (await sp(this.member)).member.Guilds;
             activeLobbies = this.workerCache.activeLobbies.filter(guildLobby => guilds.some(guild => guild.GuildID == guildLobby.guildID));
         }
@@ -486,11 +485,11 @@ export default class TypoClient {
         const currentMember = (await sp(this.member)).member;
 
         // set playing room definitely only if currently playing
-        if(this.reportData.currentStatus == "playing") {
-            if(!this.typosocket.socket.rooms.has("playing")) this.typosocket.socket.join("playing");
+        if (this.reportData.currentStatus == "playing") {
+            if (!this.typosocket.socket.rooms.has("playing")) this.typosocket.socket.join("playing");
         }
         else {
-            if(this.typosocket.socket.rooms.has("playing")) this.typosocket.socket.leave("playing");
+            if (this.typosocket.socket.rooms.has("playing")) this.typosocket.socket.leave("playing");
         }
 
         if (statusIsAnyOf("playing")) {
@@ -538,7 +537,7 @@ export default class TypoClient {
         else if (statusIsAnyOf("searching", "waiting")) {
 
             // write searching or waiting status
-            if(this.reportData.nickname) currentMember.UserName = this.reportData.nickname;
+            if (this.reportData.nickname) currentMember.UserName = this.reportData.nickname;
             const status: types.playerStatus = {
                 PlayerMember: currentMember,
                 Status: this.reportData.currentStatus,
@@ -557,8 +556,8 @@ export default class TypoClient {
      * @param eventdata Eventdata containing drawing meta, uri and commands
      * @returns Response data containing the stored drawing's id
      */
-    async storeDrawing(eventdata: ithilSocketServer.storeDrawingEventdata){
-        
+    async storeDrawing(eventdata: ithilSocketServer.storeDrawingEventdata) {
+
         // fill missing meta
         const sanitizedMeta: types.imageMeta = {
             author: eventdata.meta.author ? eventdata.meta.author : "Unknown artist",
@@ -588,9 +587,9 @@ export default class TypoClient {
      * @param eventdata Eventdata containing the target drawing's id and wether the commands should be sent 
      * @returns Response data containing image data
      */
-     async fetchDrawing(eventdata: ithilSocketServer.fetchDrawingEventdata){
+    async fetchDrawing(eventdata: ithilSocketServer.fetchDrawingEventdata) {
         const dbRes = await sp(this.imageDatabaseWorker.getDrawing(eventdata.id));
-        if(!eventdata.withCommands) dbRes.result.commands = [];
+        if (!eventdata.withCommands) dbRes.result.commands = [];
 
         const response: ithilSocketServer.fetchDrawingResponseEventdata = {
             drawing: dbRes.result
@@ -602,7 +601,7 @@ export default class TypoClient {
      * Handler for delete drawing event
      * @param eventdata Eventdata containing the target drawing's id 
      */
-     async removeDrawing(eventdata: ithilSocketServer.drawingIDEventdata){
+    async removeDrawing(eventdata: ithilSocketServer.drawingIDEventdata) {
         await sp(this.imageDatabaseWorker.removeDrawing(this.login, eventdata.id));
     }
 
@@ -611,7 +610,7 @@ export default class TypoClient {
      * @param eventdata Eventdata containing the target drawing's id 
      * @returns The array of commands
      */
-     async getCommands(eventdata: ithilSocketServer.drawingIDEventdata){
+    async getCommands(eventdata: ithilSocketServer.drawingIDEventdata) {
         const dbResult = await sp(this.imageDatabaseWorker.getDrawing(eventdata.id));
 
         const response: ithilSocketServer.getCommandsResponseEventdata = {
@@ -625,7 +624,7 @@ export default class TypoClient {
      * @param eventdata Eventdata containing the search metadata
      * @returns The array of drawings
      */
-     async getMeta(eventdata: ithilSocketServer.getMetaEventdata){
+    async getMeta(eventdata: ithilSocketServer.getMetaEventdata) {
         const limit = eventdata.limit ? eventdata.limit : -1;
         const dbResult = await sp(this.imageDatabaseWorker.getUserMeta(this.login, limit, eventdata.query));
 
@@ -639,21 +638,21 @@ export default class TypoClient {
      * Handler for the claim drop event
      * @param eventdata Eventdata containing the claim details
      */
-     async claimDrop(eventdata: ithilSocketServer.claimDropEventdata){
+    async claimDrop(eventdata: ithilSocketServer.claimDropEventdata) {
         const flags = await this.flags;
         const claimTimestamp = Date.now();
-        if(flags.dropBan || eventdata.timedOut 
-            || !this.claimDropCallback || !this.reportData.joinedLobby 
+        if (flags.dropBan || eventdata.timedOut
+            || !this.claimDropCallback || !this.reportData.joinedLobby
             || !this.reportData.reportLobby) throw new Error("Unauthorized drop claim");
 
-        const username = this.reportData.reportLobby.Players.find(p=> p.Sender)?.Name;
+        const username = this.reportData.reportLobby.Players.find(p => p.Sender)?.Name;
         const lobbyKey = this.reportData.joinedLobby.Key;
         const userID = (await this.member).member.UserID;
 
         const claimData: dropClaimEventdata = {
             dropID: eventdata.dropID,
             login: this.login,
-            username: username ? username :  "Someone else",
+            username: username ? username : "Someone else",
             lobbyKey: lobbyKey,
             userID: userID,
             claimTicket: eventdata.claimTicket,

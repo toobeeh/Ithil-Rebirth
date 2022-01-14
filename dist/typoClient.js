@@ -21,8 +21,6 @@ class TypoClient {
     constructor(socket, dbWorker, imageDbWorker, memberInit, workerCache) {
         this.memberCache = {};
         /** The interval in which the current playing status is processed */
-        this.updateStatusInterval = undefined;
-        /** The interval in which the current playing status is processed */
         this.claimDropCallback = undefined;
         this.typosocket = socket;
         this.palantirDatabaseWorker = dbWorker;
@@ -52,7 +50,10 @@ class TypoClient {
             nickname: this.username,
             joinedLobby: undefined,
             reportLobby: undefined,
-            updateInterval: setInterval(this.updateStatus.bind(this), 2500)
+            updateLoop: async () => {
+                await this.updateStatus();
+                setTimeout(this.reportData.updateLoop.bind(this), 2500);
+            }
         };
         console.log(this.username + " logged in.");
     }
