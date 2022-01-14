@@ -47,6 +47,7 @@ const portscanner_1 = __importDefault(require("portscanner"));
 const config = require("../ecosystem.config").config;
 // disable listener limit - bug in threads.js described here:https://github.com/andywer/threads.js/issues/312
 //require('events').EventEmitter.defaultMaxListeners = 0;
+const debug = /--debug|--inspect/.test(process.execArgv.join(' '));
 // measure eventloop latency
 let eventLoopLatency = 0;
 setInterval(() => {

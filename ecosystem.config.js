@@ -20,7 +20,7 @@ module.exports = {
             wait_ready: true,
             listen_timeout: 10000,
             time: true,
-            node_args: "--inspect=9229"
+            node_args: "--inspect=9229 "
         }, {
             name: "Ithil-Rebirth Drop Server",
             script: "./dist/dropServer.js",
