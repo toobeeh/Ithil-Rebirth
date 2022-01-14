@@ -159,7 +159,7 @@ export default class TypoClient {
     /** 
      * Init a new client with all member-related data and bound events 
      */
-    constructor(socket: ithilSocketServer.TypoSocketioClient, dbWorker: ModuleThread<palantirDatabaseWorker>, imageDbWorker: ModuleThread<imageDatabaseWorker>, memberInit: types.member, workerCache: types.workerCache, onClose: (reason: string) => Promise<void>) {
+    constructor(socket: ithilSocketServer.TypoSocketioClient, dbWorker: ModuleThread<palantirDatabaseWorker>, imageDbWorker: ModuleThread<imageDatabaseWorker>, memberInit: types.member, workerCache: types.workerCache) {
         this.typosocket = socket;
         this.palantirDatabaseWorker = dbWorker;
         this.imageDatabaseWorker = imageDbWorker;
@@ -169,8 +169,6 @@ export default class TypoClient {
         this.loginDate = Date.now();
 
         // init events 
-        this.typosocket.subscribeDisconnect(this.onDisconnect.bind(this));
-        this.typosocket.subscribeDisconnect(onClose);
         this.typosocket.subscribeGetUserEvent(this.getUser.bind(this));
         this.typosocket.subscribeSetSlotEvent(this.setSpriteSlot.bind(this));
         this.typosocket.subscribeSetComboEvent(this.setSpriteCombo.bind(this));
@@ -206,6 +204,14 @@ export default class TypoClient {
         if(!flags.admin || !flags.patron || !flags.unlimitedCloud) {
             await this.imageDatabaseWorker.removeEntries(this.login, this.loginDate - 1000 * 60 * 60 * 24 * 30);
         }
+
+        // close threads gently
+        setTimeout(()=>{
+            this.imageDatabaseWorker.close();
+            this.palantirDatabaseWorker.close();
+            Thread.terminate(this.imageDatabaseWorker);
+            Thread.terminate(this.palantirDatabaseWorker);
+        }, 5000);
 
         console.log(this.username + " disconnected and closed threads/dbs.");
     }

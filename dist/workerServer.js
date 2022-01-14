@@ -165,8 +165,7 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
         // listen for login event
         clientSocket.subscribeLoginEvent(async (loginData) => {
             // create database worker and check access token - prepare empty event response
-            const dbWorker = new threads_1.Worker("./database/palantirDatabaseWorker");
-            const asyncDb = await (0, threads_1.spawn)(dbWorker);
+            const asyncDb = await (0, threads_1.spawn)(new threads_1.Worker("./database/palantirDatabaseWorker"));
             await asyncDb.init(config.palantirDbPath, debug);
             const loginResult = await asyncDb.getLoginFromAccessToken(loginData.accessToken, true);
             const response = {
@@ -177,15 +176,11 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
             // if login succeeded, create a typo client and enable further events
             if (loginResult.success) {
                 const memberResult = await asyncDb.getUserByLogin(loginResult.result.login);
-                // create image db worker
-                const imageDbWorker = new threads_1.Worker("./database/imageDatabaseWorker");
-                const asyncImageDb = await (0, threads_1.spawn)(imageDbWorker);
+                const asyncImageDb = await (0, threads_1.spawn)(new threads_1.Worker("./database/imageDatabaseWorker"));
                 await asyncImageDb.init(loginResult.result.login.toString(), config.imageDbParentPath);
-                const close = async (reason) => {
-                    dbWorker.terminate();
-                    imageDbWorker.terminate();
+                const close = () => {
                 };
-                const client = new typoClient_1.default(clientSocket, asyncDb, asyncImageDb, memberResult.result, workerCache, close);
+                const client = new typoClient_1.default(clientSocket, asyncDb, asyncImageDb, memberResult.result, workerCache);
                 client.claimDropCallback = (eventdata) => {
                     eventdata.workerEventloopLatency = eventLoopLatency;
                     eventdata.workerPort = workerPort;
@@ -198,7 +193,7 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
                 response.activeLobbies = workerCache.activeLobbies.filter(guild => memberResult.result.member.Guilds.some(connectedGuild => connectedGuild.GuildID == guild.guildID));
             }
             else
-                await dbWorker.terminate();
+                await threads_1.Thread.terminate(asyncDb);
             return response;
         });
     });
