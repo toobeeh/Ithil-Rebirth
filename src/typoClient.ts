@@ -5,6 +5,12 @@ import * as types from "./database/types";
 import * as ithilSocketServer from "./ithilSocketServer";
 import { dropClaimEventdata } from './ipc';
 
+
+interface cachedData<TData> {
+    date?: number,
+    cache?: TData
+}
+
 /**
  * Manage dataflow and interactions with a client socket accessing from skribbl.io using typo
  */
@@ -19,13 +25,38 @@ export default class TypoClient {
     /** Socketio client socket instance */
     typosocket: ithilSocketServer.TypoSocketioClient;
 
+    /**
+     * Get cached data if valid
+     * @param cache The cache object
+     * @param validMs The validity limit
+     * @returns Cached data
+     */
+    private getCache<TData>(cache: cachedData<TData>, validMs: number = 5000){
+        if(cache.date && cache.cache && cache.date + validMs < Date.now()) return cache.cache;
+        else return undefined;
+    }
+
+    /**
+     * Set cached data
+     * @param cache The cache object
+     * @param data The new cache data
+     */
+    private setCache<TData>(cache: cachedData<TData>, data: TData){
+        cache.cache = data;
+        cache.date = Date.now();
+    }
 
     /** Get the authentificated member */
     get member() {
-        return new Promise<types.member>(async resolve => {
-            resolve((await this.palantirDatabaseWorker.getUserByLogin(Number(this.login))).result);
+        const cache = this.getCache(this.memberCache);
+        if(cache) return Promise.resolve(cache);
+        else return new Promise<types.member>(async resolve => {
+            const result = (await this.palantirDatabaseWorker.getUserByLogin(Number(this.login))).result;
+            this.setCache(this.memberCache, result);
+            resolve(result);
         });
     }
+    private memberCache: cachedData<types.member> = {};
 
     /** Get the member's current sprite slots */
     get spriteSlots() {
@@ -166,10 +197,10 @@ export default class TypoClient {
             await this.imageDatabaseWorker.removeEntries(this.login, this.loginDate - 1000 * 60 * 60 * 24 * 30);
         }
 
-        // await this.palantirDatabaseWorker.close();
-        // await this.imageDatabaseWorker.close();
-        // await Thread.terminate(this.palantirDatabaseWorker);
-        // await Thread.terminate(this.imageDatabaseWorker);
+        await this.palantirDatabaseWorker.close();
+        await this.imageDatabaseWorker.close();
+        await Thread.terminate(this.palantirDatabaseWorker);
+        await Thread.terminate(this.imageDatabaseWorker);
 
         console.log(this.username + " disconnected and closed threads/dbs.");
     }
