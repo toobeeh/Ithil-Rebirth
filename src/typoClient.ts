@@ -213,6 +213,8 @@ export default class TypoClient {
             Thread.terminate(this.imageDatabaseWorker);
             Thread.terminate(this.palantirDatabaseWorker);
 
+            global.gc?.();
+
             console.log("terminated threads");
         }, 5000);
 

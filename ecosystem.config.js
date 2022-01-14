@@ -11,6 +11,7 @@ module.exports = {
             instances: 7,
             wait_ready: true,
             listen_timeout: 10000,
+            node_args: "--expose-gc",
             time: true
         }, {
             name: "Ithil-Rebirth Worker Debug Server",
@@ -20,7 +21,7 @@ module.exports = {
             wait_ready: true,
             listen_timeout: 10000,
             time: true,
-            node_args: "--inspect=9229 "
+            node_args: "--inspect=9229 --expose-gc"
         }, {
             name: "Ithil-Rebirth Drop Server",
             script: "./dist/dropServer.js",
