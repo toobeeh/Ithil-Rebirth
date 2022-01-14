@@ -473,7 +473,6 @@ export default class TypoClient {
      * - **playing**: write status in db, write lobby report in db
      */
     async updateStatus() {
-        console.log("start statusupdate: " + this.login);
         const statusIsAnyOf = (...statusNames: string[]) => statusNames.indexOf(this.reportData.currentStatus) >= 0;
         const currentMember = (await sp(this.member)).member;
 
@@ -485,7 +484,6 @@ export default class TypoClient {
             if (this.typosocket.socket.rooms.has("playing")) this.typosocket.socket.leave("playing");
         }
 
-        console.log("switch state: " + this.login);
         if (statusIsAnyOf("playing")) {
 
             // write lobby report for each guild and set playing status
