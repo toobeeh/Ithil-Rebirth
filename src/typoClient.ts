@@ -166,10 +166,10 @@ export default class TypoClient {
             await this.imageDatabaseWorker.removeEntries(this.login, this.loginDate - 1000 * 60 * 60 * 24 * 30);
         }
 
-        await this.palantirDatabaseWorker.close();
-        await this.imageDatabaseWorker.close();
-        await Thread.terminate(this.palantirDatabaseWorker);
-        await Thread.terminate(this.imageDatabaseWorker);
+        // await this.palantirDatabaseWorker.close();
+        // await this.imageDatabaseWorker.close();
+        // await Thread.terminate(this.palantirDatabaseWorker);
+        // await Thread.terminate(this.imageDatabaseWorker);
 
         console.log(this.username + " disconnected and closed threads/dbs.");
     }

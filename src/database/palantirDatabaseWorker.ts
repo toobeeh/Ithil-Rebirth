@@ -14,7 +14,7 @@ const palantirDatabaseWorker = {
     /** Inits a {@link PalantirDatabase} in a worker*/
     init(path: string, _debug: boolean = false) {
         database = new PalantirDatabase(path);
-        debug = debug;
+        debug = _debug;
     },
 
     /** Closes a {@link PalantirDatabase} in a worker*/
