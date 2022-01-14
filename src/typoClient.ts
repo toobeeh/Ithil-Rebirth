@@ -204,6 +204,7 @@ export default class TypoClient {
                 setTimeout(this.reportData.updateLoop.bind(this), 2500);
             }
         };
+        this.reportData.updateLoop();
 
         console.log(this.username + " logged in.");
     }
