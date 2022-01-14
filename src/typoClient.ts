@@ -15,7 +15,7 @@ interface cachedData<TData> {
 function sp<TPromise>(promise: Promise<TPromise>){
     return new Promise<TPromise>(async (resolve, reject) => {
         setTimeout(()=>{
-            reject(new Error("Promise timed out"));
+            reject(new Error("Promise timed out at type: " + (typeof promise)));
         },60000);
         const result = await promise;
         resolve(result);
