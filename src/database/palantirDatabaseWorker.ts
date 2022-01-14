@@ -20,7 +20,6 @@ const palantirDatabaseWorker = {
         if (!database) throw new Error("Database is not initialized.");
         database.close();
         database = null;
-        process.exit(0);
     },
 
     /** Executes {@link PalantirDatabase.clearVolatile} in a worker*/

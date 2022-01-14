@@ -200,6 +200,7 @@ export default class TypoClient {
             joinedLobby: undefined,
             reportLobby: undefined,
             updateLoop: async () => {
+                if (!this.typosocket.socket.connected) return;
                 await sp(this.updateStatus());
                 setTimeout(this.reportData.updateLoop.bind(this), 2500);
             }

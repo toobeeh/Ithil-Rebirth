@@ -20,7 +20,6 @@ const imageDatabaseWorker = {
             throw new Error("Database is not initialized.");
         database.close();
         database = null;
-        process.exit(0);
     },
     /** Executes {@link ImageDatabase.addDrawing} in a worker*/
     addDrawing(login, id, meta) {

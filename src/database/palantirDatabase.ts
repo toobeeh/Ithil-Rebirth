@@ -44,7 +44,6 @@ class PalantirDatabase {
      */
     getUserByLogin(login: number) {
         let result = this.emptyResult<types.member>();
-        let now = Date.now();
         try {
             let row = this.db.prepare("SELECT * FROM Members WHERE Login = ?").get(login);
             result.result = {
@@ -60,8 +59,6 @@ class PalantirDatabase {
         catch (e) {
             console.warn("Error in query: ", e);
         }
-        now = Date.now() - now;
-        if(now > 200) console.log("User fetch took " + now + "ms");
         return result;
     }
 
