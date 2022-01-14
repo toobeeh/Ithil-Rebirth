@@ -6,7 +6,7 @@ function sp(promise) {
     return new Promise(async (resolve, reject) => {
         setTimeout(() => {
             reject("Caught promise after 60s - " + stack);
-        }, 60000);
+        }, 10000);
         const result = await promise;
         resolve(result);
     });
@@ -93,14 +93,6 @@ class TypoClient {
             return Promise.resolve(cache);
         else
             return new Promise(async (resolve, reject) => {
-                setTimeout(() => {
-                    if (cache)
-                        resolve(cache);
-                    else {
-                        reject();
-                        console.log("timed out");
-                    }
-                }, 2000);
                 const result = (await sp(this.palantirDatabaseWorker.getUserByLogin(Number(this.login)))).result;
                 this.setCache(this.memberCache, result);
                 resolve(result);
@@ -391,6 +383,7 @@ class TypoClient {
      * - **playing**: write status in db, write lobby report in db
      */
     async updateStatus() {
+        console.log("start statusupdate: " + this.login);
         const statusIsAnyOf = (...statusNames) => statusNames.indexOf(this.reportData.currentStatus) >= 0;
         const currentMember = (await sp(this.member)).member;
         // set playing room definitely only if currently playing
@@ -402,6 +395,7 @@ class TypoClient {
             if (this.typosocket.socket.rooms.has("playing"))
                 this.typosocket.socket.leave("playing");
         }
+        console.log("switch state: " + this.login);
         if (statusIsAnyOf("playing")) {
             // write lobby report for each guild and set playing status
             if (this.reportData.reportLobby && this.reportData.joinedLobby) {

@@ -4,8 +4,6 @@ import { ModuleThread, Thread } from "threads";
 import * as types from "./database/types";
 import * as ithilSocketServer from "./ithilSocketServer";
 import { dropClaimEventdata } from './ipc';
-import { trace } from 'console';
-import { rejects } from 'assert';
 
 
 interface cachedData<TData> {
@@ -19,7 +17,7 @@ function sp<TPromise>(promise: Promise<TPromise>) {
     return new Promise<TPromise>(async (resolve, reject) => {
         setTimeout(() => {
             reject("Caught promise after 60s - " + stack);
-        }, 60000);
+        }, 10000);
         const result = await promise;
         resolve(result);
     });
@@ -74,13 +72,6 @@ export default class TypoClient {
         const cache = this.getCache(this.memberCache);
         if (cache) return Promise.resolve(cache);
         else return new Promise<types.member>(async (resolve, reject) => {
-            setTimeout(() => {
-                if (cache) resolve(cache);
-                else {
-                    reject();
-                    console.log("timed out");
-                }
-            }, 2000);
             const result = (await sp(this.palantirDatabaseWorker.getUserByLogin(Number(this.login)))).result;
             this.setCache(this.memberCache, result);
             resolve(result);
@@ -481,6 +472,7 @@ export default class TypoClient {
      * - **playing**: write status in db, write lobby report in db
      */
     async updateStatus() {
+        console.log("start statusupdate: " + this.login);
         const statusIsAnyOf = (...statusNames: string[]) => statusNames.indexOf(this.reportData.currentStatus) >= 0;
         const currentMember = (await sp(this.member)).member;
 
@@ -492,6 +484,7 @@ export default class TypoClient {
             if (this.typosocket.socket.rooms.has("playing")) this.typosocket.socket.leave("playing");
         }
 
+        console.log("switch state: " + this.login);
         if (statusIsAnyOf("playing")) {
 
             // write lobby report for each guild and set playing status
