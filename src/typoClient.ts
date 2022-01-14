@@ -4,6 +4,7 @@ import { ModuleThread, Thread } from "threads";
 import * as types from "./database/types";
 import * as ithilSocketServer from "./ithilSocketServer";
 import { dropClaimEventdata } from './ipc';
+import { trace } from 'console';
 
 
 interface cachedData<TData> {
@@ -13,9 +14,10 @@ interface cachedData<TData> {
 
 
 function sp<TPromise>(promise: Promise<TPromise>){
+    let stack = (new Error()).stack;
     return new Promise<TPromise>(async (resolve, reject) => {
         setTimeout(()=>{
-            reject(new Error("Promise timed out at type: " + (typeof promise)));
+            reject(new Error("Promise timed out - " + stack));
         },60000);
         const result = await promise;
         resolve(result);

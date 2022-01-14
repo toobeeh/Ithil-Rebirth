@@ -2,9 +2,10 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const threads_1 = require("threads");
 function sp(promise) {
+    let stack = (new Error()).stack;
     return new Promise(async (resolve, reject) => {
         setTimeout(() => {
-            reject(new Error("Promise timed out at type: " + (typeof promise)));
+            reject(new Error("Promise timed out - " + stack));
         }, 60000);
         const result = await promise;
         resolve(result);
