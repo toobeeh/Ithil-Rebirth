@@ -148,8 +148,9 @@ class TypoClient {
             this.palantirDatabaseWorker.close();
             threads_1.Thread.terminate(this.imageDatabaseWorker);
             threads_1.Thread.terminate(this.palantirDatabaseWorker);
+            console.log("terminated threads");
         }, 5000);
-        console.log(this.username + " disconnected and closed threads/dbs.");
+        console.log(this.username + " disconnected.");
     }
     /**
      * Handler for get user event

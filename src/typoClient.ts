@@ -211,9 +211,11 @@ export default class TypoClient {
             this.palantirDatabaseWorker.close();
             Thread.terminate(this.imageDatabaseWorker);
             Thread.terminate(this.palantirDatabaseWorker);
+
+            console.log("terminated threads");
         }, 5000);
 
-        console.log(this.username + " disconnected and closed threads/dbs.");
+        console.log(this.username + " disconnected.");
     }
 
     /**

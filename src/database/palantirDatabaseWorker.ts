@@ -7,20 +7,19 @@ import PalantirDatabase from "./palantirDatabase";
  * Interface to provide worker access to the database
  */
 let database: PalantirDatabase | null;
-let debug = false;
 
 const palantirDatabaseWorker = {
 
     /** Inits a {@link PalantirDatabase} in a worker*/
-    init(path: string, _debug: boolean = false) {
+    init(path: string) {
         database = new PalantirDatabase(path);
-        debug = _debug;
     },
 
     /** Closes a {@link PalantirDatabase} in a worker*/
     close() {
         if (!database) throw new Error("Database is not initialized.");
         database.close();
+        database = null;
     },
 
     /** Executes {@link PalantirDatabase.clearVolatile} in a worker*/
