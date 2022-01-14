@@ -58,6 +58,16 @@ setInterval(() => {
         console.log("RAM: " + ramRss + " MB (Heap: " + ramHeap + " MB)", "INFO");
     }
 }, 5000);
+function securePromise(promise) {
+    return new Promise(async (resolve, reject) => {
+        setTimeout(() => {
+            reject(new Error("Primise timed out"));
+        }, 60000);
+        const result = await promise;
+        resolve(result);
+    });
+}
+console.log(global.gc);
 // measure eventloop latency
 let eventLoopLatency = 0;
 setInterval(() => {
@@ -162,9 +172,9 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
         // listen for login event
         clientSocket.subscribeLoginEvent(async (loginData) => {
             // create database worker and check access token - prepare empty event response
-            const asyncDb = await (0, threads_1.spawn)(new threads_1.Worker("./database/palantirDatabaseWorker"));
-            await asyncDb.init(config.palantirDbPath);
-            const loginResult = await asyncDb.getLoginFromAccessToken(loginData.accessToken, true);
+            const asyncDb = await securePromise((0, threads_1.spawn)(new threads_1.Worker("./database/palantirDatabaseWorker")));
+            await securePromise(asyncDb.init(config.palantirDbPath));
+            const loginResult = await securePromise(asyncDb.getLoginFromAccessToken(loginData.accessToken, true));
             const response = {
                 authorized: false,
                 activeLobbies: [],
@@ -172,9 +182,9 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
             };
             // if login succeeded, create a typo client and enable further events
             if (loginResult.success) {
-                const memberResult = await asyncDb.getUserByLogin(loginResult.result.login);
-                const asyncImageDb = await (0, threads_1.spawn)(new threads_1.Worker("./database/imageDatabaseWorker"));
-                await asyncImageDb.init(loginResult.result.login.toString(), config.imageDbParentPath);
+                const memberResult = await securePromise(asyncDb.getUserByLogin(loginResult.result.login));
+                const asyncImageDb = await securePromise((0, threads_1.spawn)(new threads_1.Worker("./database/imageDatabaseWorker")));
+                await securePromise(asyncImageDb.init(loginResult.result.login.toString(), config.imageDbParentPath));
                 const client = new typoClient_1.default(clientSocket, asyncDb, asyncImageDb, memberResult.result, workerCache);
                 client.claimDropCallback = (eventdata) => {
                     eventdata.workerEventloopLatency = eventLoopLatency;
@@ -188,7 +198,7 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
                 response.activeLobbies = workerCache.activeLobbies.filter(guild => memberResult.result.member.Guilds.some(connectedGuild => connectedGuild.GuildID == guild.guildID));
             }
             else
-                await threads_1.Thread.terminate(asyncDb);
+                await securePromise(threads_1.Thread.terminate(asyncDb));
             return response;
         });
     });

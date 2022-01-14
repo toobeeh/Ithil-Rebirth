@@ -45,6 +45,18 @@ setInterval(() => {
     }
 }, 5000);
 
+function securePromise<TPromise>(promise: Promise<TPromise>){
+    return new Promise<TPromise>(async (resolve, reject) => {
+        setTimeout(()=>{
+            reject(new Error("Primise timed out"));
+        },60000);
+        const result = await promise;
+        resolve(result);
+    });
+}
+
+console.log(global.gc);
+
 // measure eventloop latency
 let eventLoopLatency = 0;
 setInterval(() => {
@@ -187,10 +199,10 @@ portscanner.findAPortNotInUse(
             clientSocket.subscribeLoginEvent(async (loginData) => {
 
                 // create database worker and check access token - prepare empty event response
-                const asyncDb = await spawn<palantirDatabaseWorker>(new Worker("./database/palantirDatabaseWorker"));
-                await asyncDb.init(config.palantirDbPath);
+                const asyncDb = await securePromise(spawn<palantirDatabaseWorker>(new Worker("./database/palantirDatabaseWorker")));
+                await securePromise(asyncDb.init(config.palantirDbPath));
 
-                const loginResult = await asyncDb.getLoginFromAccessToken(loginData.accessToken, true);
+                const loginResult = await securePromise(asyncDb.getLoginFromAccessToken(loginData.accessToken, true));
                 const response: ithilSocketServer.loginResponseEventdata = {
                     authorized: false,
                     activeLobbies: [],
@@ -199,10 +211,9 @@ portscanner.findAPortNotInUse(
 
                 // if login succeeded, create a typo client and enable further events
                 if (loginResult.success) {
-                    const memberResult = await asyncDb.getUserByLogin(loginResult.result.login);
-                    
-                    const asyncImageDb = await spawn<imageDatabaseWorker>(new Worker("./database/imageDatabaseWorker"));
-                    await asyncImageDb.init(loginResult.result.login.toString(), config.imageDbParentPath);
+                    const memberResult = await securePromise(asyncDb.getUserByLogin(loginResult.result.login));
+                    const asyncImageDb = await securePromise(spawn<imageDatabaseWorker>(new Worker("./database/imageDatabaseWorker")));
+                    await securePromise(asyncImageDb.init(loginResult.result.login.toString(), config.imageDbParentPath));
 
                     const client = new TypoClient(clientSocket, asyncDb, asyncImageDb, memberResult.result, workerCache);
                     client.claimDropCallback = (eventdata) => {
@@ -219,7 +230,7 @@ portscanner.findAPortNotInUse(
                         guild => memberResult.result.member.Guilds.some(connectedGuild => connectedGuild.GuildID == guild.guildID)
                     );
                 }
-                else await Thread.terminate(asyncDb);
+                else await securePromise(Thread.terminate(asyncDb));
 
                 return response;
             });
