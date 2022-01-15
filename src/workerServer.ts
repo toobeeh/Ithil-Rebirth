@@ -74,6 +74,12 @@ portscanner.findAPortNotInUse(
         const workerSocketServer = new ithilSocketServer.IthilSocketioServer(workerPort, config.certificatePath).server;
 
         /**
+         * Database worker to validate incoming member requests
+         */
+        const databaseWorker = await spawn<palantirDatabaseWorker>(new Worker("./database/palantirDatabaseWorker"));
+        await databaseWorker.init(config.palantirDbPath);
+
+        /**
          * The IPC connection to the main server
          */
         const ipcClient = new IthilIPCClient("worker@" + workerPort);
@@ -126,6 +132,7 @@ portscanner.findAPortNotInUse(
             );
         };
 
+        // listen to ipc drop clear event when someone successfully claimed a drop
         ipcClient.onDropClear = (data) => {
             const dropClearData: ithilSocketServer.eventBase<ithilSocketServer.clearDropEventdata> = {
                 event: ithilSocketServer.eventNames.clearDrop,
@@ -142,7 +149,8 @@ portscanner.findAPortNotInUse(
                 dropClearData
             );
         };
-
+        
+        // listen to ipc drop rank event when a drop raking was generated
         ipcClient.onDropRank = (data) => {
             const dropRankData: ithilSocketServer.eventBase<ithilSocketServer.rankDropEventdata> = {
                 event: ithilSocketServer.eventNames.rankDrop,
@@ -186,11 +194,8 @@ portscanner.findAPortNotInUse(
             // listen for login event
             clientSocket.subscribeLoginEvent(async (loginData) => {
 
-                // create database worker and check access token - prepare empty event response
-                const asyncDb = await spawn<palantirDatabaseWorker>(new Worker("./database/palantirDatabaseWorker"));
-                await asyncDb.init(config.palantirDbPath);
-
-                const loginResult = await asyncDb.getLoginFromAccessToken(loginData.accessToken, true);
+                // check if login data is valid
+                const loginResult = await databaseWorker.getLoginFromAccessToken(loginData.accessToken, true);
                 const response: ithilSocketServer.loginResponseEventdata = {
                     authorized: false,
                     activeLobbies: [],
@@ -199,11 +204,16 @@ portscanner.findAPortNotInUse(
 
                 // if login succeeded, create a typo client and enable further events
                 if (loginResult.success) {
-                    const memberResult = await asyncDb.getUserByLogin(loginResult.result.login);
+
+                    // spawn database workers
+                    const asyncPalantirDb = await spawn<palantirDatabaseWorker>(new Worker("./database/palantirDatabaseWorker"));
                     const asyncImageDb = await spawn<imageDatabaseWorker>(new Worker("./database/imageDatabaseWorker"));
+                    await asyncPalantirDb.init(config.palantirDbPath);     
                     await asyncImageDb.init(loginResult.result.login.toString(), config.imageDbParentPath);
 
-                    const client = new TypoClient(clientSocket, asyncDb, asyncImageDb, memberResult.result, workerCache);
+                    const memberResult = await asyncPalantirDb.getUserByLogin(loginResult.result.login);
+
+                    const client = new TypoClient(clientSocket, asyncPalantirDb, asyncImageDb, memberResult.result, workerCache);
                     client.claimDropCallback = (eventdata) => {
                         eventdata.workerEventloopLatency = eventLoopLatency;
                         eventdata.workerPort = workerPort;
@@ -218,7 +228,6 @@ portscanner.findAPortNotInUse(
                         guild => memberResult.result.member.Guilds.some(connectedGuild => connectedGuild.GuildID == guild.guildID)
                     );
                 }
-                else await Thread.terminate(asyncDb);
 
                 return response;
             });

@@ -80,6 +80,11 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
      */
     const workerSocketServer = new ithilSocketServer.IthilSocketioServer(workerPort, config.certificatePath).server;
     /**
+     * Database worker to validate incoming member requests
+     */
+    const databaseWorker = await (0, threads_1.spawn)(new threads_1.Worker("./database/palantirDatabaseWorker"));
+    await databaseWorker.init(config.palantirDbPath);
+    /**
      * The IPC connection to the main server
      */
     const ipcClient = new ipc_1.IthilIPCClient("worker@" + workerPort);
@@ -118,6 +123,7 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
         // volatile emit to all online sockets
         workerSocketServer.volatile.emit(ithilSocketServer.eventNames.onlineSprites, eventdata);
     };
+    // listen to ipc drop clear event when someone successfully claimed a drop
     ipcClient.onDropClear = (data) => {
         const dropClearData = {
             event: ithilSocketServer.eventNames.clearDrop,
@@ -130,6 +136,7 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
         };
         workerSocketServer.volatile.to("playing").emit(ithilSocketServer.eventNames.clearDrop, dropClearData);
     };
+    // listen to ipc drop rank event when a drop raking was generated
     ipcClient.onDropRank = (data) => {
         const dropRankData = {
             event: ithilSocketServer.eventNames.rankDrop,
@@ -161,10 +168,8 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
         clientSocket.emitPublicData({ publicData: workerCache.publicData });
         // listen for login event
         clientSocket.subscribeLoginEvent(async (loginData) => {
-            // create database worker and check access token - prepare empty event response
-            const asyncDb = await (0, threads_1.spawn)(new threads_1.Worker("./database/palantirDatabaseWorker"));
-            await asyncDb.init(config.palantirDbPath);
-            const loginResult = await asyncDb.getLoginFromAccessToken(loginData.accessToken, true);
+            // check if login data is valid
+            const loginResult = await databaseWorker.getLoginFromAccessToken(loginData.accessToken, true);
             const response = {
                 authorized: false,
                 activeLobbies: [],
@@ -172,10 +177,13 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
             };
             // if login succeeded, create a typo client and enable further events
             if (loginResult.success) {
-                const memberResult = await asyncDb.getUserByLogin(loginResult.result.login);
+                // spawn database workers
+                const asyncPalantirDb = await (0, threads_1.spawn)(new threads_1.Worker("./database/palantirDatabaseWorker"));
                 const asyncImageDb = await (0, threads_1.spawn)(new threads_1.Worker("./database/imageDatabaseWorker"));
+                await asyncPalantirDb.init(config.palantirDbPath);
                 await asyncImageDb.init(loginResult.result.login.toString(), config.imageDbParentPath);
-                const client = new typoClient_1.default(clientSocket, asyncDb, asyncImageDb, memberResult.result, workerCache);
+                const memberResult = await asyncPalantirDb.getUserByLogin(loginResult.result.login);
+                const client = new typoClient_1.default(clientSocket, asyncPalantirDb, asyncImageDb, memberResult.result, workerCache);
                 client.claimDropCallback = (eventdata) => {
                     eventdata.workerEventloopLatency = eventLoopLatency;
                     eventdata.workerPort = workerPort;
@@ -187,8 +195,6 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
                 response.member = memberResult.result;
                 response.activeLobbies = workerCache.activeLobbies.filter(guild => memberResult.result.member.Guilds.some(connectedGuild => connectedGuild.GuildID == guild.guildID));
             }
-            else
-                await threads_1.Thread.terminate(asyncDb);
             return response;
         });
     });
