@@ -65,7 +65,6 @@ export default class Drops {
     
                 // poll until dispatch data is set
                 while(!dispatchStats) await this.idle(50);
-                console.log("Dispatched:", dispatchStats);
 
                 // poll claim buffer while drop is not timed out
                 console.log("Waiting for claims...");
