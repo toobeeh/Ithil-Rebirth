@@ -122,7 +122,7 @@ class TypoClient {
             const sprites = inv.sprites.split(",").map(item => {
                 return {
                     slot: item.split(".").length - 1,
-                    id: Number(item.replace(".", ""))
+                    id: Number(item.split(".").join(""))
                 };
             });
             resolve(sprites);
@@ -217,7 +217,7 @@ class TypoClient {
     async setSpriteCombo(eventdata) {
         const combo = eventdata.combostring.split(",").map(slot => {
             return {
-                id: Number(slot.replace(".", "")),
+                id: Number(slot.split(".").join("")),
                 slot: slot.split(".").length - 1
             };
         });
