@@ -202,6 +202,7 @@ class TypoClient {
             await this.palantirDatabaseWorker.setUserSprites(Number(this.login), newInv);
         }
         // return updated data
+        this.clearCache(this.memberCache);
         const data = {
             user: await this.member,
             flags: flags,
@@ -242,6 +243,7 @@ class TypoClient {
             await this.palantirDatabaseWorker.setUserSprites(Number(this.login), newInvString);
         }
         // return updated data
+        this.clearCache(this.memberCache);
         const data = {
             user: await this.member,
             flags: flags,

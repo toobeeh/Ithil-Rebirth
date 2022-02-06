@@ -269,6 +269,7 @@ export default class TypoClient {
         }
 
         // return updated data
+        this.clearCache<types.member>(this.memberCache);
         const data: ithilSocketServer.getUserResponseEventdata = {
             user: await this.member,
             flags: flags,
@@ -313,6 +314,7 @@ export default class TypoClient {
         }
 
         // return updated data
+        this.clearCache<types.member>(this.memberCache);
         const data: ithilSocketServer.getUserResponseEventdata = {
             user: await this.member,
             flags: flags,
