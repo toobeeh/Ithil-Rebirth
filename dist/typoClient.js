@@ -1,6 +1,10 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const threads_1 = require("threads");
+const node_fetch_1 = __importDefault(require("node-fetch"));
 function sp(promise) {
     let stack = (new Error()).stack;
     return new Promise(async (resolve, reject) => {
@@ -273,7 +277,7 @@ class TypoClient {
                     const formdata = new URLSearchParams();
                     formdata.append("image", eventdata.imageURI);
                     formdata.append("accessToken", eventdata.accessToken);
-                    const response = await fetch('https://tobeh.host/Orthanc/tokenapi/imagepost/', {
+                    const response = await (0, node_fetch_1.default)('https://tobeh.host/Orthanc/tokenapi/imagepost/', {
                         method: 'POST',
                         headers: {
                             'Accept': '*/*'
@@ -312,7 +316,7 @@ class TypoClient {
                         ];
                     }
                     /* post webhook */
-                    await fetch(postWebhook.WebhookURL, {
+                    await (0, node_fetch_1.default)(postWebhook.WebhookURL, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

@@ -4,6 +4,7 @@ import { ModuleThread, Thread } from "threads";
 import * as types from "./database/types";
 import * as ithilSocketServer from "./ithilSocketServer";
 import { dropClaimEventdata } from './ipc';
+import fetch from 'node-fetch';
 
 
 interface cachedData<TData> {
