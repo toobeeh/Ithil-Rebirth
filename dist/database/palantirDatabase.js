@@ -52,7 +52,7 @@ class PalantirDatabase {
             };
             /* get webhooks */
             result.result.member.Guilds.forEach(guild => {
-                const guildHooks = this.getServerWebhooks(guild.GuildID);
+                const guildHooks = this.getServerWebhooks(guild.GuildID, true);
                 result.result.webhooks = result.result.webhooks.concat(...guildHooks.result);
             });
             result.success = true;
@@ -369,7 +369,7 @@ class PalantirDatabase {
      * @param lobbyPlayerID The ID of the target player in the skribbl lobby
      * @returns Indicator if the passed id is the owner as well as the actual owner id
      */
-    getServerWebhooks(serverID) {
+    getServerWebhooks(serverID, censorURL = false) {
         let result = this.emptyResult();
         try {
             let rows = this.db.prepare(`SELECT * FROM Webhooks WHERE ServerID = ?`).all(serverID);
@@ -379,7 +379,7 @@ class PalantirDatabase {
                     result.result?.push({
                         ServerID: row.ServerID,
                         Name: row.Name,
-                        WebhookURL: row.WebhookURL
+                        WebhookURL: censorURL ? ":^)" : row.WebhookURL
                     });
                 }
                 catch (e) {
