@@ -4,8 +4,7 @@ import { ModuleThread, Thread } from "threads";
 import * as types from "./database/types";
 import * as ithilSocketServer from "./ithilSocketServer";
 import { dropClaimEventdata } from './ipc';
-import crossfetch from 'cross-fetch';
-
+import fetch from 'node-fetch';
 
 
 interface cachedData<TData> {
@@ -356,7 +355,7 @@ export default class TypoClient {
                     formdata.append("image", eventdata.imageURI);
                     formdata.append("accessToken", eventdata.accessToken);
 
-                    const response = await crossfetch('https://tobeh.host/Orthanc/tokenapi/imagepost/', {
+                    const response = await fetch('https://tobeh.host/Orthanc/tokenapi/imagepost/', {
                         method: 'POST',
                         headers: {
                             'Accept': '*/*'
@@ -398,7 +397,7 @@ export default class TypoClient {
                     }
 
                     /* post webhook */
-                    await crossfetch(postWebhook.WebhookURL, {
+                    await fetch(postWebhook.WebhookURL, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
