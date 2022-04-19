@@ -321,7 +321,7 @@ class TypoClient {
                         headers: {
                             'Content-Type': 'application/json',
                         },
-                        body: webhookData
+                        body: JSON.stringify(webhookData)
                     });
                 }
             }
