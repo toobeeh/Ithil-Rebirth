@@ -270,7 +270,7 @@ class TypoClient {
                 /* if ratelimit not exceeded */
                 if (!this.lastPostedWebhooks.some(wh => wh.serverID == postServer.GuildID && Date.now() - wh.postDate > 60 * 1000)) {
                     /* save image with orthanc api */
-                    const formdata = new FormData();
+                    const formdata = new URLSearchParams();
                     formdata.append("image", eventdata.imageURI);
                     formdata.append("accessToken", eventdata.accessToken);
                     const response = await fetch('https://tobeh.host/Orthanc/tokenapi/imagepost/', {
