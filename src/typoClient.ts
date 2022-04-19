@@ -350,7 +350,7 @@ export default class TypoClient {
                 )){
 
                     /* save image with orthanc api */
-                    const formdata = new FormData();
+                    const formdata = new URLSearchParams();
                     formdata.append("image", eventdata.imageURI);
                     formdata.append("accessToken", eventdata.accessToken);
 
