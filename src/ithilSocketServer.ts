@@ -304,6 +304,14 @@ export class TypoSocketioClient {
         this.subscribeEventAsync<claimDropEventdata, void>(eventNames.claimDrop, handler, false, false);
     }
 
+    /**
+     * Subscribe to the claim drop event - client wants to claim a drop
+     * @param handler Handler that processes claim data and sends an ipc message to the main server
+     */
+    subscribePostImageEvent(handler: (incoming: postImageEventdata) => Promise<void>) {
+        this.subscribeEventAsync<postImageEventdata, void>(eventNames.postImage, handler, false, false);
+    }
+
 }
 
 //interfaces and event names for socketio communication
@@ -327,7 +335,8 @@ export const eventNames = Object.freeze({
     fetchDrawing: "fetch drawing",
     removeDrawing: "remove drawing",
     getCommands: "get commands",
-    getMeta: "get meta"
+    getMeta: "get meta",
+    postImage: "post image"
 });
 
 /** 
@@ -765,6 +774,49 @@ export interface getMetaResponseEventdata {
      * The ticket of the person that caught the drop; to identify and customize message
      */
     claimTicket: number;
+}
+
+/**
+ * Socketio eventdata for the post image event
+ */
+ export interface postImageEventdata {
+     
+    /**
+     * The webhook name
+     */
+    webhookName: string;
+
+    /**
+     * The server ID
+     */
+    serverID: string;
+
+    /**
+     * The base64 image data
+     */
+    imageURI: string;
+
+    /**
+     * Additional authorization
+     */
+    accessToken: string;
+
+    /**
+     * post format options
+     */
+    postOptions: {
+        /* indicator whether an embed should be used */
+        onlyImage: boolean;
+
+        /* the name of the drawer */
+        drawerName: string;
+
+        /* the name of the poster */
+        posterName: string;
+
+        /* the title of the drawing */
+        title: string;
+    }
 }
 
 

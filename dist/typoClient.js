@@ -19,6 +19,8 @@ class TypoClient {
      * Init a new client with all member-related data and bound events
      */
     constructor(socket, dbWorker, imageDbWorker, memberInit, workerCache) {
+        /** last posted webhook cache for rate-limiting */
+        this.lastPostedWebhooks = [];
         this.memberCache = {};
         /** The interval in which the current playing status is processed */
         this.claimDropCallback = undefined;
@@ -250,6 +252,75 @@ class TypoClient {
             slots: slots
         };
         return data;
+    }
+    /**
+     * Handler for post image event
+     * @param eventdata Eventdata containing webhook name, server id, image URI
+     */
+    async postImage(eventdata) {
+        const memberServers = (await this.getUser()).user.member.Guilds;
+        const postServer = memberServers.find(server => server.GuildID == eventdata.serverID);
+        /* if user is in this server */
+        if (postServer) {
+            const serverWebhooks = await this.palantirDatabaseWorker.getServerWebhooks(postServer.GuildID);
+            const postWebhook = serverWebhooks.result.find(webhook => webhook.Name == eventdata.webhookName);
+            /* if there exists a webhook of that name*/
+            if (postWebhook) {
+                /* if ratelimit not exceeded */
+                if (!this.lastPostedWebhooks.some(wh => wh.serverID == postServer.GuildID && Date.now() - wh.postDate > 60 * 1000)) {
+                    /* save image with orthanc api */
+                    const formdata = new FormData();
+                    formdata.append("image", eventdata.imageURI);
+                    formdata.append("accessToken", eventdata.accessToken);
+                    const response = await fetch('https://tobeh.host/Orthanc/tokenapi/imagepost/', {
+                        method: 'POST',
+                        headers: {
+                            'Accept': '*/*'
+                        },
+                        body: formdata
+                    });
+                    let url = await response.text();
+                    /* build webhook data */
+                    const webhookData = {};
+                    if (eventdata.postOptions.onlyImage) {
+                        webhookData.username = eventdata.postOptions.posterName;
+                        webhookData.avatar_url = 'https://tobeh.host/Orthanc/images/letterred.png';
+                        webhookData.content = url;
+                    }
+                    else {
+                        webhookData.username = "Skribbl Image Post";
+                        webhookData.avatar_url = 'https://tobeh.host/Orthanc/images/letterred.png';
+                        webhookData.embeds = [
+                            {
+                                "title": eventdata.postOptions.title,
+                                "description": "Posted by " + eventdata.postOptions.posterName,
+                                "color": 4368373,
+                                "image": {
+                                    "url": url
+                                },
+                                "footer": {
+                                    "icon_url": "https://cdn.discordapp.com/attachments/334696834322661376/860509383104528425/128CircleFit.png",
+                                    "text": "skribbl typo"
+                                },
+                                "author": {
+                                    "name": "Drawn by " + eventdata.postOptions.drawerName,
+                                    "url": "https://typo.rip",
+                                    "icon_url": "https://skribbl.io/res/pen.gif"
+                                }
+                            }
+                        ];
+                    }
+                    /* post webhook */
+                    await fetch(postWebhook.WebhookURL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: webhookData
+                    });
+                }
+            }
+        }
     }
     /**
      * Handler for join lobby event

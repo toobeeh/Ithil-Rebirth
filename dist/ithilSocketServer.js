@@ -276,6 +276,13 @@ class TypoSocketioClient {
     subscribeClaimDropEvent(handler) {
         this.subscribeEventAsync(exports.eventNames.claimDrop, handler, false, false);
     }
+    /**
+     * Subscribe to the claim drop event - client wants to claim a drop
+     * @param handler Handler that processes claim data and sends an ipc message to the main server
+     */
+    subscribePostImageEvent(handler) {
+        this.subscribeEventAsync(exports.eventNames.postImage, handler, false, false);
+    }
 }
 exports.TypoSocketioClient = TypoSocketioClient;
 //interfaces and event names for socketio communication
@@ -298,6 +305,7 @@ exports.eventNames = Object.freeze({
     fetchDrawing: "fetch drawing",
     removeDrawing: "remove drawing",
     getCommands: "get commands",
-    getMeta: "get meta"
+    getMeta: "get meta",
+    postImage: "post image"
 });
 //# sourceMappingURL=ithilSocketServer.js.map

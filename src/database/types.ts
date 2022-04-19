@@ -126,6 +126,8 @@
      * The member's scenes
      */
      scenes: string 
+
+    webhooks: Array<palantirWebhook>;
 }
 
 /**
@@ -619,4 +621,22 @@ export interface imageData{
      * Jagged array of commands: either old action-format (commands[action[command[data]]]) or new flat ([commands[command[data]]])
      */
     commands: Array<Array<Array<number> | number>>;
+}
+
+export interface palantirWebhook{
+
+    /**
+     * The server ID of the webhook
+     */
+    ServerID: string;
+
+    /**
+     * The display name on skribbl
+     */
+    Name: string;
+
+    /**
+     * The webhook url
+     */
+    WebhookURL: string;
 }

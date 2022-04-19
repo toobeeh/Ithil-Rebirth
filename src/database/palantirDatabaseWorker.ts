@@ -104,6 +104,12 @@ const palantirDatabaseWorker = {
     writeReport(lobbies: types.guildLobby[]) {
         if (!database) throw new Error("Database is not initialized.");
         return database.writeReport(lobbies);
+    },
+
+    /** Executes {@link PalantirDatabase.getServerWebhooks} in a worker*/
+    getServerWebhooks(serverID: string) {
+        if (!database) throw new Error("Database is not initialized.");
+        return database.getServerWebhooks(serverID);
     }
 }
 

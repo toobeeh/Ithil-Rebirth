@@ -52,8 +52,16 @@ class PalantirDatabase {
                 sprites: row.Sprites,
                 drops: Number(row.Drops),
                 flags: row.Flag,
-                scenes: row.Scenes
+                scenes: row.Scenes,
+                webhooks: []
             }
+
+            /* get webhooks */
+            result.result.member.Guilds.forEach(guild => {
+                const guildHooks = this.getServerWebhooks(guild.GuildID);
+                result.result.webhooks = result.result.webhooks.concat(...guildHooks.result);
+            })
+
             result.success = true;
         }
         catch (e) {
@@ -372,6 +380,38 @@ class PalantirDatabase {
                 result.result.ownerID = lobbyPlayerID;
             }
 
+            result.success = true;
+        }
+        catch (e) {
+            console.warn("Error in query: ", e);
+        }
+        return result;
+    }
+
+    /**
+     * Check if a player is the palantir owner of a lobby
+     * @param lobbyID The ID of the target lobby
+     * @param lobbyPlayerID The ID of the target player in the skribbl lobby
+     * @returns Indicator if the passed id is the owner as well as the actual owner id
+     */
+    getServerWebhooks(serverID: string) {
+        let result = this.emptyResult<Array<types.palantirWebhook>>();
+
+        try {
+            let rows = this.db.prepare(`SELECT * FROM Webhooks WHERE ServerID = ?`).all(serverID);
+            result.result = [];
+            rows.forEach(row => {
+                try {
+                    result.result?.push({
+                        ServerID: row.ServerID,
+                        Name: row.Name,
+                        WebhookURL: row.WebhookURL
+                    });
+                }
+                catch (e) {
+                    console.warn("Error adding webhook: ", e);
+                }
+            });
             result.success = true;
         }
         catch (e) {
