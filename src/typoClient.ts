@@ -195,6 +195,7 @@ export default class TypoClient {
         this.typosocket.subscribeGetCommandsEvent(this.getCommands.bind(this));
         this.typosocket.subscribeGetMetaEvent(this.getMeta.bind(this));
         this.typosocket.subscribeClaimDropEvent(this.claimDrop.bind(this));
+        this.typosocket.subscribePostImageEvent(this.postImage.bind(this));
 
         // init report data 
         this.reportData = {
