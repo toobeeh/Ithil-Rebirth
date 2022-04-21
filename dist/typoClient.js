@@ -35,6 +35,11 @@ class TypoClient {
         this.username = memberInit.member.UserName;
         this.login = memberInit.member.UserLogin;
         this.loginDate = Date.now();
+        // check banned
+        setImmediate(async () => {
+            if ((await this.flags).permaBan)
+                this.typosocket.socket.disconnect();
+        });
         // init events 
         this.typosocket.subscribeDisconnect(this.onDisconnect.bind(this));
         this.typosocket.subscribeGetUserEvent(this.getUser.bind(this));
