@@ -307,6 +307,9 @@ class PalantirDatabase {
             this.db.prepare("UPDATE 'Drop' SET CaughtLobbyKey = ?, CaughtLobbyPlayerID = ? WHERE DropID = ?").run(lobbyKey, playerName, dropID);
             this.db.prepare("INSERT INTO PastDrops Select * From 'Drop' WHERE DropID = ?").run(dropID);
             this.db.prepare("UPDATE PastDrops SET CaughtLobbyPlayerID = ?, LeagueWeight = ? WHERE DropID = ?").run(userid, leagueweight, dropID);
+            // if league drop, free up for next claim
+            if (leagueweight > 0)
+                this.db.prepare("UPDATE 'Drop' SET CaughtLobbyKey = '', CaughtLobbyPlayerID = '' WHERE DropID = ?").run(dropID);
             success = true;
         }
         catch (e) {
