@@ -774,6 +774,11 @@ export interface getMetaResponseEventdata {
      * The ticket of the person that caught the drop; to identify and customize message
      */
     claimTicket: number;
+
+    /**
+     * League weight of the drop, if it was caught below 1000ms
+     */
+    leagueWeight: number;
 }
 
 /**

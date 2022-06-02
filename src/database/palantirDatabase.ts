@@ -323,13 +323,13 @@ class PalantirDatabase {
       * @param userid Discord ID of the claiming user
       * @returns Indicator if the query succeeded
       */
-    claimDrop(lobbyKey: string, playerName: string, dropID: string, userid: string) {
+    claimDrop(lobbyKey: string, playerName: string, dropID: string, userid: string, leagueweight: number) {
         let success = false;
         try {
             // get drop
             this.db.prepare("UPDATE 'Drop' SET CaughtLobbyKey = ?, CaughtLobbyPlayerID = ? WHERE DropID = ?").run(lobbyKey, playerName, dropID);
             this.db.prepare("INSERT INTO PastDrops Select * From 'Drop' WHERE DropID = ?").run(dropID);
-            this.db.prepare("UPDATE PastDrops SET CaughtLobbyPlayerID = ? WHERE DropID = ?").run(userid, dropID);
+            this.db.prepare("UPDATE PastDrops SET CaughtLobbyPlayerID = ?, LeagueWeight = ? WHERE DropID = ?").run(userid, leagueweight, dropID);
             success = true;
         }
         catch (e) {

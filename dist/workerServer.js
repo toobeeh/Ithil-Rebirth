@@ -131,7 +131,8 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
                 dropID: data.dropID,
                 claimTicket: data.claimTicket,
                 caughtLobbyKey: data.caughtLobbyKey,
-                caughtPlayer: data.caughtPlayer
+                caughtPlayer: data.caughtPlayer,
+                leagueWeight: data.leagueWeight
             }
         };
         workerSocketServer.volatile.to("playing").emit(ithilSocketServer.eventNames.clearDrop, dropClearData);

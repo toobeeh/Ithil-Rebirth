@@ -140,7 +140,8 @@ portscanner.findAPortNotInUse(
                     dropID: data.dropID,
                     claimTicket: data.claimTicket,
                     caughtLobbyKey: data.caughtLobbyKey,
-                    caughtPlayer: data.caughtPlayer
+                    caughtPlayer: data.caughtPlayer,
+                    leagueWeight: data.leagueWeight
                 }
             };
 

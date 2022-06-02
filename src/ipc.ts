@@ -63,6 +63,7 @@ export interface clearDropEventdata {
     caughtPlayer: string;
     caughtLobbyKey: string;
     claimTicket: number;
+    leagueWeight: number;
 }
 
 export interface rankDropEventdata {
