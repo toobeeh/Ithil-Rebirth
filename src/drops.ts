@@ -89,13 +89,14 @@ export default class Drops {
     
                             /* detect if it was caught below 1s => leaguedrop */
                             let leagueDrop = lastClaim.claimTimestamp - dispatchStats.dispatchTimestamp < 1000;
+                            console.log(lastClaim.claimTimestamp - dispatchStats.dispatchTimestamp);
 
                             /* weight if league drop */
-                            let weight = leagueDrop ? lastClaim.claimTimestamp - dispatchStats.dispatchTimestamp : 0;
+                            let leagueTime = leagueDrop ? lastClaim.claimTimestamp - dispatchStats.dispatchTimestamp : 0;
 
                             // claim and reward drop
                             if(!leagueDrop) await this.db.rewardDrop(lastClaim.login, nextDrop.EventDropID);
-                            await this.db.claimDrop(lastClaim.lobbyKey, lastClaim.username, nextDrop.DropID, lastClaim.userID, weight);
+                            await this.db.claimDrop(lastClaim.lobbyKey, lastClaim.username, nextDrop.DropID, lastClaim.userID, leagueTime);
     
                             // clear drop and exit loop
                             const clearData: ipc.clearDropEventdata = {
@@ -103,16 +104,16 @@ export default class Drops {
                                 caughtLobbyKey: lastClaim.lobbyKey,
                                 claimTicket: lastClaim.claimTicket,
                                 caughtPlayer: "<abbr title='Drop ID: " + nextDrop.DropID + "'>" + lastClaim.username + "</abbr>",
-                                leagueWeight: this.leagueWeight(weight/1000)
+                                leagueWeight: this.leagueWeight(leagueTime/1000)
                             };
                             this.ipcServer.broadcastClearDrop(clearData);
 
                             /* collect claim */
-                            successfulClaims.push({claim: lastClaim, leagueWeight: weight});
+                            successfulClaims.push({claim: lastClaim, leagueWeight: leagueTime});
 
                             /* if it was a league drop, accept other drops */
                             if(!leagueDrop) break;
-                            else console.log("league drop claimed with weight " + weight);
+                            else console.log("league drop claimed with weight " + leagueTime);
                         }
                         else console.log("Rejected claim.");
                     }
