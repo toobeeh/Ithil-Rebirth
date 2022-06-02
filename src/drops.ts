@@ -104,7 +104,7 @@ export default class Drops {
                                 caughtLobbyKey: lastClaim.lobbyKey,
                                 claimTicket: lastClaim.claimTicket,
                                 caughtPlayer: "<abbr title='Drop ID: " + nextDrop.DropID + "'>" + lastClaim.username + "</abbr>",
-                                leagueWeight: this.leagueWeight(leagueTime/1000)
+                                leagueWeight: leagueDrop ? this.leagueWeight(leagueTime/1000) : 0
                             };
                             this.ipcServer.broadcastClearDrop(clearData);
 
