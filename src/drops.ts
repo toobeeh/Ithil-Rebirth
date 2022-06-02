@@ -123,7 +123,7 @@ export default class Drops {
                 // build leaderboard and result data, if a claim successful and some claims left in buffer after 1s
                 await this.idle(2000);
                 console.log("Building ranks...");
-                if(lastClaim && dispatchStats){
+                if(successfulClaims.length > 0 && dispatchStats){
                     const ranks: Array<string> = [];
                     /* let firstRank = `<abbr title="`
                             + `- drop server dispatch delay: ${dispatchStats.dispatchTimestamp - listenStartTimestamp}ms&#013;&#010;`
