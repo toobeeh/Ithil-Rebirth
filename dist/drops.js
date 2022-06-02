@@ -89,7 +89,7 @@ class Drops {
                                 console.log("league drop claimed with weight " + leagueTime);
                         }
                         else
-                            console.log("Rejected claim.");
+                            console.log("Rejected claim.", claimTarget);
                     }
                     else
                         await this.idle(bufferPoll);

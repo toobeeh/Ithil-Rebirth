@@ -115,7 +115,7 @@ export default class Drops {
                             if(!leagueDrop) break;
                             else console.log("league drop claimed with weight " + leagueTime);
                         }
-                        else console.log("Rejected claim.");
+                        else console.log("Rejected claim.", claimTarget);
                     }
                     else await this.idle(bufferPoll);
                     lastClaim = undefined;
