@@ -91,7 +91,7 @@ export default class Drops {
                             let leagueDrop = lastClaim.claimTimestamp - dispatchStats.dispatchTimestamp < 1000;
 
                             /* weight if league drop */
-                            let weight = leagueDrop ? this.leagueWeight(lastClaim.claimTimestamp - dispatchStats.dispatchTimestamp) : 0;
+                            let weight = leagueDrop ? lastClaim.claimTimestamp - dispatchStats.dispatchTimestamp : 0;
 
                             // claim and reward drop
                             if(!leagueDrop) await this.db.rewardDrop(lastClaim.login, nextDrop.EventDropID);
@@ -103,7 +103,7 @@ export default class Drops {
                                 caughtLobbyKey: lastClaim.lobbyKey,
                                 claimTicket: lastClaim.claimTicket,
                                 caughtPlayer: "<abbr title='Drop ID: " + nextDrop.DropID + "'>" + lastClaim.username + "</abbr>",
-                                leagueWeight: weight
+                                leagueWeight: this.leagueWeight(weight/1000)
                             };
                             this.ipcServer.broadcastClearDrop(clearData);
 
@@ -112,7 +112,7 @@ export default class Drops {
 
                             /* if it was a league drop, accept other drops */
                             if(!leagueDrop) break;
-                            else console.log("league drop claimed with weight " + this.leagueWeight);
+                            else console.log("league drop claimed with weight " + weight);
                         }
                         else console.log("Rejected claim.");
                     }
