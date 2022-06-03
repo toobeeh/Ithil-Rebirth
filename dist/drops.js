@@ -64,8 +64,7 @@ class Drops {
                         if (claimTarget && claimTarget.CaughtLobbyPlayerID == "") {
                             /* detect if it was caught below 1s => leaguedrop */
                             let leagueDrop = lastClaim.claimTimestamp - dispatchStats.dispatchTimestamp < 1000;
-                            console.log(lastClaim.claimTimestamp - dispatchStats.dispatchTimestamp);
-                            /* weight if league drop */
+                            /* time if league drop */
                             let leagueTime = leagueDrop ? lastClaim.claimTimestamp - dispatchStats.dispatchTimestamp : 0;
                             // claim and reward drop
                             if (!leagueDrop)

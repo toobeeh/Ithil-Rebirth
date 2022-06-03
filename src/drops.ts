@@ -84,14 +84,13 @@ export default class Drops {
     
                         // get claimed drop and double-check if drop still valid
                         console.log("Shifted claim:", lastClaim);
-                        const claimTarget = (await this.db.getDrop(nextDrop.DropID)).result;
-                        if (claimTarget && claimTarget.CaughtLobbyPlayerID == "") {
+                        const claimTarget = (await this.db.getDrop(nextDrop.DropID));
+                        if (claimTarget.result && claimTarget.result.CaughtLobbyPlayerID == "") {
     
                             /* detect if it was caught below 1s => leaguedrop */
                             let leagueDrop = lastClaim.claimTimestamp - dispatchStats.dispatchTimestamp < 1000;
-                            console.log(lastClaim.claimTimestamp - dispatchStats.dispatchTimestamp);
 
-                            /* weight if league drop */
+                            /* time if league drop */
                             let leagueTime = leagueDrop ? lastClaim.claimTimestamp - dispatchStats.dispatchTimestamp : 0;
 
                             // claim and reward drop
