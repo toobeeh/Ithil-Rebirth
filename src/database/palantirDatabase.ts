@@ -327,7 +327,7 @@ class PalantirDatabase {
         let success = false;
         try {
             // get drop
-            if(leagueweight > 0) this.db.prepare("UPDATE 'Drop' SET CaughtLobbyKey = ?, CaughtLobbyPlayerID = ? WHERE DropID = ?").run(lobbyKey, playerName, dropID);
+            if(leagueweight == 0) this.db.prepare("UPDATE 'Drop' SET CaughtLobbyKey = ?, CaughtLobbyPlayerID = ? WHERE DropID = ?").run(lobbyKey, playerName, dropID);
             this.db.prepare("INSERT INTO PastDrops Select * From 'Drop' WHERE DropID = ?").run(dropID);
             this.db.prepare("UPDATE PastDrops SET CaughtLobbyPlayerID = ?, CaughtLobbyKey = ?, LeagueWeight = ? WHERE DropID = ?").run(userid, lobbyKey, leagueweight, dropID);
 
