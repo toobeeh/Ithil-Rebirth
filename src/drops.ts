@@ -88,7 +88,7 @@ export default class Drops {
                         if (claimTarget.result && claimTarget.result.CaughtLobbyPlayerID == "") {
     
                             /* detect if it was caught below 1s => leaguedrop */
-                            let leagueDrop = lastClaim.claimTimestamp - dispatchStats.dispatchTimestamp < 1000;
+                            let leagueDrop = false; //lastClaim.claimTimestamp - dispatchStats.dispatchTimestamp < 1000;
 
                             /* time if league drop */
                             let leagueTime = leagueDrop ? lastClaim.claimTimestamp - dispatchStats.dispatchTimestamp : 0;
