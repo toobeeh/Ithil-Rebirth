@@ -24,8 +24,8 @@ class Drops {
         if (s < 0)
             return 0;
         if (s > 1000)
-            return 40;
-        return -1.42746105233562 * Math.pow(10, -9) * Math.pow(s, 4) + 0.00000357514422271203 * Math.pow(s, 3) - 0.00312725463318275 * Math.pow(s, 2) + 1.01957146280634 * s;
+            return 30;
+        return -1.78641975945623 * Math.pow(10, -9) * Math.pow(s, 4) + 0.00000457264006980028 * Math.pow(s, 3) - 0.00397188791256729 * Math.pow(s, 2) + 1.21566760222325 * s;
     }
     /**
      *The loop that contains all drop processing
@@ -65,7 +65,7 @@ class Drops {
                 let successfulClaims = [];
                 let leagueDropClaimed = false;
                 // random league drop extension
-                const leagueRandom = Math.random() * 150;
+                const leagueRandom = Math.random() * 100;
                 const claimedUsers = [];
                 while (Date.now() - dispatchStats.dispatchTimestamp < dropTimeout) {
                     // get the first claim and process it
