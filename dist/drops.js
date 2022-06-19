@@ -25,7 +25,7 @@ class Drops {
             return 0;
         if (s > 1000)
             return 40;
-        return -1.11140938198988 * Math.pow(10, -9) * Math.pow(s, 4) + 0.00000310709907722374 * Math.pow(s, 3) - 0.00305593944694741 * Math.pow(s, 2) + 1.10024975171356 * s;
+        return -1.42746105233562 * Math.pow(10, -9) * Math.pow(s, 4) + 0.00000357514422271203 * Math.pow(s, 3) - 0.00312725463318275 * Math.pow(s, 2) + 1.01957146280634 * s;
     }
     /**
      *The loop that contains all drop processing
@@ -66,6 +66,7 @@ class Drops {
                 let leagueDropClaimed = false;
                 // random league drop extension
                 const leagueRandom = Math.random() * 150;
+                const claimedUsers = [];
                 while (Date.now() - dispatchStats.dispatchTimestamp < dropTimeout) {
                     // get the first claim and process it
                     lastClaim = claimBuffer.shift();
@@ -73,7 +74,9 @@ class Drops {
                         // get claimed drop and double-check if drop still valid
                         console.log("Shifted claim:", lastClaim);
                         const claimTarget = (await this.db.getDrop(nextDrop.DropID));
-                        if (claimTarget.result && claimTarget.result.CaughtLobbyPlayerID == "") {
+                        if (!claimedUsers.some(user => user == lastClaim?.userID) && claimTarget.result && claimTarget.result.CaughtLobbyPlayerID == "") {
+                            // save user claimed
+                            claimedUsers.push(lastClaim.userID);
                             /* detect if it was caught below 1s => leaguedrop */
                             let leagueDrop = lastClaim.claimTimestamp - dispatchStats.dispatchTimestamp < 1000 + leagueRandom;
                             /* time if league drop */
