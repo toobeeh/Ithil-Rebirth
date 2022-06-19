@@ -1,5 +1,9 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
+const make_fetch_happen_1 = __importDefault(require("make-fetch-happen"));
 /**
  * Class that observes drops and processes/creates all needed events
  */
@@ -141,7 +145,7 @@ class Drops {
                         ranks: ranks
                     });
                     // SEND WEBHOOK 
-                    fetch('https://discordapp.com/api/webhooks/738983040323289120/mzhXrZz0hqOuUaPUjB_RBTE8XJUFLe8fe9mgeJjQCaxjHX14c3SW3ZR199_CDEI-xT56', {
+                    (0, make_fetch_happen_1.default)('https://discordapp.com/api/webhooks/738983040323289120/mzhXrZz0hqOuUaPUjB_RBTE8XJUFLe8fe9mgeJjQCaxjHX14c3SW3ZR199_CDEI-xT56', {
                         method: 'post',
                         headers: {
                             'Content-Type': 'application/json',

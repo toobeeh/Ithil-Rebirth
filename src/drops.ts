@@ -2,6 +2,7 @@ import { palantirDatabaseWorker } from './database/palantirDatabaseWorker';
 import { ModuleThread } from "threads";
 import * as ipc from './ipc';
 import * as types from "./database/types";
+import fetch from 'make-fetch-happen';
 
 /**
  * Class that observes drops and processes/creates all needed events
