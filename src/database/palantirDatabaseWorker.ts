@@ -77,9 +77,9 @@ const palantirDatabaseWorker = {
     },
 
     /** Executes {@link PalantirDatabase.claimDrop} in a worker*/
-    claimDrop(lobbyKey: string, playerName: string, dropID: string, userid: string, leagueWeight: number) {
+    claimDrop(lobbyKey: string, playerName: string, dropID: string, userid: string, leagueWeight: number, dropOrigin: types.drop) {
         if (!database) throw new Error("Database is not initialized.");
-        return database.claimDrop(lobbyKey, playerName, dropID, userid, leagueWeight);
+        return database.claimDrop(lobbyKey, playerName, dropID, userid, leagueWeight, dropOrigin);
     },
 
     /** Executes {@link PalantirDatabase.setLobby} in a worker*/

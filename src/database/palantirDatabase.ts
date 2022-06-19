@@ -323,13 +323,13 @@ class PalantirDatabase {
       * @param userid Discord ID of the claiming user
       * @returns Indicator if the query succeeded
       */
-    claimDrop(lobbyKey: string, playerName: string, dropID: string, userid: string, leagueweight: number) {
+    claimDrop(lobbyKey: string, playerName: string, dropID: string, userid: string, leagueweight: number, dropOrigin: types.drop) {
         let success = false;
         try {
             // get drop
             if(leagueweight == 0) this.db.prepare("UPDATE 'Drop' SET CaughtLobbyKey = ?, CaughtLobbyPlayerID = ? WHERE DropID = ?").run(lobbyKey, playerName, dropID);
-            this.db.prepare("INSERT INTO PastDrops Select * From 'Drop' WHERE DropID = ?").run(dropID);
-            this.db.prepare("UPDATE PastDrops SET CaughtLobbyPlayerID = ?, CaughtLobbyKey = ?, LeagueWeight = ? WHERE DropID = ?").run(userid, lobbyKey, leagueweight, dropID);
+            this.db.prepare("INSERT INTO PastDrops VALUES (?, ?, ?, ?, ?, ?)").run(dropID, lobbyKey, userid, dropOrigin.ValidFrom, dropOrigin.EventDropID, leagueweight);
+            //this.db.prepare("UPDATE PastDrops SET CaughtLobbyPlayerID = ?, CaughtLobbyKey = ?, LeagueWeight = ? WHERE DropID = ?").run(userid, lobbyKey, leagueweight, dropID);
 
             // if league drop, free up for next claim
             //if(leagueweight > 0) this.db.prepare("UPDATE 'Drop' SET CaughtLobbyKey = '', CaughtLobbyPlayerID = '' WHERE DropID = ?").run(dropID);
