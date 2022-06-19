@@ -294,12 +294,12 @@ class TypoClient {
                     const webhookData = {};
                     if (eventdata.postOptions.onlyImage) {
                         webhookData.username = eventdata.postOptions.posterName;
-                        webhookData.avatar_url = 'https://tobeh.host/Orthanc/images/letterred.png';
+                        webhookData.avatar_url = 'https://cdn.discordapp.com/attachments/334696834322661376/988002446158741544/letter.png';
                         webhookData.content = url;
                     }
                     else {
                         webhookData.username = "Skribbl Image Post";
-                        webhookData.avatar_url = 'https://tobeh.host/Orthanc/images/letterred.png';
+                        webhookData.avatar_url = 'https://cdn.discordapp.com/attachments/334696834322661376/988002446158741544/letter.png';
                         webhookData.embeds = [
                             {
                                 "title": eventdata.postOptions.title,

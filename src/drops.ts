@@ -169,6 +169,27 @@ export default class Drops {
                         dropID: nextDrop.DropID,
                         ranks: ranks
                     });
+
+                    // SEND WEBHOOK 
+                    fetch(
+                        'https://discordapp.com/api/webhooks/738983040323289120/mzhXrZz0hqOuUaPUjB_RBTE8XJUFLe8fe9mgeJjQCaxjHX14c3SW3ZR199_CDEI-xT56',
+                        {
+                          method: 'post',
+                          headers: {
+                            'Content-Type': 'application/json',
+                          },
+                          body: JSON.stringify({
+                            // the username to be displayed
+                            username: 'Drop Log',
+                            // the avatar to be displayed
+                            avatar_url:
+                              'https://media.discordapp.net/attachments/334696834322661376/987821727688036352/league_rnk1_drop.gif',
+                            // contents of the message to be sent
+                            content:
+                              ranks
+                          }),
+                        }
+                    );
                 }
             }
             catch(e){
