@@ -19,7 +19,10 @@ export default class Drops {
     ipcServer: ipc.IthilIPCServer;
 
     leagueWeight(s: number){
-        return -372.505925447102 * Math.pow(s,4) + 1093.85046326223 *  Math.pow(s,3) - 988.674423615601 *  Math.pow(s,2) + 187.221934927817 * s + 90.1079508726569;
+        s = s*1000;
+        if(s < 0) return 0;
+        if(s > 1000) return 40;
+        return -1.11140938198988 * Math.pow(10, -9) * Math.pow(s, 4) + 0.00000310709907722374 * Math.pow(s, 3) - 0.00305593944694741 * Math.pow(s, 2) + 1.10024975171356 * s;
     } 
 
     /**
@@ -77,6 +80,11 @@ export default class Drops {
                 const bufferPoll = 30;
                 let lastClaim: ipc.dropClaimEventdata | undefined;
                 let successfulClaims: Array<{claim: ipc.dropClaimEventdata, leagueWeight: number}> = [];
+                let leagueDropClaimed = false;
+
+                // random league drop extension
+                const leagueRandom = Math.random() * 150;
+
                 while (Date.now() - dispatchStats.dispatchTimestamp < dropTimeout) {
     
                     // get the first claim and process it
@@ -89,13 +97,13 @@ export default class Drops {
                         if (claimTarget.result && claimTarget.result.CaughtLobbyPlayerID == "") {
     
                             /* detect if it was caught below 1s => leaguedrop */
-                            let leagueDrop = lastClaim.claimTimestamp - dispatchStats.dispatchTimestamp < 1000;
+                            let leagueDrop = lastClaim.claimTimestamp - dispatchStats.dispatchTimestamp < 1000 + leagueRandom;
 
                             /* time if league drop */
                             let leagueTime = leagueDrop ? lastClaim.claimTimestamp - dispatchStats.dispatchTimestamp : 0;
 
                             // claim and reward drop
-                            if(!leagueDrop) await this.db.rewardDrop(lastClaim.login, nextDrop.EventDropID);
+                            if(!leagueDrop || !leagueDropClaimed) await this.db.rewardDrop(lastClaim.login, nextDrop.EventDropID);
                             await this.db.claimDrop(lastClaim.lobbyKey, lastClaim.username, nextDrop.DropID, lastClaim.userID, leagueTime, claimTarget.result);
     
                             // clear drop and exit loop
@@ -113,7 +121,10 @@ export default class Drops {
 
                             /* if it was a league drop, accept other drops */
                             if(!leagueDrop) break;
-                            else console.log("league drop claimed with weight " + leagueTime);
+                            else {
+                                console.log("league drop claimed with weight " + leagueTime);
+                                leagueDropClaimed = true;
+                            }
                         }
                         else console.log("Rejected claim.", claimTarget);
                     }
@@ -152,7 +163,8 @@ export default class Drops {
                         ranks.push(successfulRank);
                     });
     
-                    claimBuffer.forEach(claim => {
+                    // disable regular drop ranking
+                    false && claimBuffer.forEach(claim => {
                         let otherRank = `<abbr title="`
                                 + `- drop server dispatch delay: ${dispatchStats!.dispatchTimestamp - listenStartTimestamp}ms&#013;&#010;`
                                 + `- individual socket dispatch delay: ${dispatchStats?.dispatchDelays.find(d => d.claimTicket == claim.claimTicket)?.delay}ms&#013;&#010;`
@@ -187,7 +199,7 @@ export default class Drops {
                               'https://media.discordapp.net/attachments/334696834322661376/987821727688036352/league_rnk1_drop.gif',
                             // contents of the message to be sent
                             content:
-                              ranks
+                              ranks.join("\n")
                           }),
                         }
                     );
