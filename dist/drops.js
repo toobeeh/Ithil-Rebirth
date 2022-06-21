@@ -82,7 +82,7 @@ class Drops {
                             /* time if league drop */
                             let leagueTime = leagueDrop ? lastClaim.claimTimestamp - dispatchStats.dispatchTimestamp : 0;
                             // claim and reward drop
-                            if (!leagueDrop || !leagueDropClaimed)
+                            if (!leagueDrop)
                                 await this.db.rewardDrop(lastClaim.login, nextDrop.EventDropID);
                             await this.db.claimDrop(lastClaim.lobbyKey, lastClaim.username, nextDrop.DropID, lastClaim.userID, leagueTime, claimTarget.result);
                             // clear drop and exit loop
