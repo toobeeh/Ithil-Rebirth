@@ -19,7 +19,7 @@ class Drops {
         // start async loop
         setImmediate(this.loop.bind(this));
     }
-    leagueWeight(s) {
+    static leagueWeight(s) {
         s = s * 1000;
         if (s < 0)
             return 0;
@@ -91,7 +91,7 @@ class Drops {
                                 caughtLobbyKey: lastClaim.lobbyKey,
                                 claimTicket: lastClaim.claimTicket,
                                 caughtPlayer: "<abbr title='Drop ID: " + nextDrop.DropID + "'>" + lastClaim.username + "</abbr>",
-                                leagueWeight: leagueDrop ? this.leagueWeight(leagueTime / 1000) : 0
+                                leagueWeight: leagueDrop ? Drops.leagueWeight(leagueTime / 1000) : 0
                             };
                             this.ipcServer.broadcastClearDrop(clearData);
                             /* collect claim */

@@ -1,4 +1,5 @@
 import sqlite3 from "better-sqlite3";
+import Drops from "../drops";
 import * as types from "./types";
 
 /**
@@ -55,6 +56,21 @@ class PalantirDatabase {
                 scenes: row.Scenes,
                 webhooks: []
             }
+
+            /* get weighted league drops */
+            let weight = 0;
+            let rows = this.db.prepare(`SELECT LeagueWeight FROM "PastDrops" WHERE CaughtLobbyPlayerID = "?" AND LeagueWeight > 0`).all(result.result.member.UserID);
+            rows.forEach(row => {
+                try {
+                    let time = Number(row.LeagueWeight);
+                    let weighted = Drops.leagueWeight(time / 1000);
+                    weight += weighted;
+                }
+                catch (e) {
+                    console.warn("Error calculating drop weight: ", e);
+                }
+            });
+            result.result.drops += weight;
 
             /* get webhooks */
             result.result.member.Guilds.forEach(guild => {

@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const better_sqlite3_1 = __importDefault(require("better-sqlite3"));
+const drops_1 = __importDefault(require("../drops"));
 /**
  * Palantir/Typo main db access
  */
@@ -50,6 +51,20 @@ class PalantirDatabase {
                 scenes: row.Scenes,
                 webhooks: []
             };
+            /* get weighted league drops */
+            let weight = 0;
+            let rows = this.db.prepare(`SELECT LeagueWeight FROM "PastDrops" WHERE CaughtLobbyPlayerID = "?" AND LeagueWeight > 0`).all(result.result.member.UserID);
+            rows.forEach(row => {
+                try {
+                    let time = Number(row.LeagueWeight);
+                    let weighted = drops_1.default.leagueWeight(time / 1000);
+                    weight += weighted;
+                }
+                catch (e) {
+                    console.warn("Error calculating drop weight: ", e);
+                }
+            });
+            result.result.drops += weight;
             /* get webhooks */
             result.result.member.Guilds.forEach(guild => {
                 const guildHooks = this.getServerWebhooks(guild.GuildID, true);

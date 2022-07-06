@@ -18,7 +18,7 @@ export default class Drops {
      */
     ipcServer: ipc.IthilIPCServer;
 
-    leagueWeight(s: number){
+    static leagueWeight(s: number){
         s = s*1000;
         if(s < 0) return 0;
         if(s > 1000) return 30;
@@ -116,7 +116,7 @@ export default class Drops {
                                 caughtLobbyKey: lastClaim.lobbyKey,
                                 claimTicket: lastClaim.claimTicket,
                                 caughtPlayer: "<abbr title='Drop ID: " + nextDrop.DropID + "'>" + lastClaim.username + "</abbr>",
-                                leagueWeight: leagueDrop ? this.leagueWeight(leagueTime/1000) : 0
+                                leagueWeight: leagueDrop ? Drops.leagueWeight(leagueTime/1000) : 0
                             };
                             this.ipcServer.broadcastClearDrop(clearData);
 
