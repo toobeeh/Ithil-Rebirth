@@ -59,7 +59,7 @@ class PalantirDatabase {
 
             /* get weighted league drops */
             let weight = 0;
-            let rows = this.db.prepare(`SELECT LeagueWeight FROM "PastDrops" WHERE CaughtLobbyPlayerID = ? AND LeagueWeight > 0`).all(result.result.member.UserID);
+            let rows = this.db.prepare(`SELECT LeagueWeight FROM "PastDrops" WHERE CaughtLobbyPlayerID = ? AND LeagueWeight > 0 AND EventDropID = 0`).all(result.result.member.UserID);
             rows.forEach(row => {
                 try {
                     let time = Number(row.LeagueWeight);
