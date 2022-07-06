@@ -70,7 +70,7 @@ class PalantirDatabase {
                     console.warn("Error calculating drop weight: ", e);
                 }
             });
-            result.result.drops += weight;
+            result.result.drops += weight / 100;
 
             /* get webhooks */
             result.result.member.Guilds.forEach(guild => {
