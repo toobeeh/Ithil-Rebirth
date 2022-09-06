@@ -174,10 +174,15 @@ class PalantirDatabase {
             // get scenes
             const scenes = this.db.prepare("SELECT * FROM Scenes").all();
 
+            // get online items
+            let now = Date.now()
+            const onlineitems = this.db.prepare("SELECT * FROM OnlineItems WHERE Date > " + (now-15).toString() + "").all();
+
             result.result = {
                 drops: eventdrops as Array<types.drop>,
                 onlineSprites: onlinesprites as Array<types.onlineSprite>,
                 onlineScenes: onlinescenes as Array<types.onlineSprite>,
+                onlineItems: onlineitems as Array<types.onlineItem>,
                 sprites: sprites as Array<types.sprite>,
                 scenes: scenes as Array<types.scene>
             };

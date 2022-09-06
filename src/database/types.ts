@@ -326,7 +326,7 @@ export interface activeGuildLobbies{
  */
  export interface onlineSprite{
     /**
-    * The speudo-ID of the lobby where the sprite is present
+    * The pseudo-ID of the lobby where the sprite is present
     */
     LobbyKey: string,
 
@@ -357,6 +357,42 @@ export interface activeGuildLobbies{
 }
 
 /**
+ * An item that is associated with an online player, replaces onlinesprites/scenes
+ * @summary Database Entity of Table `OnlienSprites`
+ */
+ export interface onlineItem{
+    /**
+    * The speudo-ID of the lobby where the sprite is present
+    */
+    LobbyKey: string,
+
+    /**
+    * The id of the player that wears the sprite
+    */
+    LobbyPlayerID: number,
+
+    /**
+    * The item type (sprite, scene, shift)
+    */
+    ItemType: string,
+
+    /**
+    * The item data
+    */
+    ItemID: number,
+
+    /**
+    * The slot of stackable items
+    */
+    Slot: number,
+
+    /**
+    * The unix epoch date
+    */
+    Date: number,
+}
+
+/**
  * A Palantir sprite
  * @summary Database Entity of Table `Sprites`
  */
@@ -367,9 +403,14 @@ export interface activeGuildLobbies{
     ID: number,
 
     /**
-    * Indicates if the sprite repalces the avatar
+    * Indicates if the sprite replaces the avatar
     */
     Special: number,
+
+    /**
+    * Indicates if the sprite is color-customizable
+    */
+    Rainbow: number,
 
     /**
     * The cost of the sprite
@@ -440,6 +481,11 @@ export interface spriteProperty {
     * The scenes of currently online players
     */
     onlineScenes: Array<onlineSprite>
+
+    /**
+    * The currently online items
+    */
+    onlineItems: Array<onlineItem>
 }
 
 /**

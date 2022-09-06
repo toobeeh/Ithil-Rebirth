@@ -367,6 +367,11 @@ export interface onlineSpritesEventdata {
      * Currently online scenes array
      */
     onlineScenes: Array<types.onlineSprite>;
+    
+    /**
+     * Currently online items array
+     */
+    onlineItems: Array<types.onlineItem>;
 }
 
 /**

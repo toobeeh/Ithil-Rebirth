@@ -92,7 +92,7 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
     /** The worker's cache of last received data from the main ipc socket */
     const workerCache = {
         activeLobbies: [],
-        publicData: { drops: [], scenes: [], sprites: [], onlineScenes: [], onlineSprites: [] }
+        publicData: { drops: [], scenes: [], sprites: [], onlineScenes: [], onlineSprites: [], onlineItems: [] }
     };
     // listen to ipc lobbies update event
     ipcClient.onActiveLobbiesChanged = (data) => {
@@ -117,7 +117,8 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
             event: ithilSocketServer.eventNames.onlineSprites,
             payload: {
                 onlineScenes: data.publicData.onlineScenes,
-                onlineSprites: data.publicData.onlineSprites
+                onlineSprites: data.publicData.onlineSprites,
+                onlineItems: data.publicData.onlineItems
             }
         };
         // volatile emit to all online sockets
