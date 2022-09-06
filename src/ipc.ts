@@ -103,7 +103,7 @@ export class IthilIPCServer extends IthilIPC {
 
     /**
      * Callback when a worker is online and ready
-     * @param data {@link EventdataInterfaces.workerConnectEventdata}
+     * @param data {@link workerConnectEventdata}
      * @param socket The worker's ipc socket
      */
     onWorkerConnected?: (data: workerConnectEventdata, socket: IpcClient) => void;
@@ -117,52 +117,52 @@ export class IthilIPCServer extends IthilIPC {
 
     /**
      * Callback when a worker's load is changed
-     * @param data {@link EventdataInterfaces.updatePortBalanceEventdata}
+     * @param data {@link updatePortBalanceEventdata}
      * @param socket The worker's ipc socket
      */
     onBalanceChanged?: (data: updatePortBalanceEventdata, socket: IpcClient) => void;
 
     /**
      * Callback when a drop was dispatched by the drop server
-     * @param data {@link EventdataInterfaces.dispatchedDropEventdata}
+     * @param data {@link dispatchedDropEventdata}
      * @param socket The worker's ipc socket
      */
     onDropDispatched?: (data: dispatchedDropEventdata, socket: IpcClient) => void;
 
     /**
      * Callback when a drop was claimed by a client on a worker server
-     * @param data {@link EventdataInterfaces.dropClaimedEventdata}
+     * @param data {@link dropClaimedEventdata}
      * @param socket The worker's ipc socket
      */
     onDropClaim?: (data: dropClaimEventdata, socket: IpcClient) => void;
 
     /**
      * Broadcast public data to all connected workers
-     * @param data The public data object {@link EventdataInterfaces.publicDataEventdata}
+     * @param data The public data object {@link publicDataEventdata}
      */
     broadcastPublicData: (data: publicDataEventdata) => void;
 
     /**
      * Broadcast active lobbies to all connected workers
-     * @param data The active lobbies array {@link EventdataInterfaces.activeLobbiesEventdata}
+     * @param data The active lobbies array {@link activeLobbiesEventdata}
      */
     broadcastActiveLobbies: (data: activeLobbiesEventdata) => void;
 
     /**
      * Broadcast next drop
-     * @param data The next drop properties {@link EventdataInterfaces.nextDropEventdata}
+     * @param data The next drop properties {@link nextDropEventdata}
      */
     broadcastNextDrop: (data: nextDropEventdata) => void;
 
     /**
      * Broadcast clear drop
-     * @param data Drop result data {@link EventdataInterfaces.clearDropEventdata}
+     * @param data Drop result data {@link clearDropEventdata}
      */
     broadcastClearDrop: (data: clearDropEventdata) => void;
 
     /**
      * Broadcast rank drop
-     * @param data Drop rank data {@link EventdataInterfaces.rankDropEventdata}
+     * @param data Drop rank data {@link rankDropEventdata}
      */
     broadcastRankDrop: (data: rankDropEventdata) => void;
 

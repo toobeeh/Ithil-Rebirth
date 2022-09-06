@@ -70,6 +70,7 @@ async function setup() {
         ipcServer.broadcastActiveLobbies({ activeLobbies: lobbies });
     };
     dataObserver.onPublicDataChanged = (data) => {
+        console.log(data.onlineItems.length);
         ipcServer.broadcastPublicData({ publicData: data });
     };
     /**
