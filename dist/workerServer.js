@@ -112,7 +112,6 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
     // listen to ipc public data update event
     ipcClient.onPublicDataChanged = (data) => {
         workerCache.publicData = data.publicData;
-        console.log(data.publicData.onlineItems.length);
         // build eventdata
         const eventdata = {
             event: ithilSocketServer.eventNames.onlineSprites,
