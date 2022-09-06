@@ -177,6 +177,7 @@ class PalantirDatabase {
             // get online items
             let now = Math.round(Date.now() / 1000)
             const onlineitems = this.db.prepare("SELECT * FROM OnlineItems WHERE Date > " + (now-25).toString() + "").all();
+            console.log(onlineitems.length)
 
             result.result = {
                 drops: eventdrops as Array<types.drop>,
