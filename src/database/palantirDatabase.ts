@@ -54,6 +54,7 @@ class PalantirDatabase {
                 drops: Number(row.Drops),
                 flags: row.Flag,
                 scenes: row.Scenes,
+                rainbowSprites: row.RainbowSprites,
                 webhooks: []
             }
 

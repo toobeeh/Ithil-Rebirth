@@ -125,7 +125,12 @@
     /**
      * The member's scenes
      */
-     scenes: string 
+    scenes: string,
+
+    /**
+     * The member's scenes
+     */
+    rainbowSprites: string,
 
     webhooks: Array<palantirWebhook>;
 }
