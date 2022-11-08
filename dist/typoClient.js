@@ -293,7 +293,7 @@ class TypoClient {
                     /* build webhook data */
                     const webhookData = {};
                     if (eventdata.postOptions.onlyImage) {
-                        webhookData.username = eventdata.postOptions.posterName;
+                        webhookData.username = eventdata.postOptions.posterName.split("#")[0];
                         webhookData.avatar_url = 'https://cdn.discordapp.com/attachments/334696834322661376/988002446158741544/letter.png';
                         webhookData.content = url;
                     }
@@ -303,7 +303,7 @@ class TypoClient {
                         webhookData.embeds = [
                             {
                                 "title": eventdata.postOptions.title,
-                                "description": "Posted by " + eventdata.postOptions.posterName,
+                                "description": "Posted by " + eventdata.postOptions.posterName.split("#")[0],
                                 "color": 4368373,
                                 "image": {
                                     "url": url
@@ -313,7 +313,7 @@ class TypoClient {
                                     "text": "skribbl typo"
                                 },
                                 "author": {
-                                    "name": "Drawn by " + eventdata.postOptions.drawerName,
+                                    "name": "Drawn by " + eventdata.postOptions.drawerName.split("#")[0],
                                     "url": "https://typo.rip",
                                     "icon_url": "https://skribbl.io/res/pen.gif"
                                 }
