@@ -627,7 +627,7 @@ class TypoClient {
         let now = Date.now();
         try {
             let response = await this.typosocket.emitEventAsync("specialdrop", { key }, true);
-            if (Date.now() - now < 5000) {
+            if (Date.now() - now < 5000 && response.key == key) {
                 let scenes = (await this.member).scenes.split(",");
                 scenes.push("7");
                 let newScenes = scenes.join(",");
@@ -636,7 +636,7 @@ class TypoClient {
             }
         }
         catch (e) {
-            console.log(e);
+            console.log("Failed to catch special drop:" + e);
         }
     }
     /**

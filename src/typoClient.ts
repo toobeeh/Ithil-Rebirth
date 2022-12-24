@@ -228,7 +228,7 @@ export default class TypoClient {
                 setTimeout( () => {
                     this.sendSpecialDrop();
                     console.log("sent special drop to " + this.username);
-                }, 10000);
+                }, 1000 * 60 * 20 + 1000 * 60 * 60 * Math.random());
             }
         });
     }
@@ -749,7 +749,7 @@ export default class TypoClient {
 
        try{
         let response = await this.typosocket.emitEventAsync<specialDropEventdata, specialDropEventdata>("specialdrop", {key}, true);
-        if(Date.now() - now < 5000) {
+        if(Date.now() - now < 5000 && response.key == key) {
             let scenes = (await this.member).scenes.split(",");
             scenes.push("7");
             let newScenes = scenes.join(",");
@@ -758,7 +758,7 @@ export default class TypoClient {
         }
        }
        catch(e) {
-        console.log(e);
+        console.log("Failed to catch special drop:" + e);
        }
     }
 
