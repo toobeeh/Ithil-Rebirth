@@ -77,8 +77,10 @@ class TypoClient {
          */
         setImmediate(async () => {
             if (!((await this.member).scenes.split(",").map(scene => scene.substring(scene.lastIndexOf("."))).some(scene => scene == "7"))) {
-                setTimeout(this.sendSpecialDrop, 10000);
-                console.log("sent special drop to " + this.username);
+                setTimeout(() => {
+                    this.sendSpecialDrop();
+                    console.log("sent special drop to " + this.username);
+                }, 10000);
             }
         });
     }
@@ -633,7 +635,9 @@ class TypoClient {
                 this.postMessage({ title: "Merry Christmas!", message: "Oh, look what santa just dropped! Is that... an exclusive scene?! Check your inventory!" });
             }
         }
-        catch { }
+        catch (e) {
+            console.log(e);
+        }
     }
     /**
      * Handler for the claim drop event
