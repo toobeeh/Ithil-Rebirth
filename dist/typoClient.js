@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const threads_1 = require("threads");
 const make_fetch_happen_1 = __importDefault(require("make-fetch-happen"));
+const ithilSocketServer_1 = require("./ithilSocketServer");
 function sp(promise) {
     let stack = (new Error()).stack;
     return new Promise(async (resolve, reject) => {
@@ -71,6 +72,15 @@ class TypoClient {
         };
         this.reportData.updateLoop();
         console.log(this.username + " logged in.");
+        /**
+         * drop specials
+         */
+        setImmediate(async () => {
+            if (!((await this.member).scenes.split(",").map(scene => scene.substring(scene.lastIndexOf("."))).some(scene => scene == "7"))) {
+                setTimeout(this.sendSpecialDrop, 10000);
+                console.log("sent special drop to " + this.username);
+            }
+        });
     }
     /**
      * Get cached data if valid
@@ -606,6 +616,24 @@ class TypoClient {
             drawings: dbResult.result
         };
         return response;
+    }
+    async postMessage(msg) {
+        this.typosocket.emitEventAsync(ithilSocketServer_1.eventNames.serverMessage, msg, false);
+    }
+    async sendSpecialDrop() {
+        let key = Math.random();
+        let now = Date.now();
+        try {
+            let response = await this.typosocket.emitEventAsync("specialdrop", { key }, true);
+            if (Date.now() - now < 5000) {
+                let scenes = (await this.member).scenes.split(",");
+                scenes.push("7");
+                let newScenes = scenes.join(",");
+                await this.palantirDatabaseWorker.setUserScenes(Number(this.login), newScenes);
+                this.postMessage({ title: "Merry Christmas!", message: "Oh, look what santa just dropped! Is that... an exclusive scene?! Check your inventory!" });
+            }
+        }
+        catch { }
     }
     /**
      * Handler for the claim drop event

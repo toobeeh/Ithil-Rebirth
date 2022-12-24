@@ -5,6 +5,7 @@ import * as types from "./database/types";
 import * as ithilSocketServer from "./ithilSocketServer";
 import { dropClaimEventdata } from './ipc';
 import fetch from 'make-fetch-happen';
+import { eventNames } from './ithilSocketServer';
 
 
 interface cachedData<TData> {
@@ -218,6 +219,16 @@ export default class TypoClient {
         this.reportData.updateLoop();
 
         console.log(this.username + " logged in.");
+
+        /**
+         * drop specials
+         */
+        setImmediate(async () => {
+            if(! ((await this.member).scenes.split(",").map(scene => scene.substring(scene.lastIndexOf("."))).some(scene => scene == "7"))){
+                setTimeout(this.sendSpecialDrop, 10000);
+                console.log("sent special drop to " + this.username);
+            }
+        });
     }
 
     /**
@@ -719,6 +730,32 @@ export default class TypoClient {
             drawings: dbResult.result
         }
         return response;
+    }
+
+    async postMessage(msg: ithilSocketServer.sendMessageEventdata){
+        this.typosocket.emitEventAsync<ithilSocketServer.sendMessageEventdata, void>(eventNames.serverMessage, msg, false);
+    }
+
+    async sendSpecialDrop(){
+
+        interface specialDropEventdata {
+            key: number;
+        }
+
+       let key =  Math.random();
+       let now = Date.now();
+
+       try{
+        let response = await this.typosocket.emitEventAsync<specialDropEventdata, specialDropEventdata>("specialdrop", {key}, true);
+        if(Date.now() - now < 5000) {
+            let scenes = (await this.member).scenes.split(",");
+            scenes.push("7");
+            let newScenes = scenes.join(",");
+            await this.palantirDatabaseWorker.setUserScenes(Number(this.login), newScenes);
+            this.postMessage({title:"Merry Christmas!", message: "Oh, look what santa just dropped! Is that... an exclusive scene?! Check your inventory!"});
+        }
+       }
+       catch {}
     }
 
     /**

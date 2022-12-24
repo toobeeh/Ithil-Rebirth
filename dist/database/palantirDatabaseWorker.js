@@ -93,6 +93,12 @@ const palantirDatabaseWorker = {
             throw new Error("Database is not initialized.");
         return database.setUserSprites(login, sprites);
     },
+    /** Executes {@link PalantirDatabase.setUserScenes} in a worker*/
+    setUserScenes(login, scenes) {
+        if (!database)
+            throw new Error("Database is not initialized.");
+        return database.setUserScenes(login, scenes);
+    },
     /** Executes {@link PalantirDatabase.writePlayerStatus} in a worker*/
     writePlayerStatus(status, session) {
         if (!database)

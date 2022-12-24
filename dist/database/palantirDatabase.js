@@ -101,6 +101,22 @@ class PalantirDatabase {
         return result;
     }
     /**
+     * Set the scenes of a palantir user
+     * @param accessToken The user's access token
+     * @returns An indicator for the query's success
+     */
+    setUserScenes(login, scenes) {
+        let result = false;
+        try {
+            this.db.prepare("UPDATE Members SET Scenes = ? WHERE Login = ?").run(scenes, login);
+            result = true;
+        }
+        catch (e) {
+            console.warn("Error in query: ", e);
+        }
+        return result;
+    }
+    /**
      * Set the sprites of a palantir user
      * @param accessToken The user's access token
      * @returns An indicator for the query's success

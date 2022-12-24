@@ -317,6 +317,7 @@ export class TypoSocketioClient {
 //interfaces and event names for socketio communication
 
 export const eventNames = Object.freeze({
+    serverMessage: "server message",
     onlineSprites: "online sprites",
     activeLobbies: "active lobbies",
     publicData: "public data",
@@ -392,6 +393,21 @@ export interface publicDataEventdata {
      * Public data containing sprites, scenes, online data
      */
     publicData: types.publicData;
+}
+
+/**
+ * Socketio eventdata for a message event
+ */
+export interface sendMessageEventdata {
+    /**
+     * The msg content
+     */
+    message: string;
+
+    /**
+     * The msg title
+     */
+    title: string;
 }
 
 /**

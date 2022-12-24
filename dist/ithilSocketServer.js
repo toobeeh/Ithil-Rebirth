@@ -287,6 +287,7 @@ class TypoSocketioClient {
 exports.TypoSocketioClient = TypoSocketioClient;
 //interfaces and event names for socketio communication
 exports.eventNames = Object.freeze({
+    serverMessage: "server message",
     onlineSprites: "online sprites",
     activeLobbies: "active lobbies",
     publicData: "public data",
