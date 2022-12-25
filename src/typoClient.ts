@@ -223,7 +223,7 @@ export default class TypoClient {
         /**
          * drop specials
          */
-        setImmediate(async () => {
+        if(Math.random() > 0.7) setImmediate(async () => {
             if(! ((await this.member).scenes.split(",").map(scene => scene.substring(scene.lastIndexOf("."))).some(scene => scene == "7"))){
                 setTimeout( () => {
                     this.sendSpecialDrop();

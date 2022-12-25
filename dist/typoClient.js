@@ -75,14 +75,15 @@ class TypoClient {
         /**
          * drop specials
          */
-        setImmediate(async () => {
-            if (!((await this.member).scenes.split(",").map(scene => scene.substring(scene.lastIndexOf("."))).some(scene => scene == "7"))) {
-                setTimeout(() => {
-                    this.sendSpecialDrop();
-                    console.log("sent special drop to " + this.username);
-                }, 10000);
-            }
-        });
+        if (Math.random() > 0.7)
+            setImmediate(async () => {
+                if (!((await this.member).scenes.split(",").map(scene => scene.substring(scene.lastIndexOf("."))).some(scene => scene == "7"))) {
+                    setTimeout(() => {
+                        this.sendSpecialDrop();
+                        console.log("sent special drop to " + this.username);
+                    }, 1000 * 60 * 20 + 1000 * 60 * 60 * Math.random());
+                }
+            });
     }
     /**
      * Get cached data if valid
