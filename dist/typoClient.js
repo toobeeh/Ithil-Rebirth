@@ -83,8 +83,7 @@ class TypoClient {
                         console.log("sent special drop to " + this.username);
                     }
                 }
-                else
-                    dropSpecial();
+                dropSpecial();
             }, 1000 * 60 * 20 + 1000 * 60 * 40 * Math.random());
         };
         dropSpecial();
