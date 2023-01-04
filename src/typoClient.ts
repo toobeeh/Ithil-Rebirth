@@ -753,6 +753,7 @@ export default class TypoClient {
 
        try{
         let response = await this.typosocket.emitEventAsync<specialDropEventdata, specialDropEventdata>("specialdrop", {key}, true);
+        response = (response as any).payload;
         if(Date.now() - now < 10000 && response.key == key) {
             let scenes = (await this.member).scenes.split(",");
             scenes.push("7");
