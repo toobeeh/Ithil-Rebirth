@@ -631,12 +631,15 @@ class TypoClient {
         let now = Date.now();
         try {
             let response = await this.typosocket.emitEventAsync("specialdrop", { key }, true);
-            if (Date.now() - now < 5000 && response.key == key) {
+            if (Date.now() - now < 10000 && response.key == key) {
                 let scenes = (await this.member).scenes.split(",");
                 scenes.push("7");
                 let newScenes = scenes.join(",");
                 await this.palantirDatabaseWorker.setUserScenes(Number(this.login), newScenes);
                 this.postMessage({ title: "Merry Christmas!", message: "Oh, look what santa just dropped! Is that... an exclusive scene?! Check your inventory!" });
+            }
+            else {
+                console.log("Special drop rejected:", response.key, key, Date.now() - now);
             }
         }
         catch (e) {
