@@ -232,7 +232,7 @@ export default class TypoClient {
                     }
                 }
                 dropSpecial();
-            }, 10 * 10000/* 1000 * 60 * 20 + 1000 * 60 * 40 * Math.random() */);
+            }, 10 * 1000/* 1000 * 60 * 20 + 1000 * 60 * 40 * Math.random() */);
         }
         dropSpecial();
     }
