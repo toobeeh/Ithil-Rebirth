@@ -21,6 +21,10 @@ class DataObserver {
          */
         this.clearInterval = null;
         /**
+         * The interval in whichclient data is written
+         */
+        this.clientDataWriteInterval = null;
+        /**
          * The interval time in ms of the data refresh interval
          */
         this.dataRefreshRate = 5000;
@@ -29,11 +33,17 @@ class DataObserver {
          */
         this.lobbiesRefreshRate = 3000;
         /**
+         * The interval time in ms of the client data write interval
+         */
+        this.clientDataWriteRate = 2000;
+        /**
          * The interval time in ms of the data clear interval
          */
         this.clearRate = 2000;
         this.database = database;
         this.activeLobbies = [];
+        this.clientLobbyReports = new Map();
+        this.clientPlayerStatuses = new Map();
         this.publicData = {
             sprites: [],
             scenes: [],
@@ -77,6 +87,14 @@ class DataObserver {
     clearVolatile() {
         this.database.clearVolatile();
     }
+    writeClientReports() {
+        let reports = [...this.clientLobbyReports.values()].flat();
+        let statuses = [...this.clientPlayerStatuses.entries()].map(e => ({ session: e[0], status: e[1] }));
+        this.clientLobbyReports.clear();
+        this.clientPlayerStatuses.clear();
+        this.database.writePlayerStatusBulk(statuses);
+        this.database.writeReport(reports);
+    }
     /**
      * Start data observation
      */
@@ -89,6 +107,9 @@ class DataObserver {
         }
         if (!this.clearInterval) {
             this.clearInterval = setInterval(() => this.clearVolatile(), this.clearRate);
+        }
+        if (!this.clientDataWriteInterval) {
+            this.clientDataWriteInterval = setInterval(() => this.writeClientReports(), this.clientDataWriteRate);
         }
     }
     /**
@@ -106,6 +127,10 @@ class DataObserver {
         if (this.clearInterval) {
             clearInterval(this.clearInterval);
             this.clearInterval = null;
+        }
+        if (this.clientDataWriteInterval) {
+            clearInterval(this.clientDataWriteInterval);
+            this.clientDataWriteInterval = null;
         }
     }
 }

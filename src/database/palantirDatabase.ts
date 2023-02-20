@@ -308,6 +308,26 @@ class PalantirDatabase {
     }
 
     /**
+      * Write a player's status for a certain session
+      * @param status The status object containing status information
+      * @param key The session id of the status
+      * @returns Indicator if the query succeeded
+      */
+    writePlayerStatusBulk(statuses: Array<{session: string, status: types.playerStatus}>) {
+        let success = false;
+        try {
+            let query = "REPLACE INTO Status VALUES " + statuses.map(s => "(?, ?, datetime('now'))").join(", ");
+            let params = statuses.map(s => [s.session, JSON.stringify(s.status)]).flat();
+            this.db.prepare(query).run(params);
+            success = true;
+        }
+        catch (e) {
+            console.warn("Error in query: ", e);
+        }
+        return success;
+    }
+
+    /**
      *  Clear volatile data as reports, status, onlinesprites etc
      * @returns Indicator if the query succeeded
      */
@@ -317,6 +337,7 @@ class PalantirDatabase {
             this.db.prepare("DELETE FROM Reports WHERE Date < datetime('now', '-30 seconds')").run();
             this.db.prepare("DELETE FROM Status WHERE Date < datetime('now', '-10 seconds')").run();
             this.db.prepare("DELETE FROM OnlineSprites WHERE Date < datetime('now', '-30 seconds')").run();
+            this.db.prepare("DELETE FROM OnlineItems WHERE DATETIME(Date, 'unixepoch') < datetime('now', '-30 seconds')").run();
             this.db.prepare("DELETE From Lobbies WHERE json_extract(Lobby, '$.ID') NOT IN (SELECT DISTINCT json_extract(Status, '$.LobbyID') from Status WHERE json_extract(Status, '$.LobbyID') IS NOT NULL) AND " + Date.now() + " - LobbyID > 60000;").run();
 
             // delete duplicate keys with different IDs

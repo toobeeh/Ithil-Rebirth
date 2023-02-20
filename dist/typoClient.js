@@ -27,8 +27,12 @@ class TypoClient {
         /** last posted webhook cache for rate-limiting */
         this.lastPostedWebhooks = [];
         this.memberCache = {};
-        /** The interval in which the current playing status is processed */
+        /** callback to send a drop claim */
         this.claimDropCallback = undefined;
+        /** callback to report the clients lobbies */
+        this.reportLobbyCallback = undefined;
+        /** callback to report the clients status */
+        this.reportStatusCallback = undefined;
         this.typosocket = socket;
         this.palantirDatabaseWorker = dbWorker;
         this.imageDatabaseWorker = imageDbWorker;
@@ -522,7 +526,9 @@ class TypoClient {
                     templateClone.GuildID = guild.GuildID;
                     guildReportLobbies.push(templateClone);
                 });
-                await sp(this.palantirDatabaseWorker.writeReport(guildReportLobbies));
+                //await sp(this.palantirDatabaseWorker.writeReport(guildReportLobbies));
+                if (this.reportLobbyCallback)
+                    this.reportLobbyCallback({ session: this.typosocket.socket.id, lobbies: guildReportLobbies });
                 // write player status to db
                 const lobbyPlayerID = guildReportTemplate.Players.find(player => player.Sender)?.LobbyPlayerID;
                 const status = {
@@ -531,7 +537,9 @@ class TypoClient {
                     LobbyID: guildReportTemplate.ID,
                     LobbyPlayerID: (lobbyPlayerID ? lobbyPlayerID : 0).toString()
                 };
-                await sp(this.palantirDatabaseWorker.writePlayerStatus(status, this.typosocket.socket.id));
+                //await sp(this.palantirDatabaseWorker.writePlayerStatus(status, this.typosocket.socket.id));
+                if (this.reportStatusCallback)
+                    this.reportStatusCallback({ session: this.typosocket.socket.id, status: status });
             }
         }
         else if (statusIsAnyOf("searching", "waiting")) {
@@ -544,7 +552,9 @@ class TypoClient {
                 LobbyID: "",
                 LobbyPlayerID: ""
             };
-            await sp(this.palantirDatabaseWorker.writePlayerStatus(status, this.typosocket.socket.id));
+            //await sp(this.palantirDatabaseWorker.writePlayerStatus(status, this.typosocket.socket.id));
+            if (this.reportStatusCallback)
+                this.reportStatusCallback({ session: this.typosocket.socket.id, status: status });
         }
         else if (statusIsAnyOf("idle")) {
             // do nothing. user is idling. yay.

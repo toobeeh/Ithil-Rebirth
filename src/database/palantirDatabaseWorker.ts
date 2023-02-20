@@ -106,6 +106,12 @@ const palantirDatabaseWorker = {
         return database.writePlayerStatus(status, session);
     },
 
+    /** Executes {@link PalantirDatabase.writePlayerStatusBulk} in a worker*/
+    writePlayerStatusBulk(statuses: { session: string; status: types.playerStatus }[]) {
+        if (!database) throw new Error("Database is not initialized.");
+        return database.writePlayerStatusBulk(statuses);
+    },
+
     /** Executes {@link PalantirDatabase.writeReport} in a worker*/
     writeReport(lobbies: types.guildLobby[]) {
         if (!database) throw new Error("Database is not initialized.");

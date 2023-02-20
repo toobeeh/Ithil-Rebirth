@@ -15,7 +15,9 @@ export const ipcEvents = Object.freeze({
     dropDispatched: "dropDispatched",
     dropClaim: "dropClaim",
     clearDrop: "clearDrop",
-    rankDrop: "rankDrop"
+    rankDrop: "rankDrop",
+    lobbyReport: "lobbyReport",
+    statusReport: "statusReport"
 });
 
 export interface workerConnectEventdata {
@@ -56,6 +58,16 @@ export interface dropClaimEventdata {
     claimVerifyDelay: number;
     workerEventloopLatency: number;
     workerPort: number;
+}
+
+export interface lobbyReportEventdata {
+    lobbies: types.guildLobby[],
+    session: string
+}
+
+export interface lobbyStatusEventdata {
+    status: types.playerStatus;
+    session: string
 }
 
 export interface clearDropEventdata {
@@ -137,6 +149,20 @@ export class IthilIPCServer extends IthilIPC {
     onDropClaim?: (data: dropClaimEventdata, socket: IpcClient) => void;
 
     /**
+     * Callback when a client reports to its connected servers
+     * @param data {@link lobbyReportEventdata}
+     * @param socket The worker's ipc socket
+     */
+    onLobbyReport?: (data: lobbyReportEventdata, socket: IpcClient) => void;
+
+    /**
+     * Callback when a client reports its current status
+     * @param data {@link lobbyStatusEventdata}
+     * @param socket The worker's ipc socket
+     */
+    onStatusReport?: (data: lobbyStatusEventdata, socket: IpcClient) => void;
+
+    /**
      * Broadcast public data to all connected workers
      * @param data The public data object {@link publicDataEventdata}
      */
@@ -200,6 +226,14 @@ export class IthilIPCServer extends IthilIPC {
             this.on(ipcEvents.dropClaim, (data: dropClaimEventdata, socket: IpcClient) => {
                 if (this.onDropClaim) this.onDropClaim(data, socket);
             });
+
+            this.on(ipcEvents.statusReport, (data: lobbyStatusEventdata, socket: IpcClient) => {
+                if (this.onStatusReport) this.onStatusReport(data, socket);
+            });
+
+            this.on(ipcEvents.lobbyReport, (data: lobbyReportEventdata, socket: IpcClient) => {
+                if (this.onLobbyReport) this.onLobbyReport(data, socket);
+            });
         });
         this.ipc.server.start();
 
@@ -249,6 +283,18 @@ export class IthilIPCClient extends IthilIPC {
      * @param data Event data containing the dispatch data
      */
     sendDispatchedDropData?: (data: dispatchedDropEventdata) => void;
+
+    /**
+     * Emit an event to the main server containing the clients current status. 
+     * @param data Event data containing the dispatch data
+     */
+    sendLobbyStatus?: (data: lobbyStatusEventdata) => void;
+
+    /**
+     * Emit an event to the main server containingthe clients latest lobby reports. 
+     * @param data Event data containing the dispatch data
+     */
+    sendLobbyReport?: (data: lobbyReportEventdata) => void;
 
     /**
      * Emit an event to the main server containing a drop claim request.

@@ -14,7 +14,9 @@ exports.ipcEvents = Object.freeze({
     dropDispatched: "dropDispatched",
     dropClaim: "dropClaim",
     clearDrop: "clearDrop",
-    rankDrop: "rankDrop"
+    rankDrop: "rankDrop",
+    lobbyReport: "lobbyReport",
+    statusReport: "statusReport"
 });
 /**
  * Abstract IPC class with common config
@@ -67,6 +69,14 @@ class IthilIPCServer extends IthilIPC {
             this.on(exports.ipcEvents.dropClaim, (data, socket) => {
                 if (this.onDropClaim)
                     this.onDropClaim(data, socket);
+            });
+            this.on(exports.ipcEvents.statusReport, (data, socket) => {
+                if (this.onStatusReport)
+                    this.onStatusReport(data, socket);
+            });
+            this.on(exports.ipcEvents.lobbyReport, (data, socket) => {
+                if (this.onLobbyReport)
+                    this.onLobbyReport(data, socket);
             });
         });
         this.ipc.server.start();

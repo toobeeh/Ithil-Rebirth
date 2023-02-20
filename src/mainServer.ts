@@ -72,6 +72,14 @@ async function setup(){
         balancer.updateClients(data.port, data.clients);
         console.log(balancer.currentBalancing());
     }
+
+    ipcServer.onLobbyReport = (data, socket) => {
+        dataObserver.clientLobbyReports.set(data.session, data.lobbies);
+    }
+
+    ipcServer.onStatusReport = (data, socket) => {
+        dataObserver.clientPlayerStatuses.set(data.session, data.status);
+    }
     
     // add callbacks to data observer events
     dataObserver.onActiveLobbiesChanged = (lobbies) => {

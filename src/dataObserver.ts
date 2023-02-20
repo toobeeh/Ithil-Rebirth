@@ -20,6 +20,10 @@ export default class DataObserver{
      */
     publicData: types.publicData;
 
+    clientLobbyReports: Map<string, types.guildLobby[]>;
+
+    clientPlayerStatuses: Map<string, types.playerStatus>;
+
     /**
      * The callback which fires when changes in active lobbies were found
      */
@@ -46,6 +50,11 @@ export default class DataObserver{
     clearInterval: NodeJS.Timer | null = null;
 
     /**
+     * The interval in whichclient data is written
+     */
+    clientDataWriteInterval: NodeJS.Timer | null = null;
+
+    /**
      * The interval time in ms of the data refresh interval
      */
     dataRefreshRate: number = 5000;
@@ -54,6 +63,11 @@ export default class DataObserver{
      * The interval time in ms of the lobbies refresh interval
      */
     lobbiesRefreshRate: number = 3000;
+
+    /**
+     * The interval time in ms of the client data write interval
+     */
+    clientDataWriteRate: number = 2000;
 
     /**
      * The interval time in ms of the data clear interval
@@ -66,6 +80,8 @@ export default class DataObserver{
     constructor(database: PalantirDatabase){
         this.database = database;
         this.activeLobbies = [];
+        this.clientLobbyReports = new Map();
+        this.clientPlayerStatuses = new Map();
         this.publicData = {
             sprites: [],
             scenes: [],
@@ -112,6 +128,17 @@ export default class DataObserver{
     clearVolatile() {
         this.database.clearVolatile();
     }
+    
+    writeClientReports(){
+        let reports = [...this.clientLobbyReports.values()].flat();
+        let statuses = [...this.clientPlayerStatuses.entries()].map(e => ({session: e[0], status: e[1]}));
+
+        this.clientLobbyReports.clear();
+        this.clientPlayerStatuses.clear();
+
+        this.database.writePlayerStatusBulk(statuses);
+        this.database.writeReport(reports);
+    }
 
     /**
      * Start data observation
@@ -125,6 +152,9 @@ export default class DataObserver{
         }
         if(!this.clearInterval){
             this.clearInterval = setInterval(() => this.clearVolatile(), this.clearRate);
+        }
+        if(!this.clientDataWriteInterval){
+            this.clientDataWriteInterval = setInterval(() => this.writeClientReports(), this.clientDataWriteRate);
         }
     }
 
@@ -143,6 +173,10 @@ export default class DataObserver{
         if(this.clearInterval) {
             clearInterval(this.clearInterval);
             this.clearInterval = null;
+        }
+        if(this.clientDataWriteInterval) {
+            clearInterval(this.clientDataWriteInterval);
+            this.clientDataWriteInterval = null;
         }
     }
 }
