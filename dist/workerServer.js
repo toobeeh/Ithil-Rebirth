@@ -192,6 +192,8 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
                     eventdata.workerPort = workerPort;
                     ipcClient.claimDrop?.(eventdata);
                 };
+                client.reportLobbyCallback = eventdata => ipcClient.sendLobbyReport?.(eventdata);
+                client.reportStatusCallback = eventdata => ipcClient.sendLobbyStatus?.(eventdata);
                 memberResult.result.member.Guilds.forEach(guild => clientSocket.socket.join("guild" + guild.GuildID));
                 // fill login response data
                 response.authorized = true;
