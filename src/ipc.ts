@@ -365,6 +365,8 @@ export class IthilIPCClient extends IthilIPC {
                 this.updatePortBalance = (data) => this.emit(ipcEvents.updateBalance, data);
                 this.sendDispatchedDropData = (data) => this.emit(ipcEvents.dropDispatched, data);
                 this.claimDrop = (data) => this.emit(ipcEvents.dropClaim, data);
+                this.sendLobbyReport = data => this.emit(ipcEvents.lobbyReport, data);
+                this.sendLobbyStatus = data => this.emit(ipcEvents.statusReport, data);
 
                 // init predefined events
                 this.on(ipcEvents.activeLobbies, (data, socket) => {
