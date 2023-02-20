@@ -74,12 +74,10 @@ async function setup(){
     }
 
     ipcServer.onLobbyReport = (data, socket) => {
-        console.log("lr");
         dataObserver.clientLobbyReports.set(data.session, data.lobbies);
     }
 
     ipcServer.onStatusReport = (data, socket) => {
-        console.log("sr");
         dataObserver.clientPlayerStatuses.set(data.session, data.status);
     }
     

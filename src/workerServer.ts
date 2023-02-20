@@ -223,8 +223,8 @@ portscanner.findAPortNotInUse(
                         eventdata.workerPort = workerPort;
                         ipcClient.claimDrop?.(eventdata);
                     };
-                    client.reportLobbyCallback = eventdata => {console.log("reportLobbyCallback ");ipcClient.sendLobbyReport?.(eventdata);}
-                    client.reportStatusCallback = eventdata => {console.log("reportStatusCallback ");ipcClient.sendLobbyStatus?.(eventdata);}
+                    client.reportLobbyCallback = eventdata => { ipcClient.sendLobbyReport?.(eventdata);}
+                    client.reportStatusCallback = eventdata => { ipcClient.sendLobbyStatus?.(eventdata);}
 
                     memberResult.result.member.Guilds.forEach(guild => clientSocket.socket.join("guild" + guild.GuildID));
 

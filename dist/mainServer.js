@@ -66,11 +66,9 @@ async function setup() {
         console.log(balancer.currentBalancing());
     };
     ipcServer.onLobbyReport = (data, socket) => {
-        console.log("lr");
         dataObserver.clientLobbyReports.set(data.session, data.lobbies);
     };
     ipcServer.onStatusReport = (data, socket) => {
-        console.log("sr");
         dataObserver.clientPlayerStatuses.set(data.session, data.status);
     };
     // add callbacks to data observer events
