@@ -75,6 +75,7 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
         console.log(error);
         process.exit(1);
     }
+    console.log("Worker online on port " + workerPort);
     /**
      * The worker socketio server
      */

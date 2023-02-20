@@ -68,6 +68,8 @@ portscanner.findAPortNotInUse(
             process.exit(1);
         }
 
+        console.log("Worker online on port " + workerPort);
+
         /**
          * The worker socketio server
          */
