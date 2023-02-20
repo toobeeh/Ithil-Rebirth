@@ -136,8 +136,8 @@ export default class DataObserver{
         this.clientLobbyReports.clear();
         this.clientPlayerStatuses.clear();
 
-        this.database.writePlayerStatusBulk(statuses);
-        this.database.writeReport(reports);
+        if(reports.length > 0) this.database.writePlayerStatusBulk(statuses);
+        if(statuses.length > 0)this.database.writeReport(reports);
     }
 
     /**

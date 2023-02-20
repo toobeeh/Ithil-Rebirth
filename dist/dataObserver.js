@@ -92,8 +92,10 @@ class DataObserver {
         let statuses = [...this.clientPlayerStatuses.entries()].map(e => ({ session: e[0], status: e[1] }));
         this.clientLobbyReports.clear();
         this.clientPlayerStatuses.clear();
-        this.database.writePlayerStatusBulk(statuses);
-        this.database.writeReport(reports);
+        if (reports.length > 0)
+            this.database.writePlayerStatusBulk(statuses);
+        if (statuses.length > 0)
+            this.database.writeReport(reports);
     }
     /**
      * Start data observation
