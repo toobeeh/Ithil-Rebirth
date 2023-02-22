@@ -139,6 +139,7 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
         };
         workerSocketServer.volatile.to("playing").emit(ithilSocketServer.eventNames.clearDrop, dropClearData);
     };
+    ipcClient.onNextDropReceived = () => console.log("Drop received timestamp: " + Date.now());
     // listen to ipc drop rank event when a drop raking was generated
     ipcClient.onDropRank = (data) => {
         const dropRankData = {

@@ -51,7 +51,11 @@ class Drops {
                 let dispatchStats;
                 const claimBuffer = [];
                 const listenStartTimestamp = Date.now();
-                this.ipcServer.onDropClaim = data => claimBuffer.push(data);
+                this.ipcServer.onDropClaim = data => {
+                    console.log("claim for ticket " + data.claimTicket);
+                    data.workerMasterDelay = (data.workerMasterDelay - Date.now()) * -1;
+                    claimBuffer.push(data);
+                };
                 this.ipcServer.onDropDispatched = data => dispatchStats = data;
                 this.ipcServer.broadcastNextDrop({ dropID: nextDrop.DropID, eventDropID: nextDrop.EventDropID.toString() });
                 // poll until dispatch data is set
@@ -134,7 +138,8 @@ class Drops {
                             + `- individual dispatch position: #${dispatchStats.dispatchDelays.find(d => d.claimTicket == lastClaim?.claimTicket)?.claimTicket}&#013;&#010;`
                             + `- worker port/ID: ${claim.claim.workerPort}&#013;&#010;`
                             + `- worker eventloop latency: ${claim.claim.workerEventloopLatency}ms&#013;&#010;`
-                            + `- worker claim verify delay: ${claim.claim.claimVerifyDelay}ms
+                            + `- worker claim verify delay: ${claim.claim.claimVerifyDelay}ms`
+                            + `- worker to main delay: ${claim.claim.workerMasterDelay}ms
                         ">
                             ${claim.claim.username} (${claim.leagueWeight != 0 ? " 💎 " : ""}after ${Math.round(claim.claim.claimTimestamp - dispatchStats.dispatchTimestamp)}ms)
                         </abbr>`;

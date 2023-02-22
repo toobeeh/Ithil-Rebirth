@@ -58,6 +58,7 @@ export interface dropClaimEventdata {
     claimVerifyDelay: number;
     workerEventloopLatency: number;
     workerPort: number;
+    workerMasterDelay: number;
 }
 
 export interface lobbyReportEventdata {

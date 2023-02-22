@@ -804,7 +804,8 @@ export default class TypoClient {
             claimTimestamp: claimTimestamp,
             claimVerifyDelay: Date.now() - claimTimestamp,
             workerEventloopLatency: 0,
-            workerPort: 0
+            workerPort: 0,
+            workerMasterDelay: Date.now()
         };
         this.claimDropCallback(claimData);
     }

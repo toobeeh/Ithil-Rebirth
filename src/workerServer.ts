@@ -153,6 +153,8 @@ portscanner.findAPortNotInUse(
                 dropClearData
             );
         };
+
+        ipcClient.onNextDropReceived = () => console.log("Drop received timestamp: " + Date.now());
         
         // listen to ipc drop rank event when a drop raking was generated
         ipcClient.onDropRank = (data) => {
