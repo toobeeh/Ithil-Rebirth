@@ -95,6 +95,11 @@ export default class Drops {
                     // get the first claim and process it
                     lastClaim = claimBuffer.shift();
                     if (lastClaim && lastClaim.dropID == nextDrop.DropID) {
+
+                        if(lastClaim.claimTimestamp - dispatchStats.dispatchTimestamp < 300){
+                            console.log("rejected spam", lastClaim);
+                            continue;
+                        }
     
                         // get claimed drop and double-check if drop still valid
                         console.log("Shifted claim:", lastClaim);
