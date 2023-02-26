@@ -6,6 +6,7 @@ import * as ithilSocketServer from "./ithilSocketServer";
 import { dropClaimEventdata, lobbyReportEventdata, lobbyStatusEventdata } from './ipc';
 import fetch from 'make-fetch-happen';
 import { eventNames } from './ithilSocketServer';
+import PalantirDatabase from './database/mysql/palantirDatabase';
 
 
 interface cachedData<TData> {
@@ -31,7 +32,7 @@ function sp<TPromise>(promise: Promise<TPromise>) {
 export default class TypoClient {
 
     /** Async database access in separate worker */
-    palantirDatabaseWorker: ModuleThread<palantirDatabaseWorker>;
+    palantirDatabaseWorker: PalantirDatabase;
 
     /** Async image database access in separate worker */
     imageDatabaseWorker: ModuleThread<imageDatabaseWorker>;
@@ -179,7 +180,7 @@ export default class TypoClient {
     /** 
      * Init a new client with all member-related data and bound events 
      */
-    constructor(socket: ithilSocketServer.TypoSocketioClient, dbWorker: ModuleThread<palantirDatabaseWorker>, imageDbWorker: ModuleThread<imageDatabaseWorker>, memberInit: types.member, workerCache: types.workerCache) {
+    constructor(socket: ithilSocketServer.TypoSocketioClient, dbWorker: PalantirDatabase, imageDbWorker: ModuleThread<imageDatabaseWorker>, memberInit: types.member, workerCache: types.workerCache) {
         this.typosocket = socket;
         this.palantirDatabaseWorker = dbWorker;
         this.imageDatabaseWorker = imageDbWorker;
@@ -256,7 +257,7 @@ export default class TypoClient {
         this.imageDatabaseWorker.close();
         this.palantirDatabaseWorker.close();
         Thread.terminate(this.imageDatabaseWorker);
-        Thread.terminate(this.palantirDatabaseWorker);
+        this.palantirDatabaseWorker.close();
 
         console.log(this.username + " disconnected.");
     }

@@ -25,6 +25,7 @@ import { spawn, Worker } from "threads";
 import { IthilIPCClient } from './ipc';
 import TypoClient from "./typoClient";
 import portscanner from "portscanner";
+import PalantirDatabase from "./database/mysql/palantirDatabase";
 
 const config = require("../ecosystem.config").config;
 
@@ -212,9 +213,9 @@ portscanner.findAPortNotInUse(
                 if (loginResult.success) {
 
                     // spawn database workers
-                    const asyncPalantirDb = await spawn<palantirDatabaseWorker>(new Worker("./database/palantirDatabaseWorker"));
+                    const asyncPalantirDb = new PalantirDatabase();
+                    await asyncPalantirDb.open();
                     const asyncImageDb = await spawn<imageDatabaseWorker>(new Worker("./database/imageDatabaseWorker"));
-                    await asyncPalantirDb.init(config.palantirDbPath);     
                     await asyncImageDb.init(loginResult.result.login.toString(), config.imageDbParentPath);
 
                     const memberResult = await asyncPalantirDb.getUserByLogin(loginResult.result.login);

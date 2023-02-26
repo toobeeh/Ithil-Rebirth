@@ -25,15 +25,14 @@ const drops_1 = __importDefault(require("./drops"));
 const ipc_1 = require("./ipc");
 const dataObserver_1 = __importDefault(require("./dataObserver"));
 const statDatabase_1 = __importDefault(require("./database/statDatabase"));
-const palantirDatabase_1 = __importDefault(require("./database/palantirDatabase"));
-const threads_1 = require("threads");
+const palantirDatabase_1 = __importDefault(require("./database/mysql/palantirDatabase"));
 const config = require("../ecosystem.config").config;
 // async setup
 async function setup() {
     /**
      * Palantir main database connection
      */
-    const palantirDb = new palantirDatabase_1.default(config.palantirDbPath);
+    const palantirDb = new palantirDatabase_1.default();
     /**
      * Statistics database for logging user count
      */
@@ -95,10 +94,8 @@ async function setup() {
         });
     });
     // start drops
-    const dropDbWorker = await (0, threads_1.spawn)(new threads_1.Worker("./database/palantirDatabaseWorker"));
-    await dropDbWorker.init(config.palantirDbPath);
     /** Drop handler that conatisn all drop logic and handling */
-    const dropHandler = new drops_1.default(dropDbWorker, ipcServer); // lgtm [js/unused-local-variable]
+    const dropHandler = new drops_1.default(palantirDb, ipcServer); // lgtm [js/unused-local-variable]
     console.log("all done");
 }
 setup();

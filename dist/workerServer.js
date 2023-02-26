@@ -44,6 +44,7 @@ const threads_1 = require("threads");
 const ipc_1 = require("./ipc");
 const typoClient_1 = __importDefault(require("./typoClient"));
 const portscanner_1 = __importDefault(require("portscanner"));
+const palantirDatabase_1 = __importDefault(require("./database/mysql/palantirDatabase"));
 const config = require("../ecosystem.config").config;
 // disable listener limit - bug in threads.js described here:https://github.com/andywer/threads.js/issues/312
 //require('events').EventEmitter.defaultMaxListeners = 0;
@@ -182,9 +183,9 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
             // if login succeeded, create a typo client and enable further events
             if (loginResult.success) {
                 // spawn database workers
-                const asyncPalantirDb = await (0, threads_1.spawn)(new threads_1.Worker("./database/palantirDatabaseWorker"));
+                const asyncPalantirDb = new palantirDatabase_1.default();
+                await asyncPalantirDb.open();
                 const asyncImageDb = await (0, threads_1.spawn)(new threads_1.Worker("./database/imageDatabaseWorker"));
-                await asyncPalantirDb.init(config.palantirDbPath);
                 await asyncImageDb.init(loginResult.result.login.toString(), config.imageDbParentPath);
                 const memberResult = await asyncPalantirDb.getUserByLogin(loginResult.result.login);
                 const client = new typoClient_1.default(clientSocket, asyncPalantirDb, asyncImageDb, memberResult.result, workerCache);

@@ -1,8 +1,9 @@
-import { palantirDatabaseWorker } from './database/palantirDatabaseWorker';
 import { ModuleThread } from "threads";
 import * as ipc from './ipc';
 import * as types from "./database/types";
 import fetch from 'make-fetch-happen';
+import PalantirDatabase from "./database/mysql/palantirDatabase";
+import { NextDrop } from "./database/mysql/schema";
 
 /**
  * Class that observes drops and processes/creates all needed events
@@ -11,7 +12,7 @@ export default class Drops {
     /**
      * Instance of a palantir db worker thread
      */
-    db: ModuleThread<palantirDatabaseWorker>;
+    db: PalantirDatabase;
 
     /**
      * Instance of a ipc server that is used to listen to and emit events
@@ -30,7 +31,7 @@ export default class Drops {
      * @param db Palantir DB worker thread
      * @param ipcServer IPC Main Server
      */
-    constructor(db: ModuleThread<palantirDatabaseWorker>, ipcServer: ipc.IthilIPCServer) {
+    constructor(db: PalantirDatabase, ipcServer: ipc.IthilIPCServer) {
         this.db = db;
         this.ipcServer = ipcServer;
 
@@ -45,7 +46,7 @@ export default class Drops {
         while (true) {
             try{
                 let nextTimeout: number | null = null;
-                let nextDrop: types.drop | null = null;
+                let nextDrop: NextDrop | null = null;
     
                 // poll for next drop
                 while (!nextTimeout || nextTimeout < 0 || !nextDrop) {

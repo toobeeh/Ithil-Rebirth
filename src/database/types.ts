@@ -1,3 +1,5 @@
+import { EventDrops } from "./mysql/schema";
+
 /**
  * The result of a database query
  */
@@ -292,7 +294,7 @@ export interface activeGuildLobbies{
     /**
     * The scene ID
     */
-    EventDropID: number,
+    ID: number,
 
     /**
     * The scene's event ID
@@ -465,7 +467,7 @@ export interface spriteProperty {
     /**
     * An array of eventdrops
     */
-    drops: Array<drop>,
+    drops: Array<EventDrops>,
 
     /**
     * An array of sprites

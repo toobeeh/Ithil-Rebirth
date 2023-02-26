@@ -18,12 +18,11 @@
 import { IthilSocketioServer } from './ithilSocketServer';
 import Balancer from './balancer';
 import Drops from './drops';
-import { palantirDatabaseWorker } from './database/palantirDatabaseWorker';
 import { IthilIPCServer } from './ipc';
 import DataObserver from './dataObserver';
 import StatDb from "./database/statDatabase";
-import PalantirDatabase from './database/palantirDatabase';
 import { spawn, Worker } from "threads";
+import PalantirDatabase from './database/mysql/palantirDatabase';
 
 const config = require("../ecosystem.config").config;
 
@@ -33,7 +32,7 @@ async function setup(){
     /**
      * Palantir main database connection
      */
-    const palantirDb = new PalantirDatabase(config.palantirDbPath);
+    const palantirDb = new PalantirDatabase();
 
     /** 
      * Statistics database for logging user count 
@@ -112,11 +111,9 @@ async function setup(){
     });
     
     // start drops
-    const dropDbWorker = await spawn<palantirDatabaseWorker>(new Worker("./database/palantirDatabaseWorker"));
-    await dropDbWorker.init(config.palantirDbPath);
 
     /** Drop handler that conatisn all drop logic and handling */
-    const dropHandler = new Drops(dropDbWorker, ipcServer); // lgtm [js/unused-local-variable]
+    const dropHandler = new Drops(palantirDb, ipcServer); // lgtm [js/unused-local-variable]
     
     console.log("all done");
 }

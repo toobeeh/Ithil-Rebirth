@@ -192,7 +192,7 @@ class TypoClient {
         this.imageDatabaseWorker.close();
         this.palantirDatabaseWorker.close();
         threads_1.Thread.terminate(this.imageDatabaseWorker);
-        threads_1.Thread.terminate(this.palantirDatabaseWorker);
+        this.palantirDatabaseWorker.close();
         console.log(this.username + " disconnected.");
     }
     /**

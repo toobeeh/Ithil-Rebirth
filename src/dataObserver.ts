@@ -1,4 +1,4 @@
-import PalantirDatabase from "./database/palantirDatabase";
+import PalantirDatabase from "./database/mysql/palantirDatabase";
 import * as types from "./database/types";
 
 /**
@@ -95,8 +95,8 @@ export default class DataObserver{
     /**
      * Checks for changes in active lobbies and invoke callback if set
      */
-    refreshActiveLobbies(){
-        let dbResult = this.database.getActiveLobbies();
+    async refreshActiveLobbies(){
+        let dbResult = await this.database.getActiveLobbies();
         if(dbResult.success && dbResult.result != null){
             if(JSON.stringify(this.activeLobbies) != JSON.stringify(dbResult.result)
                 && this.onActiveLobbiesChanged){
@@ -109,8 +109,8 @@ export default class DataObserver{
     /**
      * Checks for changes in public data and invoke callback if set
      */
-    refreshPublicData(){
-        let dbResult = this.database.getPublicData();
+    async refreshPublicData(){
+        let dbResult = await this.database.getPublicData();
         if(dbResult.success && dbResult.result != null){
             if((JSON.stringify(this.publicData.onlineScenes) != JSON.stringify(dbResult.result.onlineScenes) 
                 || JSON.stringify(this.publicData.onlineSprites) != JSON.stringify(dbResult.result.onlineSprites)
@@ -125,19 +125,19 @@ export default class DataObserver{
     /**
      * Clears volatile data in the database
      */
-    clearVolatile() {
-        this.database.clearVolatile();
+    async clearVolatile() {
+        await this.database.clearVolatile();
     }
     
-    writeClientReports(){
+    async writeClientReports(){
         let reports = [...this.clientLobbyReports.values()].flat();
         let statuses = [...this.clientPlayerStatuses.entries()].map(e => ({session: e[0], status: e[1]}));
 
         this.clientLobbyReports.clear();
         this.clientPlayerStatuses.clear();
 
-        if(reports.length > 0) this.database.writePlayerStatusBulk(statuses);
-        if(statuses.length > 0)this.database.writeReport(reports);
+        if(reports.length > 0) await this.database.writePlayerStatusBulk(statuses);
+        if(statuses.length > 0) await this.database.writeReport(reports);
     }
 
     /**
