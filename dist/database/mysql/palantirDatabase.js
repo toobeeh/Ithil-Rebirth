@@ -300,7 +300,7 @@ class PalantirDatabase {
     async writeReport(lobbies) {
         let success = false;
         try {
-            let query = "REPLACE INTO Reports VALUES " + lobbies.map(s => "(?,?,?,Date < CURRENT_TIMESTAMP)").join(", ");
+            let query = "REPLACE INTO Reports VALUES " + lobbies.map(s => "(?,?,?, CURRENT_TIMESTAMP)").join(", ");
             let params = lobbies.map(lobby => [lobby.ID, lobby.ObserveToken, JSON.stringify(lobby)]).flat();
             await this.get(query, params);
             success = true;
