@@ -37,7 +37,8 @@ module.exports = {
         palantirDbPath: '/home/pi/Database/palantir.db',
         statDbPath: '/home/pi/Database/typoStats.db',
         imageDbParentPath: '/home/pi/Database/imagedb/',
-        dbUser: "palantir",
+        dbUser: "ithil",
+        dbHost: "localhost",
         dbPassword: ""
     }
 };

@@ -34,9 +34,9 @@ class PalantirDatabase {
         else
             throw new Error("db not connected");
     }
-    async open(user, password) {
+    async open(user, password, host) {
         this._db = await mysql2.createConnection({
-            host: "192.168.0.20",
+            host: host,
             user: user,
             password: password != "" ? password : undefined,
             database: "palantir"

@@ -184,7 +184,7 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
             if (loginResult.success) {
                 // spawn database workers
                 const asyncPalantirDb = new palantirDatabase_1.default();
-                await asyncPalantirDb.open(config.dbUser, config.dbPassword);
+                await asyncPalantirDb.open(config.dbUser, config.dbPassword, config.dbHost);
                 const asyncImageDb = await (0, threads_1.spawn)(new threads_1.Worker("./database/imageDatabaseWorker"));
                 await asyncImageDb.init(loginResult.result.login.toString(), config.imageDbParentPath);
                 const memberResult = await asyncPalantirDb.getUserByLogin(loginResult.result.login);
