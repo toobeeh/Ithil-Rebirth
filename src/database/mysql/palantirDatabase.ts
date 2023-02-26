@@ -269,7 +269,7 @@ class PalantirDatabase {
         result.result = { found: false, lobby: null };
         try {
             if (indicator == "key") {
-                let rows = await this.get<schema.Lobbies>("SELECT * FROM LOBBIES", []);
+                let rows = await this.get<schema.Lobbies>("SELECT * FROM Lobbies", []);
                 // iterate through lobbies and check if lobby kay matches
                 for (const row of rows) {
                     let lobby: types.palantirLobby = JSON.parse(row.Lobby);
