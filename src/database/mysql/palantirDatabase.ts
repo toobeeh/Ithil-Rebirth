@@ -304,7 +304,7 @@ class PalantirDatabase {
         let success = false;
         try {
             
-            let query = "REPLACE INTO Reports VALUES " + lobbies.map(s => "(?,?,?,datetime('now'))").join(", ");
+            let query = "REPLACE INTO Reports VALUES " + lobbies.map(s => "(?,?,?,Date < CURRENT_TIMESTAMP)").join(", ");
             let params = lobbies.map(lobby => [lobby.ID, lobby.ObserveToken, JSON.stringify(lobby)]).flat();
 
             await this.get<schema.Lobbies>(query, params);
@@ -325,7 +325,7 @@ class PalantirDatabase {
     async writePlayerStatusBulk(statuses: Array<{session: string, status: types.playerStatus}>) {
         let success = false;
         try {
-            let query = "REPLACE INTO Status VALUES " + statuses.map(s => "(?, ?, datetime('now'))").join(", ");
+            let query = "REPLACE INTO Status VALUES " + statuses.map(s => "(?, ?, CURRENT_TIMESTAMP)").join(", ");
             let params = statuses.map(s => [s.session, JSON.stringify(s.status)]).flat();
             this.get<schema.Status>(query, params);
             success = true;
@@ -343,10 +343,10 @@ class PalantirDatabase {
     async clearVolatile() {
         let success = false;
         try {
-            await this.get("DELETE FROM Reports WHERE Date < datetime('now', '-30 seconds')", []);
-            await this.get("DELETE FROM Status WHERE Date < datetime('now', '-10 seconds')", []);
-            await this.get("DELETE FROM OnlineSprites WHERE Date < datetime('now', '-30 seconds')", []);
-            await this.get("DELETE FROM OnlineItems WHERE DATETIME(Date, 'unixepoch') < datetime('now', '-30 seconds')", []);
+            await this.get("DELETE FROM Reports WHERE Date < DATE_ADD(CURRENT_TIMESTAMP, INTERVAL -30 SECOND)", []);
+            await this.get("DELETE FROM Status WHERE Date < DATE_ADD(CURRENT_TIMESTAMP, INTERVAL -10 SECOND)", []);
+            await this.get("DELETE FROM OnlineSprites WHERE Date < DATE_ADD(CURRENT_TIMESTAMP, INTERVAL -30 SECOND)", []);
+            await this.get("DELETE FROM OnlineItems WHERE FROM_UNIXTIME(Date) < Date < DATE_ADD(CURRENT_TIMESTAMP, INTERVAL -30 SECOND)", []);
             await this.get("DELETE From Lobbies WHERE json_extract(Lobby, '$.ID') NOT IN (SELECT DISTINCT json_extract(Status, '$.LobbyID') from Status WHERE json_extract(Status, '$.LobbyID') IS NOT NULL) AND " + Date.now() + " - LobbyID > 60000;", []);
 
             // delete duplicate keys with different IDs
