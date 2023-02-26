@@ -33,6 +33,7 @@ async function setup(){
      * Palantir main database connection
      */
     const palantirDb = new PalantirDatabase();
+    await palantirDb.open();
 
     /** 
      * Statistics database for logging user count 
