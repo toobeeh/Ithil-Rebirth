@@ -52,7 +52,7 @@ class PalantirDatabase {
     }
 
     async update<TTable>(query: string, values: any[]){
-        let [rows, fields] = await this.db.query<Array<TTable & OkPacket>>(query, values);
+        let [rows, fields] = await this.db.execute<Array<TTable & OkPacket>>(query, values);
         return rows[0];
     }
 

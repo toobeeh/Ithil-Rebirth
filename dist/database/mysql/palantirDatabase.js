@@ -63,7 +63,7 @@ class PalantirDatabase {
         return rows;
     }
     async update(query, values) {
-        let [rows, fields] = await this.db.query(query, values);
+        let [rows, fields] = await this.db.execute(query, values);
         return rows[0];
     }
     async first(query, values) {
