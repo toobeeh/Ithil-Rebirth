@@ -180,7 +180,7 @@ class PalantirDatabase {
         let result = this.emptyResult<Array<types.activeGuildLobbies>>();
 
         try {
-            let rows = await this.get<schema.GuildLobbies>(`SELECT '"' || GuildID || '"' as GuildID, Lobbies FROM GuildLobbies`, []);
+            let rows = await this.get<schema.GuildLobbies>(`SELECT CONCAT('"', GuildID, '"') as GuildID, Lobbies FROM GuildLobbies`, []);
             result.result = [];
             rows.forEach(row => {
                 try {

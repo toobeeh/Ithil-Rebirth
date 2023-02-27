@@ -183,7 +183,7 @@ class PalantirDatabase {
     async getActiveLobbies() {
         let result = this.emptyResult();
         try {
-            let rows = await this.get(`SELECT '"' || GuildID || '"' as GuildID, Lobbies FROM GuildLobbies`, []);
+            let rows = await this.get(`SELECT CONCAT('"', GuildID, '"') as GuildID, Lobbies FROM GuildLobbies`, []);
             result.result = [];
             rows.forEach(row => {
                 try {
