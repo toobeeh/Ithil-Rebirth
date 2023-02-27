@@ -63,8 +63,8 @@ class PalantirDatabase {
         return rows;
     }
     async update(query, values) {
-        let [rows, fields] = await this.db.execute(query, values);
-        return rows[0];
+        let [results, fields] = await this.db.query(query, values);
+        return results;
     }
     async first(query, values) {
         let results = await this.get(query, values);
@@ -152,7 +152,7 @@ class PalantirDatabase {
     async setUserScenes(login, scenes) {
         let result = false;
         try {
-            await this.get("UPDATE Members SET Scenes = ? WHERE Login = ?", [scenes, login]);
+            await this.update("UPDATE Members SET Scenes = ? WHERE Login = ?", [scenes, login]);
             result = true;
         }
         catch (e) {
@@ -168,7 +168,7 @@ class PalantirDatabase {
     async setUserSprites(login, sprites) {
         let result = false;
         try {
-            await this.get("UPDATE Members SET Sprites = ? WHERE Login = ?", [sprites, login]);
+            await this.update("UPDATE Members SET Sprites = ? WHERE Login = ?", [sprites, login]);
             result = true;
         }
         catch (e) {
@@ -249,7 +249,7 @@ class PalantirDatabase {
     async setLobby(id, key, description = "", restriction = "") {
         let success = false;
         try {
-            await this.get("REPLACE INTO Lobbies VALUES(?,?)", [id, JSON.stringify({ ID: id, Key: key, Description: description, Restriction: restriction })]);
+            await this.update("REPLACE INTO Lobbies VALUES(?,?)", [id, JSON.stringify({ ID: id, Key: key, Description: description, Restriction: restriction })]);
             success = true;
         }
         catch (e) {
@@ -302,7 +302,7 @@ class PalantirDatabase {
         try {
             let query = "REPLACE INTO Reports VALUES " + lobbies.map(s => "(?,?,?, CURRENT_TIMESTAMP)").join(", ");
             let params = lobbies.map(lobby => [lobby.ID, lobby.ObserveToken, JSON.stringify(lobby)]).flat();
-            await this.get(query, params);
+            await this.update(query, params);
             success = true;
         }
         catch (e) {
@@ -321,7 +321,7 @@ class PalantirDatabase {
         try {
             let query = "REPLACE INTO Status VALUES " + statuses.map(s => "(?, ?, CURRENT_TIMESTAMP)").join(", ");
             let params = statuses.map(s => [s.session, JSON.stringify(s.status)]).flat();
-            this.get(query, params);
+            this.update(query, params);
             success = true;
         }
         catch (e) {
@@ -389,8 +389,8 @@ class PalantirDatabase {
         try {
             // get drop
             if (leagueweight == 0)
-                this.get("UPDATE NextDrop SET CaughtLobbyKey = ?, CaughtLobbyPlayerID = ? WHERE DropID = ?", [lobbyKey, playerName, dropID]);
-            await this.get("INSERT INTO PastDrops VALUES (?, ?, ?, ?, ?, ?)", [dropID, lobbyKey, userid, dropOrigin.ValidFrom, dropOrigin.EventDropID, leagueweight]);
+                this.update("UPDATE NextDrop SET CaughtLobbyKey = ?, CaughtLobbyPlayerID = ? WHERE DropID = ?", [lobbyKey, playerName, dropID]);
+            await this.update("INSERT INTO PastDrops VALUES (?, ?, ?, ?, ?, ?)", [dropID, lobbyKey, userid, dropOrigin.ValidFrom, dropOrigin.EventDropID, leagueweight]);
             //this.db.prepare("UPDATE PastDrops SET CaughtLobbyPlayerID = ?, CaughtLobbyKey = ?, LeagueWeight = ? WHERE DropID = ?").run(userid, lobbyKey, leagueweight, dropID);
             // if league drop, free up for next claim
             //if(leagueweight > 0) this.db.prepare("UPDATE 'Drop' SET CaughtLobbyKey = '', CaughtLobbyPlayerID = '' WHERE DropID = ?").run(dropID);
@@ -434,7 +434,7 @@ class PalantirDatabase {
     async isPalantirLobbyOwner(lobbyID, lobbyPlayerID) {
         let result = this.emptyResult();
         try {
-            let lobbyplayers = await this.get("select json_extract(Status, '$.LobbyPlayerID') as playerid from Status where json_extract(Status, '$.LobbyID') = ?", [lobbyID]);
+            let lobbyplayers = await this.get("SELECT json_extract(Status, '$.LobbyPlayerID') as playerid from Status where json_extract(Status, '$.LobbyID') = ?", [lobbyID]);
             result.result.owner = !lobbyplayers.some(player => Number(player.playerid) < lobbyPlayerID);
             if (lobbyplayers.length > 0)
                 result.result.ownerID = lobbyplayers.sort((a, b) => a.playerid - b.playerid)[0].playerid;
