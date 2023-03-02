@@ -35,6 +35,13 @@ async function setup(){
     const palantirDb = new PalantirDatabase();
     await palantirDb.open(config.dbUser, config.dbPassword, config.dbHost);
 
+    
+    /**
+     * Palantir public data database connection
+     */
+    const dataDb = new PalantirDatabase();
+    await dataDb.open(config.dbUser, config.dbPassword, config.dbHost);
+
     /** 
      * Statistics database for logging user count 
      */
@@ -53,7 +60,7 @@ async function setup(){
     /**
      * Data observer that broadcasts shared data to all workers os they dont have to fetch from the db
      */
-    const dataObserver = new DataObserver(palantirDb);
+    const dataObserver = new DataObserver(dataDb);
     dataObserver.observe();
     
     // add callbacks to ipc balancer events
