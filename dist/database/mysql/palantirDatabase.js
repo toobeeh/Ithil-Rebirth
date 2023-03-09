@@ -128,7 +128,7 @@ class PalantirDatabase {
     async getLoginFromAccessToken(accessToken, silent) {
         let result = this.emptyResult();
         try {
-            let row = await this.first("SELECT * FROM AccessTokens WHERE AccessToken = '?'", [accessToken]);
+            let row = await this.first("SELECT * FROM AccessTokens WHERE AccessToken = ?", [accessToken]);
             if (!row)
                 throw new Error("no token found");
             result.result = {

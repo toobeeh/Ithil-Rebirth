@@ -121,7 +121,7 @@ class PalantirDatabase {
         let result = this.emptyResult<types.accessToken>();
 
         try {
-            let row = await this.first<schema.AccessTokens>("SELECT * FROM AccessTokens WHERE AccessToken = '?'", [accessToken]);
+            let row = await this.first<schema.AccessTokens>("SELECT * FROM AccessTokens WHERE AccessToken = ?", [accessToken]);
             if (!row) throw new Error("no token found");
             result.result = {
                 accessToken: row.AccessToken,
