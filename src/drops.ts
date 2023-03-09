@@ -97,7 +97,7 @@ export default class Drops {
                     lastClaim = claimBuffer.shift();
                     if (lastClaim && lastClaim.dropID == nextDrop.DropID) {
 
-                        if(lastClaim.claimTimestamp - dispatchStats.dispatchTimestamp < 300){
+                        if(lastClaim.claimTimestamp - dispatchStats.dispatchTimestamp < 250){
                             console.log("rejected spam", lastClaim);
                             continue;
                         }

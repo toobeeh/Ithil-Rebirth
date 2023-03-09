@@ -13,13 +13,13 @@ class PalantirDatabase {
      * The Sqlite3 database object
      */
     _db?: mysql2.Connection;
-    
-    private get db(){
-        if(this._db) return this._db;
+
+    private get db() {
+        if (this._db) return this._db;
         else throw new Error("db not connected");
     }
 
-    async open(user: string, password: string, host: string){
+    async open(user: string, password: string, host: string) {
         this._db = await mysql2.createConnection({
             host: host,
             user: user,
@@ -41,24 +41,24 @@ class PalantirDatabase {
     emptyResult<Type>() {
         let empty: types.dbResult<Type> = {
             success: false,
-            result: { } as Type
+            result: {} as Type
         }
         return empty;
     }
 
-    async get<TTable>(query: string, values: any[]){
+    async get<TTable>(query: string, values: any[]) {
         let [rows, fields] = await this.db.query<Array<TTable & RowDataPacket>>(query, values);
         return rows;
     }
 
-    async update(query: string, values: any[]){
+    async update(query: string, values: any[]) {
         let [results, fields] = await this.db.query<OkPacket>(query, values);
         return results;
     }
 
-    async first<TTable>(query: string, values: any[]){
+    async first<TTable>(query: string, values: any[]) {
         let results = await this.get<TTable>(query, values);
-        if(results.length > 0) return results[0];
+        if (results.length > 0) return results[0];
         else return null;
     }
 
@@ -71,7 +71,7 @@ class PalantirDatabase {
         let result = this.emptyResult<types.member>();
         try {
             let row = await this.first<schema.Members>("SELECT * FROM Members WHERE Login = ?", [login]);
-            if(!row) throw new Error("no member found");
+            if (!row) throw new Error("no member found");
             result.result = {
                 member: JSON.parse(row.Member),
                 bubbles: Number(row.Bubbles),
@@ -99,7 +99,7 @@ class PalantirDatabase {
             result.result.drops += Math.floor(weight / 100);
 
             /* get webhooks */
-            for(const guild of result.result.member.Guilds) {
+            for (const guild of result.result.member.Guilds) {
                 const guildHooks = await this.getServerWebhooks(guild.GuildID, true);
                 result.result.webhooks = result.result.webhooks.concat(...guildHooks.result);
             }
@@ -121,8 +121,8 @@ class PalantirDatabase {
         let result = this.emptyResult<types.accessToken>();
 
         try {
-            let row = await this.first<schema.AccessTokens>("SELECT * FROM AccessTokens WHERE AccessToken = ?", [accessToken]);
-            if(!row) throw new Error("no token found");
+            let row = await this.first<schema.AccessTokens>("SELECT * FROM AccessTokens WHERE AccessToken = '?'", [accessToken]);
+            if (!row) throw new Error("no token found");
             result.result = {
                 accessToken: row.AccessToken,
                 login: row.Login,
@@ -131,7 +131,7 @@ class PalantirDatabase {
             result.success = true;
         }
         catch (e) {
-            if(!silent) console.warn("Error in query: ", e);
+            if (!silent) console.warn("Error in query: ", e);
         }
         return result;
     }
@@ -221,15 +221,15 @@ class PalantirDatabase {
 
             // get online items
             let now = Math.round(Date.now() / 1000)
-            const onlineitems = await this.get<schema.OnlineItems>("SELECT * FROM OnlineItems WHERE Date > " + (now-25).toString() + "", []);
+            const onlineitems = await this.get<schema.OnlineItems>("SELECT * FROM OnlineItems WHERE Date > " + (now - 25).toString() + "", []);
 
             result.result = {
-                drops: eventdrops.map(d => ({EventDropID: d.EventDropID, EventID: d.EventID, Name: d.Name, URL: d.URL})),
+                drops: eventdrops.map(d => ({ EventDropID: d.EventDropID, EventID: d.EventID, Name: d.Name, URL: d.URL })),
                 onlineSprites: onlinesprites,
                 onlineScenes: onlinescenes,
                 onlineItems: onlineitems,
                 sprites: sprites as Array<types.sprite>,
-                scenes: scenes.map(s => { if(!s.GuessedColor) s.GuessedColor = ""; return s as types.scene; })
+                scenes: scenes.map(s => { if (!s.GuessedColor) s.GuessedColor = ""; return s as types.scene; })
             };
             result.success = true;
         }
@@ -303,7 +303,7 @@ class PalantirDatabase {
     async writeReport(lobbies: Array<types.guildLobby>) {
         let success = false;
         try {
-            
+
             let query = "REPLACE INTO Reports VALUES " + lobbies.map(s => "(?,?,?, CURRENT_TIMESTAMP)").join(", ");
             let params = lobbies.map(lobby => [lobby.ID, lobby.ObserveToken, JSON.stringify(lobby)]).flat();
 
@@ -322,7 +322,7 @@ class PalantirDatabase {
       * @param key The session id of the status
       * @returns Indicator if the query succeeded
       */
-    async writePlayerStatusBulk(statuses: Array<{session: string, status: types.playerStatus}>) {
+    async writePlayerStatusBulk(statuses: Array<{ session: string, status: types.playerStatus }>) {
         let success = false;
         try {
             let query = "REPLACE INTO Status VALUES " + statuses.map(s => "(?, ?, CURRENT_TIMESTAMP)").join(", ");
@@ -347,10 +347,10 @@ class PalantirDatabase {
             await this.get("DELETE FROM Status WHERE Date < DATE_ADD(CURRENT_TIMESTAMP, INTERVAL -10 SECOND)", []);
             await this.get("DELETE FROM OnlineSprites WHERE Date < DATE_ADD(CURRENT_TIMESTAMP, INTERVAL -30 SECOND)", []);
             await this.get("DELETE FROM OnlineItems WHERE FROM_UNIXTIME(Date) < DATE_ADD(CURRENT_TIMESTAMP, INTERVAL -30 SECOND)", []);
-            await this.get("DELETE FROM Lobbies WHERE json_extract(Lobby, '$.ID') NOT IN (SELECT DISTINCT json_extract(Status, '$.LobbyID') FROM Status WHERE json_extract(Status, '$.LobbyID') IS NOT NULL) AND FROM_UNIXTIME(LobbyID / 1000) < DATE_ADD(CURRENT_TIMESTAMP, INTERVAL -60 SECOND);", []);
+            await this.get("DELETE FROM Lobbies WHERE json_extract(Lobby, '$.ID') NOT IN (SELECT DISTINCT json_extract(Status, '$.LobbyID') FROM Status WHERE json_extract(Status, '$.LobbyID') IS NOT NULL) AND FROM_UNIXTIME(LobbyID / 1000) < DATE_ADD(CURRENT_TIMESTAMP, INTERVAL -24 HOUR);", []);
 
             // delete duplicate keys with different IDs
-            let lobbies = await this.get<{LobbyID: string, LobbyKey: string}>("SELECT LobbyID, json_extract(Lobby, '$.Key') as LobbyKey FROM Lobbies", []);
+            let lobbies = await this.get<{ LobbyID: string, LobbyKey: string }>("SELECT LobbyID, json_extract(Lobby, '$.Key') as LobbyKey FROM Lobbies", []);
             lobbies.forEach(async (lobby, index) => {
                 if (lobbies.findIndex(unique => lobby.LobbyKey == unique.LobbyKey) != index && lobby.LobbyKey.indexOf("https") < 0) {
                     console.log("dupe found:" + lobby.LobbyKey + lobby.LobbyID);
@@ -374,7 +374,7 @@ class PalantirDatabase {
         let result = this.emptyResult<schema.NextDrop | null>();
         try {
             // get drop
-            let drop = id != "" ? 
+            let drop = id != "" ?
                 await this.first<schema.NextDrop>("SELECT * FROM NextDrop WHERE DropID = ?", [id]) :
                 await this.first<schema.NextDrop>("SELECT * FROM NextDrop", []);
             result.success = true;
@@ -398,7 +398,7 @@ class PalantirDatabase {
         let success = false;
         try {
             // get drop
-            if(leagueweight == 0) this.update("UPDATE NextDrop SET CaughtLobbyKey = ?, CaughtLobbyPlayerID = ? WHERE DropID = ?", [lobbyKey, playerName, dropID]);
+            if (leagueweight == 0) this.update("UPDATE NextDrop SET CaughtLobbyKey = ?, CaughtLobbyPlayerID = ? WHERE DropID = ?", [lobbyKey, playerName, dropID]);
             await this.update("INSERT INTO PastDrops VALUES (?, ?, ?, ?, ?, ?)", [dropID, lobbyKey, userid, dropOrigin.ValidFrom, dropOrigin.EventDropID, leagueweight]);
             //this.db.prepare("UPDATE PastDrops SET CaughtLobbyPlayerID = ?, CaughtLobbyKey = ?, LeagueWeight = ? WHERE DropID = ?").run(userid, lobbyKey, leagueweight, dropID);
 
@@ -443,11 +443,11 @@ class PalantirDatabase {
       * @returns Indicator if the passed id is the owner as well as the actual owner id
       */
     async isPalantirLobbyOwner(lobbyID: string, lobbyPlayerID: number) {
-        let result = this.emptyResult<{owner: boolean | null, ownerID: number | null}>();
+        let result = this.emptyResult<{ owner: boolean | null, ownerID: number | null }>();
         try {
-            let lobbyplayers = await this.get<{playerid: number}>("SELECT json_extract(Status, '$.LobbyPlayerID') as playerid from Status where json_extract(Status, '$.LobbyID') = ?", [lobbyID]);
+            let lobbyplayers = await this.get<{ playerid: number }>("SELECT json_extract(Status, '$.LobbyPlayerID') as playerid from Status where json_extract(Status, '$.LobbyID') = ?", [lobbyID]);
             result.result.owner = !lobbyplayers.some(player => Number(player.playerid) < lobbyPlayerID);
-            if(lobbyplayers.length > 0) result.result.ownerID = lobbyplayers.sort((a,b) => a.playerid-b.playerid)[0].playerid;
+            if (lobbyplayers.length > 0) result.result.ownerID = lobbyplayers.sort((a, b) => a.playerid - b.playerid)[0].playerid;
             else {
 
                 // if there are no online players for this lobby, user is most likely owner and the status was not yet written 

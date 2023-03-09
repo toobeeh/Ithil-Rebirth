@@ -128,7 +128,7 @@ class PalantirDatabase {
     async getLoginFromAccessToken(accessToken, silent) {
         let result = this.emptyResult();
         try {
-            let row = await this.first("SELECT * FROM AccessTokens WHERE AccessToken = ?", [accessToken]);
+            let row = await this.first("SELECT * FROM AccessTokens WHERE AccessToken = '?'", [accessToken]);
             if (!row)
                 throw new Error("no token found");
             result.result = {
@@ -340,7 +340,7 @@ class PalantirDatabase {
             await this.get("DELETE FROM Status WHERE Date < DATE_ADD(CURRENT_TIMESTAMP, INTERVAL -10 SECOND)", []);
             await this.get("DELETE FROM OnlineSprites WHERE Date < DATE_ADD(CURRENT_TIMESTAMP, INTERVAL -30 SECOND)", []);
             await this.get("DELETE FROM OnlineItems WHERE FROM_UNIXTIME(Date) < DATE_ADD(CURRENT_TIMESTAMP, INTERVAL -30 SECOND)", []);
-            await this.get("DELETE FROM Lobbies WHERE json_extract(Lobby, '$.ID') NOT IN (SELECT DISTINCT json_extract(Status, '$.LobbyID') FROM Status WHERE json_extract(Status, '$.LobbyID') IS NOT NULL) AND FROM_UNIXTIME(LobbyID / 1000) < DATE_ADD(CURRENT_TIMESTAMP, INTERVAL -60 SECOND);", []);
+            await this.get("DELETE FROM Lobbies WHERE json_extract(Lobby, '$.ID') NOT IN (SELECT DISTINCT json_extract(Status, '$.LobbyID') FROM Status WHERE json_extract(Status, '$.LobbyID') IS NOT NULL) AND FROM_UNIXTIME(LobbyID / 1000) < DATE_ADD(CURRENT_TIMESTAMP, INTERVAL -24 HOUR);", []);
             // delete duplicate keys with different IDs
             let lobbies = await this.get("SELECT LobbyID, json_extract(Lobby, '$.Key') as LobbyKey FROM Lobbies", []);
             lobbies.forEach(async (lobby, index) => {
