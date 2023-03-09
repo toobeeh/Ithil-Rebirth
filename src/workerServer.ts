@@ -36,12 +36,12 @@ setInterval(() => {
     let ram = process.memoryUsage();
     let ramRss = Math.round(ram.rss / 1024 / 1024 * 100) / 100;
     let ramHeap = Math.round(ram.heapUsed / 1024 / 1024 * 100) / 100;
-    if ( maxRecordedRam * 1.05 < ramRss ) {
+    if (maxRecordedRam * 1.05 < ramRss) {
         // memory load is higher than the last recorded value + 5%
         maxRecordedRam = ramRss;
         console.log(
-                "RAM: " + ramRss + " MB (Heap: " + ramHeap + " MB)", 
-                "INFO"
+            "RAM: " + ramRss + " MB (Heap: " + ramHeap + " MB)",
+            "INFO"
         );
     }
 }, 5000);
@@ -79,8 +79,10 @@ portscanner.findAPortNotInUse(
         /**
          * Database worker to validate incoming member requests
          */
-        const databaseWorker = await spawn<palantirDatabaseWorker>(new Worker("./database/palantirDatabaseWorker"));
-        await databaseWorker.init(config.palantirDbPath);
+        /* const databaseWorker = await spawn<palantirDatabaseWorker>(new Worker("./database/palantirDatabaseWorker"));
+        await databaseWorker.init(config.palantirDbPath); */
+        const database = new PalantirDatabase();
+        await database.open(config.dbUser, config.dbPassword, config.dbHost);
 
         /**
          * The IPC connection to the main server
@@ -156,7 +158,7 @@ portscanner.findAPortNotInUse(
         };
 
         ipcClient.onNextDropReceived = () => console.log("Drop received timestamp: " + Date.now());
-        
+
         // listen to ipc drop rank event when a drop raking was generated
         ipcClient.onDropRank = (data) => {
             const dropRankData: ithilSocketServer.eventBase<ithilSocketServer.rankDropEventdata> = {
@@ -202,7 +204,7 @@ portscanner.findAPortNotInUse(
             clientSocket.subscribeLoginEvent(async (loginData) => {
 
                 // check if login data is valid
-                const loginResult = await databaseWorker.getLoginFromAccessToken(loginData.accessToken, true);
+                const loginResult = await database.getLoginFromAccessToken(loginData.accessToken, true);
                 const response: ithilSocketServer.loginResponseEventdata = {
                     authorized: false,
                     activeLobbies: [],
@@ -226,8 +228,8 @@ portscanner.findAPortNotInUse(
                         eventdata.workerPort = workerPort;
                         ipcClient.claimDrop?.(eventdata);
                     };
-                    client.reportLobbyCallback = eventdata => { ipcClient.sendLobbyReport?.(eventdata);}
-                    client.reportStatusCallback = eventdata => { ipcClient.sendLobbyStatus?.(eventdata);}
+                    client.reportLobbyCallback = eventdata => { ipcClient.sendLobbyReport?.(eventdata); }
+                    client.reportStatusCallback = eventdata => { ipcClient.sendLobbyStatus?.(eventdata); }
 
                     memberResult.result.member.Guilds.forEach(guild => clientSocket.socket.join("guild" + guild.GuildID));
 

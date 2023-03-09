@@ -84,8 +84,10 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
     /**
      * Database worker to validate incoming member requests
      */
-    const databaseWorker = await (0, threads_1.spawn)(new threads_1.Worker("./database/palantirDatabaseWorker"));
-    await databaseWorker.init(config.palantirDbPath);
+    /* const databaseWorker = await spawn<palantirDatabaseWorker>(new Worker("./database/palantirDatabaseWorker"));
+    await databaseWorker.init(config.palantirDbPath); */
+    const database = new palantirDatabase_1.default();
+    await database.open(config.dbUser, config.dbPassword, config.dbHost);
     /**
      * The IPC connection to the main server
      */
@@ -174,7 +176,7 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
         // listen for login event
         clientSocket.subscribeLoginEvent(async (loginData) => {
             // check if login data is valid
-            const loginResult = await databaseWorker.getLoginFromAccessToken(loginData.accessToken, true);
+            const loginResult = await database.getLoginFromAccessToken(loginData.accessToken, true);
             const response = {
                 authorized: false,
                 activeLobbies: [],
