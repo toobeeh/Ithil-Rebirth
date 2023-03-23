@@ -176,7 +176,7 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
         // listen for login event
         clientSocket.subscribeLoginEvent(async (loginData) => {
             // check if login data is valid
-            const loginResult = await database.getLoginFromAccessToken(loginData.accessToken, true);
+            const loginResult = await database.getLoginFromAccessToken(loginData.accessToken, false);
             const response = {
                 authorized: false,
                 activeLobbies: [],
