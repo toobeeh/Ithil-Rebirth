@@ -29,18 +29,27 @@ const mysql2 = __importStar(require("mysql2/promise"));
  */
 class PalantirDatabase {
     get db() {
-        if (this._db)
+        if (this._db) {
             return this._db;
+        }
         else
             throw new Error("db not connected");
     }
     async open(user, password, host) {
-        this._db = await mysql2.createConnection({
-            host: host,
-            user: user,
-            password: password != "" ? password : undefined,
-            database: "palantir"
-        });
+        if (this.openHandler)
+            throw new Error("db already opened");
+        this.openHandler = async () => {
+            this._db = await mysql2.createConnection({
+                host: host,
+                user: user,
+                password: password != "" ? password : undefined,
+                database: "palantir"
+            });
+            this._db.on("error", async () => {
+                await this.openHandler();
+            });
+        };
+        await this.openHandler();
     }
     /**
      * Close the db connection

@@ -15,17 +15,29 @@ class PalantirDatabase {
     _db?: mysql2.Connection;
 
     private get db() {
-        if (this._db) return this._db;
+        if (this._db) {
+            return this._db;
+        }
         else throw new Error("db not connected");
     }
 
+    private openHandler?: (() => void);
+
     async open(user: string, password: string, host: string) {
-        this._db = await mysql2.createConnection({
-            host: host,
-            user: user,
-            password: password != "" ? password : undefined,
-            database: "palantir"
-        });
+        if (this.openHandler) throw new Error("db already opened");
+
+        this.openHandler = async () => {
+            this._db = await mysql2.createConnection({
+                host: host,
+                user: user,
+                password: password != "" ? password : undefined,
+                database: "palantir"
+            });
+            this._db.on("error", async () => {
+                await this.openHandler!()
+            });
+        }
+        await this.openHandler();
     }
 
     /**
