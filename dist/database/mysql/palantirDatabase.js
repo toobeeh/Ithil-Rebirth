@@ -28,34 +28,27 @@ const mysql2 = __importStar(require("mysql2/promise"));
  * Palantir/Typo main db access
  */
 class PalantirDatabase {
-    get db() {
-        if (this._db) {
-            return this._db;
-        }
-        else
-            throw new Error("db not connected");
+    async open(user, password, host, poolSize = 5) {
+        this.pool = mysql2.createPool({
+            host: host,
+            user: user,
+            password: password != "" ? password : undefined,
+            database: "palantir",
+            connectionLimit: poolSize,
+            waitForConnections: true,
+            queueLimit: 0
+        });
     }
-    async open(user, password, host) {
-        if (this.openHandler)
-            throw new Error("db already opened");
-        this.openHandler = async () => {
-            this._db = await mysql2.createConnection({
-                host: host,
-                user: user,
-                password: password != "" ? password : undefined,
-                database: "palantir"
-            });
-            this._db.on("error", async () => {
-                await this.openHandler();
-            });
-        };
-        await this.openHandler();
+    async getConnection() {
+        if (!this.pool)
+            throw new Error("database pool has not been opened yet");
+        return await this.pool.getConnection();
     }
     /**
      * Close the db connection
      */
     close() {
-        this.db.destroy();
+        this.pool?.end();
     }
     /**
      * Generates an empty database result
@@ -68,11 +61,13 @@ class PalantirDatabase {
         return empty;
     }
     async get(query, values) {
-        let [rows, fields] = await this.db.query(query, values);
+        let conn = await this.getConnection();
+        let [rows, fields] = await conn.query(query, values);
         return rows;
     }
     async update(query, values) {
-        let [results, fields] = await this.db.query(query, values);
+        let conn = await this.getConnection();
+        let [results, fields] = await conn.query(query, values);
         return results;
     }
     async first(query, values) {

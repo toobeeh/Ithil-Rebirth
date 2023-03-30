@@ -10,41 +10,32 @@ import { OkPacket, RowDataPacket } from "mysql2/typings/mysql/lib/protocol/packe
  */
 class PalantirDatabase {
     /**
-     * The Sqlite3 database object
+     * The Sqlite3 database pool
      */
-    _db?: mysql2.Connection;
+    private pool?: mysql2.Pool;
 
-    private get db() {
-        if (this._db) {
-            return this._db;
-        }
-        else throw new Error("db not connected");
+    async open(user: string, password: string, host: string, poolSize: number = 5) {
+        this.pool = mysql2.createPool({
+            host: host,
+            user: user,
+            password: password != "" ? password : undefined,
+            database: "palantir",
+            connectionLimit: poolSize,
+            waitForConnections: true,
+            queueLimit: 0
+        });
     }
 
-    private openHandler?: (() => void);
-
-    async open(user: string, password: string, host: string) {
-        if (this.openHandler) throw new Error("db already opened");
-
-        this.openHandler = async () => {
-            this._db = await mysql2.createConnection({
-                host: host,
-                user: user,
-                password: password != "" ? password : undefined,
-                database: "palantir"
-            });
-            this._db.on("error", async () => {
-                await this.openHandler!()
-            });
-        }
-        await this.openHandler();
+    private async getConnection() {
+        if (!this.pool) throw new Error("database pool has not been opened yet");
+        return await this.pool.getConnection();
     }
 
     /**
      * Close the db connection
      */
     close() {
-        this.db.destroy();
+        this.pool?.end();
     }
 
     /**
@@ -59,12 +50,14 @@ class PalantirDatabase {
     }
 
     async get<TTable>(query: string, values: any[]) {
-        let [rows, fields] = await this.db.query<Array<TTable & RowDataPacket>>(query, values);
+        let conn = await this.getConnection();
+        let [rows, fields] = await conn.query<Array<TTable & RowDataPacket>>(query, values);
         return rows;
     }
 
     async update(query: string, values: any[]) {
-        let [results, fields] = await this.db.query<OkPacket>(query, values);
+        let conn = await this.getConnection();
+        let [results, fields] = await conn.query<OkPacket>(query, values);
         return results;
     }
 
