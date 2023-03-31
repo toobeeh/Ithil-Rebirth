@@ -21,78 +21,6 @@ function sp(promise) {
  */
 class TypoClient {
     /**
-     * Init a new client with all member-related data and bound events
-     */
-    constructor(socket, dbWorker, imageDbWorker, memberInit, workerCache) {
-        /** last posted webhook cache for rate-limiting */
-        this.lastPostedWebhooks = [];
-        this.memberCache = {};
-        /** callback to send a drop claim */
-        this.claimDropCallback = undefined;
-        /** callback to report the clients lobbies */
-        this.reportLobbyCallback = undefined;
-        /** callback to report the clients status */
-        this.reportStatusCallback = undefined;
-        this.typosocket = socket;
-        this.palantirDatabaseWorker = dbWorker;
-        this.imageDatabaseWorker = imageDbWorker;
-        this.workerCache = workerCache;
-        this.username = memberInit.member.UserName;
-        this.login = memberInit.member.UserLogin;
-        this.loginDate = Date.now();
-        // check banned
-        setImmediate(async () => {
-            if ((await this.flags).permaBan)
-                this.typosocket.socket.disconnect();
-        });
-        // init events 
-        this.typosocket.subscribeDisconnect(this.onDisconnect.bind(this));
-        this.typosocket.subscribeGetUserEvent(this.getUser.bind(this));
-        this.typosocket.subscribeSetSlotEvent(this.setSpriteSlot.bind(this));
-        this.typosocket.subscribeSetComboEvent(this.setSpriteCombo.bind(this));
-        this.typosocket.subscribeJoinLobbyEvent(this.joinLobby.bind(this));
-        this.typosocket.subscribeSetLobbyEvent(this.setLobby.bind(this));
-        this.typosocket.subscribeLeaveLobbyEvent(this.leaveLobby.bind(this));
-        this.typosocket.subscribeSearchLobbyEvent(this.searchLobby.bind(this));
-        this.typosocket.subscribeStoreDrawingEvent(this.storeDrawing.bind(this));
-        this.typosocket.subscribeFetchDrawingEvent(this.fetchDrawing.bind(this));
-        this.typosocket.subscribeRemoveDrawingEvent(this.removeDrawing.bind(this));
-        this.typosocket.subscribeGetCommandsEvent(this.getCommands.bind(this));
-        this.typosocket.subscribeGetMetaEvent(this.getMeta.bind(this));
-        this.typosocket.subscribeClaimDropEvent(this.claimDrop.bind(this));
-        this.typosocket.subscribePostImageEvent(this.postImage.bind(this));
-        // init report data 
-        this.reportData = {
-            currentStatus: "idle",
-            nickname: this.username,
-            joinedLobby: undefined,
-            reportLobby: undefined,
-            updateLoop: async () => {
-                if (!this.typosocket.socket.connected)
-                    return;
-                await sp(this.updateStatus());
-                setTimeout(this.reportData.updateLoop.bind(this), 2500);
-            }
-        };
-        this.reportData.updateLoop();
-        console.log(this.username + " logged in.");
-        /**
-         * drop specials
-         */
-        /* const dropSpecial = () => {
-            setTimeout( async () => {
-                if(Math.random() > 0.7) {
-                    if(! ((await this.member).scenes.split(",").map(scene => scene.substring(scene.lastIndexOf("."))).some(scene => scene == "7"))){
-                        this.sendSpecialDrop();
-                        console.log("sent special drop to " + this.username);
-                    }
-                }
-                dropSpecial();
-            }, 1000 * 60 * 20 + 1000 * 60 * 40 * Math.random());
-        }
-        dropSpecial(); */
-    }
-    /**
      * Get cached data if valid
      * @param cache The cache object
      * @param validMs The validity limit
@@ -179,6 +107,78 @@ class TypoClient {
                 patronizer: flagArray[7] == 1,
             });
         });
+    }
+    /**
+     * Init a new client with all member-related data and bound events
+     */
+    constructor(socket, dbWorker, imageDbWorker, memberInit, workerCache) {
+        /** last posted webhook cache for rate-limiting */
+        this.lastPostedWebhooks = [];
+        this.memberCache = {};
+        /** callback to send a drop claim */
+        this.claimDropCallback = undefined;
+        /** callback to report the clients lobbies */
+        this.reportLobbyCallback = undefined;
+        /** callback to report the clients status */
+        this.reportStatusCallback = undefined;
+        this.typosocket = socket;
+        this.palantirDatabaseWorker = dbWorker;
+        this.imageDatabaseWorker = imageDbWorker;
+        this.workerCache = workerCache;
+        this.username = memberInit.member.UserName;
+        this.login = memberInit.member.UserLogin;
+        this.loginDate = Date.now();
+        // check banned
+        setImmediate(async () => {
+            if ((await this.flags).permaBan)
+                this.typosocket.socket.disconnect();
+        });
+        // init events 
+        this.typosocket.subscribeDisconnect(this.onDisconnect.bind(this));
+        this.typosocket.subscribeGetUserEvent(this.getUser.bind(this));
+        this.typosocket.subscribeSetSlotEvent(this.setSpriteSlot.bind(this));
+        this.typosocket.subscribeSetComboEvent(this.setSpriteCombo.bind(this));
+        this.typosocket.subscribeJoinLobbyEvent(this.joinLobby.bind(this));
+        this.typosocket.subscribeSetLobbyEvent(this.setLobby.bind(this));
+        this.typosocket.subscribeLeaveLobbyEvent(this.leaveLobby.bind(this));
+        this.typosocket.subscribeSearchLobbyEvent(this.searchLobby.bind(this));
+        this.typosocket.subscribeStoreDrawingEvent(this.storeDrawing.bind(this));
+        this.typosocket.subscribeFetchDrawingEvent(this.fetchDrawing.bind(this));
+        this.typosocket.subscribeRemoveDrawingEvent(this.removeDrawing.bind(this));
+        this.typosocket.subscribeGetCommandsEvent(this.getCommands.bind(this));
+        this.typosocket.subscribeGetMetaEvent(this.getMeta.bind(this));
+        this.typosocket.subscribeClaimDropEvent(this.claimDrop.bind(this));
+        this.typosocket.subscribePostImageEvent(this.postImage.bind(this));
+        // init report data 
+        this.reportData = {
+            currentStatus: "idle",
+            nickname: this.username,
+            joinedLobby: undefined,
+            reportLobby: undefined,
+            updateLoop: async () => {
+                if (!this.typosocket.socket.connected)
+                    return;
+                await sp(this.updateStatus());
+                setTimeout(this.reportData.updateLoop.bind(this), 2500);
+            }
+        };
+        this.reportData.updateLoop();
+        console.log(this.username + " logged in.");
+        /**
+         * drop specials
+         */
+        /* const dropSpecial = () => {
+            setTimeout( async () => {
+                if(Math.random() > 0.7) {
+                    if(! ((await this.member).scenes.split(",").map(scene => scene.substring(scene.lastIndexOf("."))).some(scene => scene == "7"))){
+                        this.sendSpecialDrop();
+                        console.log("sent special drop to " + this.username);
+                    }
+                }
+                dropSpecial();
+            }, 1000 * 60 * 20 + 1000 * 60 * 40 * Math.random());
+        }
+        dropSpecial(); */
     }
     /**
      * Handler for a disconnect event

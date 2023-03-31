@@ -52,12 +52,14 @@ class PalantirDatabase {
     async get<TTable>(query: string, values: any[]) {
         let conn = await this.getConnection();
         let [rows, fields] = await conn.query<Array<TTable & RowDataPacket>>(query, values);
+        conn.release();
         return rows;
     }
 
     async update(query: string, values: any[]) {
         let conn = await this.getConnection();
         let [results, fields] = await conn.query<OkPacket>(query, values);
+        conn.release();
         return results;
     }
 

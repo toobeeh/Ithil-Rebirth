@@ -8,6 +8,14 @@ const make_fetch_happen_1 = __importDefault(require("make-fetch-happen"));
  * Class that observes drops and processes/creates all needed events
  */
 class Drops {
+    static leagueWeight(s) {
+        s = s * 1000;
+        if (s < 0)
+            return 0;
+        if (s > 1000)
+            return 30;
+        return -1.78641975945623 * Math.pow(10, -9) * Math.pow(s, 4) + 0.00000457264006980028 * Math.pow(s, 3) - 0.00397188791256729 * Math.pow(s, 2) + 1.21566760222325 * s;
+    }
     /**
      * Construct object and immediately start drop loop
      * @param db Palantir DB worker thread
@@ -18,14 +26,6 @@ class Drops {
         this.ipcServer = ipcServer;
         // start async loop
         setImmediate(this.loop.bind(this));
-    }
-    static leagueWeight(s) {
-        s = s * 1000;
-        if (s < 0)
-            return 0;
-        if (s > 1000)
-            return 30;
-        return -1.78641975945623 * Math.pow(10, -9) * Math.pow(s, 4) + 0.00000457264006980028 * Math.pow(s, 3) - 0.00397188791256729 * Math.pow(s, 2) + 1.21566760222325 * s;
     }
     /**
      *The loop that contains all drop processing
