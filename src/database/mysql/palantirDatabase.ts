@@ -35,7 +35,10 @@ class PalantirDatabase {
      * Close the db connection
      */
     close() {
-        this.pool?.end();
+        try {
+            this.pool?.end();
+        }
+        catch { };
     }
 
     /**
