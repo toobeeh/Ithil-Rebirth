@@ -54,6 +54,7 @@ class PalantirDatabase {
     close() {
         try {
             this.pool?.end();
+            this.pool = undefined;
         }
         catch { }
         ;
