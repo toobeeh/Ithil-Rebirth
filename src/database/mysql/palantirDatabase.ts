@@ -55,16 +55,28 @@ class PalantirDatabase {
 
     async get<TTable>(query: string, values: any[]) {
         let conn = await this.getConnection();
-        let [rows, fields] = await conn.query<Array<TTable & RowDataPacket>>(query, values);
-        conn.release();
-        return rows;
+        try {
+            let [rows, fields] = await conn.query<Array<TTable & RowDataPacket>>(query, values);
+            conn.release();
+            return rows;
+        }
+        catch (e) {
+            conn.release();
+            throw e;
+        }
     }
 
     async update(query: string, values: any[]) {
         let conn = await this.getConnection();
-        let [results, fields] = await conn.query<OkPacket>(query, values);
-        conn.release();
-        return results;
+        try {
+            let [results, fields] = await conn.query<OkPacket>(query, values);
+            conn.release();
+            return results;
+        }
+        catch (e) {
+            conn.release();
+            throw e;
+        }
     }
 
     async first<TTable>(query: string, values: any[]) {

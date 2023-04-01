@@ -71,15 +71,27 @@ class PalantirDatabase {
     }
     async get(query, values) {
         let conn = await this.getConnection();
-        let [rows, fields] = await conn.query(query, values);
-        conn.release();
-        return rows;
+        try {
+            let [rows, fields] = await conn.query(query, values);
+            conn.release();
+            return rows;
+        }
+        catch (e) {
+            conn.release();
+            throw e;
+        }
     }
     async update(query, values) {
         let conn = await this.getConnection();
-        let [results, fields] = await conn.query(query, values);
-        conn.release();
-        return results;
+        try {
+            let [results, fields] = await conn.query(query, values);
+            conn.release();
+            return results;
+        }
+        catch (e) {
+            conn.release();
+            throw e;
+        }
     }
     async first(query, values) {
         let results = await this.get(query, values);
