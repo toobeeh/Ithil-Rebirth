@@ -41,7 +41,7 @@ export default class TypoClient {
     typosocket: ithilSocketServer.TypoSocketioClient;
 
     /** last posted webhook cache for rate-limiting */
-    lastPostedWebhooks: Array<{serverID: string, postDate: number}> = [];
+    lastPostedWebhooks: Array<{ serverID: string, postDate: number }> = [];
 
     /**
      * Get cached data if valid
@@ -190,8 +190,8 @@ export default class TypoClient {
         this.loginDate = Date.now();
 
         // check banned
-        setImmediate( async () => {
-            if((await this.flags).permaBan) this.typosocket.socket.disconnect();
+        setImmediate(async () => {
+            if ((await this.flags).permaBan) this.typosocket.socket.disconnect();
         });
 
         // init events 
@@ -361,23 +361,23 @@ export default class TypoClient {
      * Handler for post image event
      * @param eventdata Eventdata containing webhook name, server id, image URI
      */
-     async postImage(eventdata: ithilSocketServer.postImageEventdata) {
+    async postImage(eventdata: ithilSocketServer.postImageEventdata) {
         const memberServers = (await this.getUser()).user.member.Guilds;
         const postServer = memberServers.find(server => server.GuildID == eventdata.serverID);
 
         /* if user is in this server */
-        if(postServer){
+        if (postServer) {
 
             const serverWebhooks = await this.palantirDatabaseWorker.getServerWebhooks(postServer.GuildID);
             const postWebhook = serverWebhooks.result.find(webhook => webhook.Name == eventdata.webhookName);
 
             /* if there exists a webhook of that name*/
-            if(postWebhook){
+            if (postWebhook) {
 
                 /* if ratelimit not exceeded */
-                if(!this.lastPostedWebhooks.some(
+                if (!this.lastPostedWebhooks.some(
                     wh => wh.serverID == postServer.GuildID && Date.now() - wh.postDate > 60 * 1000
-                )){
+                )) {
 
                     /* save image with orthanc api */
                     const formdata = new URLSearchParams();
@@ -396,7 +396,7 @@ export default class TypoClient {
                     /* build webhook data */
                     const webhookData: any = {};
 
-                    if(eventdata.postOptions.onlyImage) {
+                    if (eventdata.postOptions.onlyImage) {
                         webhookData.username = eventdata.postOptions.posterName.split("#")[0];
                         webhookData.avatar_url = 'https://cdn.discordapp.com/attachments/334696834322661376/988002446158741544/letter.png';
                         webhookData.content = url;
@@ -433,7 +433,7 @@ export default class TypoClient {
                         },
                         body: JSON.stringify(webhookData)
                     });
-                }   
+                }
             }
         }
     }
@@ -633,7 +633,7 @@ export default class TypoClient {
                     guildReportLobbies.push(templateClone);
                 });
                 //await sp(this.palantirDatabaseWorker.writeReport(guildReportLobbies));
-                if(this.reportLobbyCallback) this.reportLobbyCallback({session: this.typosocket.socket.id, lobbies: guildReportLobbies});
+                if (this.reportLobbyCallback) this.reportLobbyCallback({ session: this.typosocket.socket.id, lobbies: guildReportLobbies });
 
                 // write player status to db
                 const lobbyPlayerID = guildReportTemplate.Players.find(player => player.Sender)?.LobbyPlayerID;
@@ -644,7 +644,7 @@ export default class TypoClient {
                     LobbyPlayerID: (lobbyPlayerID ? lobbyPlayerID : 0).toString()
                 }
                 //await sp(this.palantirDatabaseWorker.writePlayerStatus(status, this.typosocket.socket.id));
-                if(this.reportStatusCallback) this.reportStatusCallback({session: this.typosocket.socket.id, status: status});
+                if (this.reportStatusCallback) this.reportStatusCallback({ session: this.typosocket.socket.id, status: status });
             }
         }
         else if (statusIsAnyOf("searching", "waiting")) {
@@ -658,7 +658,7 @@ export default class TypoClient {
                 LobbyPlayerID: ""
             }
             //await sp(this.palantirDatabaseWorker.writePlayerStatus(status, this.typosocket.socket.id));
-            if(this.reportStatusCallback) this.reportStatusCallback({session: this.typosocket.socket.id, status: status});
+            if (this.reportStatusCallback) this.reportStatusCallback({ session: this.typosocket.socket.id, status: status });
         }
         else if (statusIsAnyOf("idle")) {
             // do nothing. user is idling. yay.
@@ -748,36 +748,36 @@ export default class TypoClient {
         return response;
     }
 
-    async postMessage(msg: ithilSocketServer.sendMessageEventdata){
+    async postMessage(msg: ithilSocketServer.sendMessageEventdata) {
         this.typosocket.emitEventAsync<ithilSocketServer.sendMessageEventdata, void>(eventNames.serverMessage, msg, false);
     }
 
-    async sendSpecialDrop(){
+    async sendSpecialDrop() {
 
         interface specialDropEventdata {
             key: number;
         }
 
-       let key =  Math.random();
-       let now = Date.now();
+        let key = Math.random();
+        let now = Date.now();
 
-       try{
-        let response = await this.typosocket.emitEventAsync<specialDropEventdata, specialDropEventdata>("specialdrop", {key}, true);
-        response = (response as any).payload;
-        if(Date.now() - now < 10000 && response.key == key) {
-            let scenes = (await this.member).scenes.split(",");
-            scenes.push("7");
-            let newScenes = scenes.join(",");
-            await this.palantirDatabaseWorker.setUserScenes(Number(this.login), newScenes);
-            this.postMessage({title:"Merry Christmas!", message: "Oh, look what santa just dropped! Is that... an exclusive scene?! Check your inventory!"});
+        try {
+            let response = await this.typosocket.emitEventAsync<specialDropEventdata, specialDropEventdata>("specialdrop", { key }, true);
+            response = (response as any).payload;
+            if (Date.now() - now < 10000 && response.key == key) {
+                let scenes = (await this.member).scenes.split(",");
+                scenes.push("7");
+                let newScenes = scenes.join(",");
+                await this.palantirDatabaseWorker.setUserScenes(Number(this.login), newScenes);
+                this.postMessage({ title: "Merry Christmas!", message: "Oh, look what santa just dropped! Is that... an exclusive scene?! Check your inventory!" });
+            }
+            else {
+                console.log("Special drop rejected:", response.key, key, Date.now() - now);
+            }
         }
-        else{
-            console.log("Special drop rejected:", response.key, key, Date.now() - now);
+        catch (e) {
+            console.log("Failed to catch special drop:" + e);
         }
-       }
-       catch(e) {
-        console.log("Failed to catch special drop:" + e);
-       }
     }
 
     /**
@@ -790,6 +790,11 @@ export default class TypoClient {
         if (flags.dropBan || eventdata.timedOut
             || !this.claimDropCallback || !this.reportData.joinedLobby
             || !this.reportData.reportLobby) throw new Error("Unauthorized drop claim");
+
+        if (this.reportData.reportLobby.Players.every(p => p.Score == 0 && !p.Drawing)) {
+            this.postMessage({ title: "Hold up", message: "The game has not started; you can't catch drops yet." });
+            return;
+        }
 
         const username = this.reportData.reportLobby.Players.find(p => p.Sender)?.Name;
         const lobbyKey = this.reportData.joinedLobby.Key;

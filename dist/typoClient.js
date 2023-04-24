@@ -668,6 +668,10 @@ class TypoClient {
             || !this.claimDropCallback || !this.reportData.joinedLobby
             || !this.reportData.reportLobby)
             throw new Error("Unauthorized drop claim");
+        if (this.reportData.reportLobby.Players.every(p => p.Score == 0 && !p.Drawing)) {
+            this.postMessage({ title: "Hold up", message: "The game has not started; you can't catch drops yet." });
+            return;
+        }
         const username = this.reportData.reportLobby.Players.find(p => p.Sender)?.Name;
         const lobbyKey = this.reportData.joinedLobby.Key;
         const userID = (await this.member).member.UserID;
