@@ -1,5 +1,5 @@
 import { exit } from 'process';
-import { spawn } from 'threads';
+import { spawn, Worker } from "threads";
 import yargs, { config } from 'yargs';
 import { imageDatabaseWorker } from './database/imageDatabaseWorker';
 import aws from 'aws-sdk';
