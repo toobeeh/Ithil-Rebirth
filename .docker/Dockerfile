@@ -21,7 +21,8 @@ RUN echo "Building app...\n" && \
     npm run build && \
     echo "build was completed."
 
-FROM keymetrics/pm2:latest-alpine
+FROM node:alpine
+RUN npm install pm2 -g
 
 # default env values for domain name
 ARG DB_DOMAIN_NAME="db.domain.tld"
