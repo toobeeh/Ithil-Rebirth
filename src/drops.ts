@@ -1,6 +1,4 @@
-import { ModuleThread } from "threads";
 import * as ipc from './ipc';
-import * as types from "./database/types";
 import fetch from 'make-fetch-happen';
 import PalantirDatabase from "./database/mysql/palantirDatabase";
 import { NextDrop } from "./database/mysql/schema";
