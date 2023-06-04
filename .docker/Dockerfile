@@ -27,9 +27,6 @@ FROM keymetrics/pm2:latest-alpine
 ARG DB_DOMAIN_NAME="db.domain.tld"
 ENV DB_DOMAIN_NAME "${DB_DOMAIN_NAME}"
 
-# Copy the entrypoint script
-COPY .docker/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
 
 WORKDIR /app/
 COPY --from=node-builder /app /app
@@ -42,6 +39,10 @@ RUN npm install --production
 RUN ls -al -R
 
 EXPOSE 4000 4001 4002 4003 4004 4005 4006 4007 4008 4009 4010
+
+# Copy the entrypoint script
+COPY .docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
 CMD [ "pm2", "start", "ecosystem.config.js" ]
