@@ -27,7 +27,6 @@ FROM keymetrics/pm2:latest-alpine
 ARG DB_DOMAIN_NAME="db.domain.tld"
 ENV DB_DOMAIN_NAME "${DB_DOMAIN_NAME}"
 
-
 WORKDIR /app/
 COPY --from=node-builder /app /app
 
