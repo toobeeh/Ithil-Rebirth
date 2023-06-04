@@ -88,7 +88,12 @@ export interface BubbleTracesWithDefaults {
 export interface CloudTags {
   Owner: number
   ImageID: number
-  Tags: string
+  Title: string
+  Author: string
+  Own: number
+  Date: number
+  Language: string
+  Private: number
 }
 
 /**
@@ -101,7 +106,12 @@ export interface CloudTags {
 export interface CloudTagsWithDefaults {
   Owner: number
   ImageID: number
-  Tags: string
+  Title: string
+  Author: string
+  Own: number
+  Date: number
+  Language: string
+  Private: number
 }
 /**
  * Exposes all fields present in DropBoosts as a typescript
@@ -460,7 +470,7 @@ export interface PalantiriWithDefaults {
   Palantir: string
 }
 /**
- * Exposes all fields present in PalantiriNightly as a typescript
+ * Exposes all fields present in PalantiriNightly as a typescript        
  * interface.
  */
 export interface PalantiriNightly {

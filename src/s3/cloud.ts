@@ -7,11 +7,9 @@ export interface metaTags {
     title: string;
     author: string;
     own: boolean;
-    owner: string;
-    date: string;
+    date: number;
     language: string;
     private: boolean;
-    uuid: string;
 }
 
 export class S3CloudConnection {
@@ -108,18 +106,16 @@ export class S3CloudConnection {
             title: meta.name,
             author: meta.author,
             own: meta.own,
-            owner: this.userID ?? "unknown",
-            date: meta.date,
+            date: new Date(meta.date).getTime(),
             language: meta.language,
-            private: meta.private,
-            uuid: uuid.toString()
+            private: meta.private
         };
 
         await this.uploadObjectToS3(metaString, `${this.userFolder}/${uuid}/meta.json`, "application/json");
         await this.uploadObjectToS3(commandsString, `${this.userFolder}/${uuid}/commands.json`, "application/json");
         await this.uploadObjectToS3(image, `${this.userFolder}/${uuid}/image.png`, "image/png");
 
-        await this.database.addCloudMeta(metaTags, this.palantirToken.toString());
+        await this.database.addCloudMeta(metaTags, this.palantirToken.toString(), uuid);
 
         return uuid;
     }

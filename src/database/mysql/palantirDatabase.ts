@@ -519,11 +519,10 @@ class PalantirDatabase {
         return result;
     }
 
-    async addCloudMeta(meta: metaTags, ownerLogin: string) {
+    async addCloudMeta(meta: metaTags, ownerLogin: string, uuid: BigInt) {
         let success = false;
         try {
-            const metaString = JSON.stringify(meta);
-            await this.update("INSERT INTO CloudTags VALUES (?, ?, ?)", [ownerLogin, meta.uuid, metaString]);
+            await this.update("INSERT INTO CloudTags VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [ownerLogin, uuid, meta.title, meta.author, meta.own, meta.date, meta.language, meta.private]);
             success = true;
         }
         catch (e) {
@@ -539,19 +538,20 @@ class PalantirDatabase {
 
             let where = "";
             let whereParams = [];
-            if (meta.own === true) {
-                where += " AND json_extract(Tags,'$.own') ";
+            if (meta.own !== undefined) {
+                where += " AND Own = ?";
+                whereParams.push(meta.own);
             }
             if (meta.title) {
-                where += " AND json_extract(Tags,'$.title') like ?";
+                where += " AND Title like ?";
                 whereParams.push("%" + meta.title + "%");
             }
             if (meta.author) {
-                where += " AND json_extract(Tags,'$.author') like ?";
+                where += " AND Author like ?";
                 whereParams.push("%" + meta.author + "%");
             }
             if (meta.date) {
-                where += " AND json_extract(Tags,'$.date') like ?";
+                where += " AND Date > ?";
                 whereParams.push(meta.date);
             }
 

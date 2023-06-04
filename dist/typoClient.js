@@ -596,7 +596,7 @@ class TypoClient {
      */
     async getMeta(eventdata) {
         const limit = eventdata.limit ? eventdata.limit : -1;
-        const results = await sp(this.cloud.searchObjectsByTags(eventdata.query));
+        const results = await sp(this.cloud.searchObjectsByTags(eventdata.query, limit));
         const response = {
             images: results
         };

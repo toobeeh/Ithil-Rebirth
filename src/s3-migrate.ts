@@ -11,6 +11,7 @@ const argv = yargs(process.argv.slice(2)).argv;
 const uValue = (argv as any).u;
 const key = (argv as any).k;
 const secret = (argv as any).s;
+const userOverride = (argv as any).uo;
 
 // Check if the "u" argument exists and log its value
 if (uValue) {
@@ -27,7 +28,7 @@ async function main() {
     const asyncImageDb = await spawn<imageDatabaseWorker>(new Worker("./database/imageDatabaseWorker"));
     const udb_path = "C:\\Users\\User\\";
     await asyncImageDb.init(uValue, udb_path);
-    const metas = await asyncImageDb.getUserMeta(uValue);
+    const metas = await asyncImageDb.getUserMeta(userOverride ?? uValue);
 
     /* init ptr db */
     const database = new PalantirDatabase();
@@ -37,20 +38,20 @@ async function main() {
     const s3 = new S3CloudConnection(key, secret, uValue, database);
     await s3.init();
 
-    /*  console.log("started import");
- 
-     //upload all drawings
-     for (let i = 0; i < metas.result.length; i++) {
-         console.log("processing drawing " + i + " of " + metas.result.length);
-         const meta = metas.result[i];
-         const drawing = await asyncImageDb.getDrawing(meta.id);
- 
-         s3.saveDrawing(drawing.result);
-     }
- 
-     console.log("finished import"); */
+    /* console.log("started import");
 
-    const results = await s3.searchObjectsByTags({ own: false })
+    //upload all drawings
+    for (let i = 0; i < metas.result.length; i++) {
+        console.log("processing drawing " + i + " of " + metas.result.length);
+        const meta = metas.result[i];
+        const drawing = await asyncImageDb.getDrawing(meta.id);
+
+        s3.saveDrawing(drawing.result);
+    }
+
+    console.log("finished import"); */
+
+    const results = await s3.searchObjectsByTags({ own: true })
     console.log(results);
 
     /* for (let r of results) {

@@ -5,6 +5,7 @@ import express from "express";
 import * as ws from "ws";
 import { Server as SocketioServer, Socket } from "socket.io";
 import * as types from "./database/types";
+import { metaTags } from './s3/cloud';
 
 /**
  * A https server with certs loaded and cors enabled
@@ -683,7 +684,7 @@ export interface getMetaEventdata {
     /**
      * The search meta, containing only desired properties, see {@link types.imageData.meta}
      */
-    query: Partial<types.imageMeta>;
+    query: Partial<metaTags>;
 
     /**
     * The search result limitor
