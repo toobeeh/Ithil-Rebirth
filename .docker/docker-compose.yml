@@ -1,6 +1,6 @@
 version: "3.0"
 
 services:
-  tirith:
-    container_name: tirith
-    image: "ghcr.io/toobeeh/tirith/tirith:latest"
+  ithil:
+    container_name: ithil
+    image: "ghcr.io/toobeeh/ithil/ithil:latest"
