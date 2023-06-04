@@ -9,7 +9,7 @@ import * as types from "./database/types";
 /**
  * A https server with certs loaded and cors enabled
  */
-class IthilHttpsServer{
+class IthilHttpsServer {
 
     /**
      * The https server
@@ -20,7 +20,7 @@ class IthilHttpsServer{
      * Init https & express server
      * @param certPath The path to the SSL certificate
      */
-    constructor(certPath: string){
+    constructor(certPath: string) {
 
         // Start the https server with cors on main port
         const serverExpress = express();
@@ -49,15 +49,15 @@ export class IthilWebsocketServer extends IthilHttpsServer {
      * @param port The socketio port 
      * @param certPath The path to the SSL certificate
      */
-     constructor(port: number, certPath: string) {
+    constructor(port: number, certPath: string) {
 
         // Call base constructor
         super(certPath);
 
         // start websocket server and listen
-        this.server = new ws.WebSocketServer({server: this.httpsServer});
+        this.server = new ws.WebSocketServer({ server: this.httpsServer });
         this.httpsServer.listen(port);
-     }
+    }
 }
 
 /**
@@ -368,7 +368,7 @@ export interface onlineSpritesEventdata {
      * Currently online scenes array
      */
     onlineScenes: Array<types.onlineSprite>;
-    
+
     /**
      * Currently online items array
      */
@@ -699,41 +699,19 @@ export interface getMetaResponseEventdata {
     /**
      * The image results
      */
-    drawings: Array<{id:string, meta: types.imageMeta}>;
-}
-
-/**
- * Socketio eventdata for the get meta event response
- */
- export interface getMetaResponseEventdata {
-
-    /**
-     * The image results
-     */
-    drawings: Array<{id:string, meta: types.imageMeta}>;
-}
-
-/**
- * Socketio eventdata for the get meta event response
- */
- export interface claimDropEventdata {
-     
-    /**
-     * The target drop ID
-     */
-    dropID: string;
-
-    /**
-     * The drop claim ticket provided by the drop server
-     */
-    claimTicket: number;
+    images: Array<{
+        uuid: string;
+        meta: string;
+        commands: string;
+        image: string;
+    }>;
 }
 
 /**
  * Socketio eventdata for the claim drop event
  */
- export interface claimDropEventdata {
-     
+export interface claimDropEventdata {
+
     /**
      * The target drop ID
      */
@@ -758,8 +736,8 @@ export interface getMetaResponseEventdata {
 /**
  * Socketio eventdata for the get rank drop event
  */
- export interface rankDropEventdata {
-     
+export interface rankDropEventdata {
+
     /**
      * The target drop ID
      */
@@ -774,8 +752,8 @@ export interface getMetaResponseEventdata {
 /**
  * Socketio eventdata for the clear drop event
  */
- export interface clearDropEventdata {
-     
+export interface clearDropEventdata {
+
     /**
      * The target drop ID
      */
@@ -805,8 +783,8 @@ export interface getMetaResponseEventdata {
 /**
  * Socketio eventdata for the post image event
  */
- export interface postImageEventdata {
-     
+export interface postImageEventdata {
+
     /**
      * The webhook name
      */

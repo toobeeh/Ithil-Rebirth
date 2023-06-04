@@ -26,6 +26,7 @@ import { IthilIPCClient } from './ipc';
 import TypoClient from "./typoClient";
 import portscanner from "portscanner";
 import PalantirDatabase from "./database/mysql/palantirDatabase";
+import { S3CloudConnection } from "./s3/cloud";
 
 const config = require("../ecosystem.config").config;
 
@@ -217,12 +218,12 @@ portscanner.findAPortNotInUse(
                     // spawn database workers
                     const asyncPalantirDb = new PalantirDatabase();
                     await asyncPalantirDb.open(config.dbUser, config.dbPassword, config.dbHost);
-                    const asyncImageDb = await spawn<imageDatabaseWorker>(new Worker("./database/imageDatabaseWorker"));
-                    await asyncImageDb.init(loginResult.result.login.toString(), config.imageDbParentPath);
 
                     const memberResult = await asyncPalantirDb.getUserByLogin(loginResult.result.login);
 
-                    const client = new TypoClient(clientSocket, asyncPalantirDb, asyncImageDb, memberResult.result, workerCache);
+                    const s3 = new S3CloudConnection(config.s3key, config.s3secret, Number(memberResult.result.member.UserLogin), asyncPalantirDb);
+
+                    const client = new TypoClient(clientSocket, asyncPalantirDb, s3, memberResult.result, workerCache);
                     client.claimDropCallback = (eventdata) => {
                         eventdata.workerEventloopLatency = eventLoopLatency;
                         eventdata.workerPort = workerPort;

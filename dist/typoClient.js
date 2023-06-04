@@ -3,7 +3,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const threads_1 = require("threads");
 const make_fetch_happen_1 = __importDefault(require("make-fetch-happen"));
 const ithilSocketServer_1 = require("./ithilSocketServer");
 function sp(promise) {
@@ -111,7 +110,7 @@ class TypoClient {
     /**
      * Init a new client with all member-related data and bound events
      */
-    constructor(socket, dbWorker, imageDbWorker, memberInit, workerCache) {
+    constructor(socket, dbWorker, cloud, memberInit, workerCache) {
         /** last posted webhook cache for rate-limiting */
         this.lastPostedWebhooks = [];
         this.memberCache = {};
@@ -123,7 +122,7 @@ class TypoClient {
         this.reportStatusCallback = undefined;
         this.typosocket = socket;
         this.palantirDatabaseWorker = dbWorker;
-        this.imageDatabaseWorker = imageDbWorker;
+        this.cloud = cloud;
         this.workerCache = workerCache;
         this.username = memberInit.member.UserName;
         this.login = memberInit.member.UserLogin;
@@ -143,9 +142,7 @@ class TypoClient {
         this.typosocket.subscribeLeaveLobbyEvent(this.leaveLobby.bind(this));
         this.typosocket.subscribeSearchLobbyEvent(this.searchLobby.bind(this));
         this.typosocket.subscribeStoreDrawingEvent(this.storeDrawing.bind(this));
-        this.typosocket.subscribeFetchDrawingEvent(this.fetchDrawing.bind(this));
         this.typosocket.subscribeRemoveDrawingEvent(this.removeDrawing.bind(this));
-        this.typosocket.subscribeGetCommandsEvent(this.getCommands.bind(this));
         this.typosocket.subscribeGetMetaEvent(this.getMeta.bind(this));
         this.typosocket.subscribeClaimDropEvent(this.claimDrop.bind(this));
         this.typosocket.subscribePostImageEvent(this.postImage.bind(this));
@@ -187,11 +184,9 @@ class TypoClient {
     async onDisconnect(reason) {
         const flags = await sp(this.flags);
         if (!flags.admin || !flags.patron || !flags.unlimitedCloud) {
-            await sp(this.imageDatabaseWorker.removeEntries(this.login, this.loginDate - 1000 * 60 * 60 * 24 * 30));
+            /* TODO REMOVE CLOUD CONTENT */
         }
-        this.imageDatabaseWorker.close();
         this.palantirDatabaseWorker.close();
-        threads_1.Thread.terminate(this.imageDatabaseWorker);
         this.palantirDatabaseWorker.close();
         console.log(this.username + " disconnected.");
     }
@@ -577,27 +572,13 @@ class TypoClient {
             private: eventdata.meta.private ? eventdata.meta.private : true,
             thumbnail: eventdata.meta.thumbnail ? eventdata.meta.thumbnail : ""
         };
-        // add content to tables
-        const id = Date.now().toString();
-        await sp(this.imageDatabaseWorker.addDrawing(this.login, id, sanitizedMeta));
-        await sp(this.imageDatabaseWorker.addDrawCommands(id, eventdata.commands));
-        await sp(this.imageDatabaseWorker.addURI(id, eventdata.uri));
+        const uuid = await this.cloud.saveDrawing({
+            meta: sanitizedMeta,
+            commands: eventdata.commands,
+            uri: eventdata.uri
+        });
         const response = {
-            id: id
-        };
-        return response;
-    }
-    /**
-     * Handler for fetch drawing event
-     * @param eventdata Eventdata containing the target drawing's id and wether the commands should be sent
-     * @returns Response data containing image data
-     */
-    async fetchDrawing(eventdata) {
-        const dbRes = await sp(this.imageDatabaseWorker.getDrawing(eventdata.id));
-        if (!eventdata.withCommands)
-            dbRes.result.commands = [];
-        const response = {
-            drawing: dbRes.result
+            id: uuid.toString()
         };
         return response;
     }
@@ -606,19 +587,7 @@ class TypoClient {
      * @param eventdata Eventdata containing the target drawing's id
      */
     async removeDrawing(eventdata) {
-        await sp(this.imageDatabaseWorker.removeDrawing(this.login, eventdata.id));
-    }
-    /**
-     * Handler for get commands event
-     * @param eventdata Eventdata containing the target drawing's id
-     * @returns The array of commands
-     */
-    async getCommands(eventdata) {
-        const dbResult = await sp(this.imageDatabaseWorker.getDrawing(eventdata.id));
-        const response = {
-            commands: dbResult.result.commands
-        };
-        return response;
+        await this.cloud.removeDrawing(eventdata.id);
     }
     /**
      * Handler for get meta event
@@ -627,9 +596,9 @@ class TypoClient {
      */
     async getMeta(eventdata) {
         const limit = eventdata.limit ? eventdata.limit : -1;
-        const dbResult = await sp(this.imageDatabaseWorker.getUserMeta(this.login, limit, eventdata.query));
+        const results = await sp(this.cloud.searchObjectsByTags(eventdata.query));
         const response = {
-            drawings: dbResult.result
+            images: results
         };
         return response;
     }

@@ -38,7 +38,7 @@ module.exports = {
         statDbPath: '/home/pi/Database/typoStats.db',
         imageDbParentPath: '/home/pi/Database/imagedb/',
         dbUser: "ithil",
-        dbHost: "localhost",
+        dbHost: "108.61.190.186",
         dbPassword: ""
     }
 };

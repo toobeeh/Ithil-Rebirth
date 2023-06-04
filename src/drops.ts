@@ -19,12 +19,12 @@ export default class Drops {
      */
     ipcServer: ipc.IthilIPCServer;
 
-    static leagueWeight(s: number){
-        s = s*1000;
-        if(s < 0) return 0;
-        if(s > 1000) return 30;
-        return -1.78641975945623 * Math.pow(10, -9) * Math.pow(s, 4) + 0.00000457264006980028  * Math.pow(s, 3) - 0.00397188791256729  * Math.pow(s, 2) + 1.21566760222325  * s;
-    } 
+    static leagueWeight(s: number) {
+        s = s * 1000;
+        if (s < 0) return 0;
+        if (s > 1000) return 30;
+        return -1.78641975945623 * Math.pow(10, -9) * Math.pow(s, 4) + 0.00000457264006980028 * Math.pow(s, 3) - 0.00397188791256729 * Math.pow(s, 2) + 1.21566760222325 * s;
+    }
 
     /**
      * Construct object and immediately start drop loop
@@ -44,47 +44,47 @@ export default class Drops {
      */
     private async loop() {
         while (true) {
-            try{
+            try {
                 let nextTimeout: number | null = null;
                 let nextDrop: NextDrop | null = null;
-    
+
                 // poll for next drop
                 while (!nextTimeout || nextTimeout < 0 || !nextDrop) {
                     await this.idle(100);
                     nextDrop = (await this.db.getDrop()).result;
-    
+
                     if (nextDrop && nextDrop.CaughtLobbyPlayerID == "") {
                         nextTimeout = (new Date(nextDrop.ValidFrom + " UTC")).getTime() - Date.now();
                     }
                 }
-    
+
                 // wait until drop is valid
                 console.log(`Next drop (${nextDrop.DropID}) in ${nextTimeout / 1000}s`);
                 await this.idle(nextTimeout);
-    
+
                 // dispatch drop and listen for claims
                 console.log("Starting drop events...");
                 let dispatchStats: ipc.dispatchedDropEventdata | undefined;
                 const claimBuffer: Array<ipc.dropClaimEventdata> = [];
                 const listenStartTimestamp = Date.now();
-    
+
                 this.ipcServer.onDropClaim = data => {
                     console.log("claim for ticket " + data.claimTicket);
                     data.workerMasterDelay = (data.workerMasterDelay - Date.now()) * -1;
                     claimBuffer.push(data);
                 }
                 this.ipcServer.onDropDispatched = data => dispatchStats = data;
-                this.ipcServer.broadcastNextDrop({ dropID: nextDrop.DropID, eventDropID: nextDrop.EventDropID.toString() });
-    
+                this.ipcServer.broadcastNextDrop({ dropID: nextDrop.DropID.toString(), eventDropID: nextDrop.EventDropID.toString() });
+
                 // poll until dispatch data is set
-                while(!dispatchStats) await this.idle(50);
+                while (!dispatchStats) await this.idle(50);
 
                 // poll claim buffer while drop is not timed out
                 console.log("Waiting for claims...");
                 const dropTimeout = 5000;
                 const bufferPoll = 30;
                 let lastClaim: ipc.dropClaimEventdata | undefined;
-                let successfulClaims: Array<{claim: ipc.dropClaimEventdata, leagueWeight: number}> = [];
+                let successfulClaims: Array<{ claim: ipc.dropClaimEventdata, leagueWeight: number }> = [];
                 let leagueDropClaimed = false;
 
                 // random league drop extension
@@ -92,21 +92,21 @@ export default class Drops {
                 const claimedUsers: Array<string> = [];
 
                 while (Date.now() - dispatchStats.dispatchTimestamp < dropTimeout) {
-    
+
                     // get the first claim and process it
                     lastClaim = claimBuffer.shift();
-                    if (lastClaim && lastClaim.dropID == nextDrop.DropID) {
+                    if (lastClaim && lastClaim.dropID == nextDrop.DropID.toString()) {
 
-                        if(lastClaim.claimTimestamp - dispatchStats.dispatchTimestamp < 250){
+                        if (lastClaim.claimTimestamp - dispatchStats.dispatchTimestamp < 250) {
                             console.log("rejected spam", lastClaim);
                             continue;
                         }
-    
+
                         // get claimed drop and double-check if drop still valid
                         console.log("Shifted claim:", lastClaim);
-                        const claimTarget = (await this.db.getDrop(nextDrop.DropID));
+                        const claimTarget = (await this.db.getDrop(nextDrop.DropID.toString()));
                         if (!claimedUsers.some(user => user == lastClaim?.userID) && claimTarget.result && claimTarget.result.CaughtLobbyPlayerID == "") {
-    
+
                             // save user claimed
                             claimedUsers.push(lastClaim.userID);
 
@@ -117,24 +117,24 @@ export default class Drops {
                             let leagueTime = leagueDrop ? lastClaim.claimTimestamp - dispatchStats.dispatchTimestamp : 0;
 
                             // claim and reward drop
-                            if(!leagueDrop) await this.db.rewardDrop(lastClaim.login, nextDrop.EventDropID);
-                            await this.db.claimDrop(lastClaim.lobbyKey, lastClaim.username, nextDrop.DropID, lastClaim.userID, leagueTime, claimTarget.result);
-    
+                            if (!leagueDrop) await this.db.rewardDrop(lastClaim.login, nextDrop.EventDropID);
+                            await this.db.claimDrop(lastClaim.lobbyKey, lastClaim.username, nextDrop.DropID.toString(), lastClaim.userID, leagueTime, claimTarget.result);
+
                             // clear drop and exit loop
                             const clearData: ipc.clearDropEventdata = {
-                                dropID: nextDrop.DropID,
+                                dropID: nextDrop.DropID.toString(),
                                 caughtLobbyKey: lastClaim.lobbyKey,
                                 claimTicket: lastClaim.claimTicket,
                                 caughtPlayer: "<abbr title='Drop ID: " + nextDrop.DropID + "'>" + lastClaim.username + "</abbr>",
-                                leagueWeight: leagueDrop ? Drops.leagueWeight(leagueTime/1000) : 0
+                                leagueWeight: leagueDrop ? Drops.leagueWeight(leagueTime / 1000) : 0
                             };
                             this.ipcServer.broadcastClearDrop(clearData);
 
                             /* collect claim */
-                            successfulClaims.push({claim: lastClaim, leagueWeight: leagueTime});
+                            successfulClaims.push({ claim: lastClaim, leagueWeight: leagueTime });
 
                             /* if it was a league drop, accept other drops */
-                            if(!leagueDrop) break;
+                            if (!leagueDrop) break;
                             else {
                                 console.log("league drop claimed with weight " + leagueTime);
                                 leagueDropClaimed = true;
@@ -145,11 +145,11 @@ export default class Drops {
                     else await this.idle(bufferPoll);
                     lastClaim = undefined;
                 }
-    
+
                 // build leaderboard and result data, if a claim successful and some claims left in buffer after 1s
                 await this.idle(2000);
                 console.log("Building ranks...");
-                if(successfulClaims.length > 0 && dispatchStats){
+                if (successfulClaims.length > 0 && dispatchStats) {
                     const ranks: Array<string> = [];
                     /* let firstRank = `<abbr title="`
                             + `- drop server dispatch delay: ${dispatchStats.dispatchTimestamp - listenStartTimestamp}ms&#013;&#010;`
@@ -165,36 +165,36 @@ export default class Drops {
 
                     successfulClaims.forEach(claim => {
                         let successfulRank = `<abbr title="`
-                                + `- drop server dispatch delay: ${dispatchStats!.dispatchTimestamp - listenStartTimestamp}ms&#013;&#010;`
-                                + `- individual socket dispatch delay: ${dispatchStats!.dispatchDelays.find(d => d.claimTicket == lastClaim?.claimTicket)?.delay}ms&#013;&#010;`
-                                + `- individual dispatch position: #${dispatchStats!.dispatchDelays.find(d => d.claimTicket == lastClaim?.claimTicket)?.claimTicket}&#013;&#010;`
-                                + `- worker port/ID: ${claim.claim.workerPort}&#013;&#010;`
-                                + `- worker eventloop latency: ${claim.claim.workerEventloopLatency}ms&#013;&#010;`
-                                + `- worker claim verify delay: ${claim.claim.claimVerifyDelay}ms`
-                                + `- worker to main delay: ${claim.claim.workerMasterDelay}ms
+                            + `- drop server dispatch delay: ${dispatchStats!.dispatchTimestamp - listenStartTimestamp}ms&#013;&#010;`
+                            + `- individual socket dispatch delay: ${dispatchStats!.dispatchDelays.find(d => d.claimTicket == lastClaim?.claimTicket)?.delay}ms&#013;&#010;`
+                            + `- individual dispatch position: #${dispatchStats!.dispatchDelays.find(d => d.claimTicket == lastClaim?.claimTicket)?.claimTicket}&#013;&#010;`
+                            + `- worker port/ID: ${claim.claim.workerPort}&#013;&#010;`
+                            + `- worker eventloop latency: ${claim.claim.workerEventloopLatency}ms&#013;&#010;`
+                            + `- worker claim verify delay: ${claim.claim.claimVerifyDelay}ms`
+                            + `- worker to main delay: ${claim.claim.workerMasterDelay}ms
                         ">
-                            ${claim.claim.username} (${ claim.leagueWeight != 0 ? " 💎 " : ""}after ${Math.round(claim.claim.claimTimestamp - dispatchStats!.dispatchTimestamp)}ms)
+                            ${claim.claim.username} (${claim.leagueWeight != 0 ? " 💎 " : ""}after ${Math.round(claim.claim.claimTimestamp - dispatchStats!.dispatchTimestamp)}ms)
                         </abbr>`;
                         ranks.push(successfulRank);
                     });
-    
+
                     // disable regular drop ranking
                     false && claimBuffer.forEach(claim => {
                         let otherRank = `<abbr title="`
-                                + `- drop server dispatch delay: ${dispatchStats!.dispatchTimestamp - listenStartTimestamp}ms&#013;&#010;`
-                                + `- individual socket dispatch delay: ${dispatchStats?.dispatchDelays.find(d => d.claimTicket == claim.claimTicket)?.delay}ms&#013;&#010;`
-                                + `- individual dispatch position: #${dispatchStats?.dispatchDelays.find(d => d.claimTicket == claim.claimTicket)?.claimTicket}&#013;&#010;`
-                                + `- worker port/ID: ${claim.workerPort}&#013;&#010;`
-                                + `- worker eventloop latency: ${claim.workerEventloopLatency}ms&#013;&#010;`
-                                + `- worker claim verify delay: ${claim.claimVerifyDelay}ms
+                            + `- drop server dispatch delay: ${dispatchStats!.dispatchTimestamp - listenStartTimestamp}ms&#013;&#010;`
+                            + `- individual socket dispatch delay: ${dispatchStats?.dispatchDelays.find(d => d.claimTicket == claim.claimTicket)?.delay}ms&#013;&#010;`
+                            + `- individual dispatch position: #${dispatchStats?.dispatchDelays.find(d => d.claimTicket == claim.claimTicket)?.claimTicket}&#013;&#010;`
+                            + `- worker port/ID: ${claim.workerPort}&#013;&#010;`
+                            + `- worker eventloop latency: ${claim.workerEventloopLatency}ms&#013;&#010;`
+                            + `- worker claim verify delay: ${claim.claimVerifyDelay}ms
                         ">
                             ${claim.username} (+${Math.round(claim.claimTimestamp - lastClaim!.claimTimestamp)}ms)
                         </abbr>`;
                         ranks.push(otherRank);
                     });
-    
+
                     this.ipcServer.broadcastRankDrop({
-                        dropID: nextDrop.DropID,
+                        dropID: nextDrop.DropID.toString(),
                         ranks: ranks
                     });
 
@@ -202,25 +202,25 @@ export default class Drops {
                     fetch(
                         'https://discordapp.com/api/webhooks/738983040323289120/mzhXrZz0hqOuUaPUjB_RBTE8XJUFLe8fe9mgeJjQCaxjHX14c3SW3ZR199_CDEI-xT56',
                         {
-                          method: 'post',
-                          headers: {
-                            'Content-Type': 'application/json',
-                          },
-                          body: JSON.stringify({
-                            // the username to be displayed
-                            username: 'Drop Log',
-                            // the avatar to be displayed
-                            avatar_url:
-                              'https://media.discordapp.net/attachments/334696834322661376/987821727688036352/league_rnk1_drop.gif',
-                            // contents of the message to be sent
-                            content:
-                              ranks.join("\n")
-                          }),
+                            method: 'post',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                // the username to be displayed
+                                username: 'Drop Log',
+                                // the avatar to be displayed
+                                avatar_url:
+                                    'https://media.discordapp.net/attachments/334696834322661376/987821727688036352/league_rnk1_drop.gif',
+                                // contents of the message to be sent
+                                content:
+                                    ranks.join("\n")
+                            }),
                         }
                     );
                 }
             }
-            catch(e){
+            catch (e) {
                 console.log("Error in drops:", e);
             }
         }

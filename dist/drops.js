@@ -57,7 +57,7 @@ class Drops {
                     claimBuffer.push(data);
                 };
                 this.ipcServer.onDropDispatched = data => dispatchStats = data;
-                this.ipcServer.broadcastNextDrop({ dropID: nextDrop.DropID, eventDropID: nextDrop.EventDropID.toString() });
+                this.ipcServer.broadcastNextDrop({ dropID: nextDrop.DropID.toString(), eventDropID: nextDrop.EventDropID.toString() });
                 // poll until dispatch data is set
                 while (!dispatchStats)
                     await this.idle(50);
@@ -74,14 +74,14 @@ class Drops {
                 while (Date.now() - dispatchStats.dispatchTimestamp < dropTimeout) {
                     // get the first claim and process it
                     lastClaim = claimBuffer.shift();
-                    if (lastClaim && lastClaim.dropID == nextDrop.DropID) {
+                    if (lastClaim && lastClaim.dropID == nextDrop.DropID.toString()) {
                         if (lastClaim.claimTimestamp - dispatchStats.dispatchTimestamp < 250) {
                             console.log("rejected spam", lastClaim);
                             continue;
                         }
                         // get claimed drop and double-check if drop still valid
                         console.log("Shifted claim:", lastClaim);
-                        const claimTarget = (await this.db.getDrop(nextDrop.DropID));
+                        const claimTarget = (await this.db.getDrop(nextDrop.DropID.toString()));
                         if (!claimedUsers.some(user => user == lastClaim?.userID) && claimTarget.result && claimTarget.result.CaughtLobbyPlayerID == "") {
                             // save user claimed
                             claimedUsers.push(lastClaim.userID);
@@ -92,10 +92,10 @@ class Drops {
                             // claim and reward drop
                             if (!leagueDrop)
                                 await this.db.rewardDrop(lastClaim.login, nextDrop.EventDropID);
-                            await this.db.claimDrop(lastClaim.lobbyKey, lastClaim.username, nextDrop.DropID, lastClaim.userID, leagueTime, claimTarget.result);
+                            await this.db.claimDrop(lastClaim.lobbyKey, lastClaim.username, nextDrop.DropID.toString(), lastClaim.userID, leagueTime, claimTarget.result);
                             // clear drop and exit loop
                             const clearData = {
-                                dropID: nextDrop.DropID,
+                                dropID: nextDrop.DropID.toString(),
                                 caughtLobbyKey: lastClaim.lobbyKey,
                                 claimTicket: lastClaim.claimTicket,
                                 caughtPlayer: "<abbr title='Drop ID: " + nextDrop.DropID + "'>" + lastClaim.username + "</abbr>",
@@ -164,7 +164,7 @@ class Drops {
                         ranks.push(otherRank);
                     });
                     this.ipcServer.broadcastRankDrop({
-                        dropID: nextDrop.DropID,
+                        dropID: nextDrop.DropID.toString(),
                         ranks: ranks
                     });
                     // SEND WEBHOOK 

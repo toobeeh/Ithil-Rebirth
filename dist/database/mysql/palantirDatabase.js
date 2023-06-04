@@ -507,6 +507,66 @@ class PalantirDatabase {
         }
         return result;
     }
+    async addCloudMeta(meta, ownerLogin) {
+        let success = false;
+        try {
+            const metaString = JSON.stringify(meta);
+            await this.update("INSERT INTO CloudTags VALUES (?, ?, ?)", [ownerLogin, meta.uuid, metaString]);
+            success = true;
+        }
+        catch (e) {
+            console.warn("Error in query: ", e);
+        }
+        return success;
+    }
+    async getCloudMetaMatch(meta, ownerLogin, limit = -1) {
+        let result = this.emptyResult();
+        try {
+            let where = "";
+            let whereParams = [];
+            if (meta.own === true) {
+                where += " AND json_extract(Tags,'$.own') ";
+            }
+            if (meta.title) {
+                where += " AND json_extract(Tags,'$.title') like ?";
+                whereParams.push("%" + meta.title + "%");
+            }
+            if (meta.author) {
+                where += " AND json_extract(Tags,'$.author') like ?";
+                whereParams.push("%" + meta.author + "%");
+            }
+            if (meta.date) {
+                where += " AND json_extract(Tags,'$.date') like ?";
+                whereParams.push(meta.date);
+            }
+            let rows = await this.get("SELECT * FROM CloudTags WHERE OWNER = ? " + where + " ORDER BY ImageID DESC" + (limit > 0 ? " LIMIT " + limit : ""), [ownerLogin, ...whereParams]);
+            result.result = [];
+            rows.forEach(row => {
+                try {
+                    result.result?.push(row.ImageID.toString());
+                }
+                catch (e) {
+                    console.warn("Error adding webhook: ", e);
+                }
+            });
+            result.success = true;
+        }
+        catch (e) {
+            console.warn("Error in query: ", e);
+        }
+        return result;
+    }
+    async removeCloudMeta(imageID, ownerLogin) {
+        let success = false;
+        try {
+            await this.update("DELETE FROM CloudTags WHERE Owner = ? AND ImageID = ?", [ownerLogin, imageID]);
+            success = true;
+        }
+        catch (e) {
+            console.warn("Error in query: ", e);
+        }
+        return success;
+    }
 }
 exports.default = PalantirDatabase;
 //# sourceMappingURL=palantirDatabase.js.map
