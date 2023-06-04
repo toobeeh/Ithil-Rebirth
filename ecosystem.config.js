@@ -19,8 +19,7 @@ module.exports = {
             instances: 1,
             wait_ready: true,
             listen_timeout: 10000,
-            time: true,
-            node_args: "--inspect=9229"
+            time: true
         }, {
             name: "Ithil-Rebirth Drop Server",
             script: "./dist/dropServer.js",
@@ -33,12 +32,8 @@ module.exports = {
         dropPort: 4001,
         workerRange: [4002, 4010],
         minAvailableWorker: 7,
-        certificatePath: '/etc/letsencrypt/live/typo.rip',
-        palantirDbPath: '/home/pi/Database/palantir.db',
-        statDbPath: '/home/pi/Database/typoStats.db',
-        imageDbParentPath: '/home/pi/Database/imagedb/',
         dbUser: "ithil",
-        dbHost: "108.61.190.186",
+        dbHost: env.DB_DOMAIN_NAME,
         dbPassword: ""
     }
 };
