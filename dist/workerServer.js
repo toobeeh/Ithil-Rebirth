@@ -193,6 +193,7 @@ portscanner_1.default.findAPortNotInUse(config.workerRange[0], config.workerRang
                 await asyncPalantirDb.open(config.dbUser, config.dbPassword, config.dbHost);
                 const memberResult = await asyncPalantirDb.getUserByLogin(loginResult.result.login);
                 const s3 = new cloud_1.S3CloudConnection(config.s3key, config.s3secret, Number(memberResult.result.member.UserLogin), asyncPalantirDb);
+                await s3.init();
                 const client = new typoClient_1.default(clientSocket, asyncPalantirDb, s3, memberResult.result, workerCache);
                 client.claimDropCallback = (eventdata) => {
                     eventdata.workerEventloopLatency = eventLoopLatency;

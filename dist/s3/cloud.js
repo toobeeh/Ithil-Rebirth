@@ -99,13 +99,13 @@ class S3CloudConnection {
         await this.database.addCloudMeta(metaTags, this.palantirToken.toString());
         return uuid;
     }
-    async searchObjectsByTags(tags) {
-        const matches = await this.database.getCloudMetaMatch(tags, this.palantirToken.toString(), 1000);
+    async searchObjectsByTags(tags, limit = -1) {
+        const matches = await this.database.getCloudMetaMatch(tags, this.palantirToken.toString(), limit === -1 ? 1000 : limit);
         return matches.result.map(m => ({
             uuid: m,
-            meta: `https://eu2.contabostorage.com/45a0651c8baa459daefd432c0307bb5b:cloud/${this.userID}/${m}/meta.json`,
-            commands: `https://eu2.contabostorage.com/45a0651c8baa459daefd432c0307bb5b:cloud/${this.userID}/${m}/commands.json`,
-            image: `https://eu2.contabostorage.com/45a0651c8baa459daefd432c0307bb5b:cloud/${this.userID}/${m}/image.png`
+            meta: `https://eu2.contabostorage.com/45a0651c8baa459daefd432c0307bb5b:cloud/${this.userFolder}/${m}/meta.json`,
+            commands: `https://eu2.contabostorage.com/45a0651c8baa459daefd432c0307bb5b:cloud/${this.userFolder}/${m}/commands.json`,
+            image: `https://eu2.contabostorage.com/45a0651c8baa459daefd432c0307bb5b:cloud/${this.userFolder}/${m}/image.png`
         }));
     }
     async removeDrawing(uuid) {

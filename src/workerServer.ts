@@ -222,6 +222,7 @@ portscanner.findAPortNotInUse(
                     const memberResult = await asyncPalantirDb.getUserByLogin(loginResult.result.login);
 
                     const s3 = new S3CloudConnection(config.s3key, config.s3secret, Number(memberResult.result.member.UserLogin), asyncPalantirDb);
+                    await s3.init();
 
                     const client = new TypoClient(clientSocket, asyncPalantirDb, s3, memberResult.result, workerCache);
                     client.claimDropCallback = (eventdata) => {
