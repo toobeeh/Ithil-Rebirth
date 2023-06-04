@@ -15,6 +15,7 @@ const uValue = argv.u;
 const key = argv.k;
 const secret = argv.s;
 const userOverride = argv.o;
+const udb_path = argv.p;
 // Check if the "u" argument exists and log its value
 if (uValue) {
     console.log('Exporting userdb to AWS from user:', uValue);
@@ -27,7 +28,6 @@ else {
 async function main() {
     /* init user img db */
     const asyncImageDb = await (0, threads_1.spawn)(new threads_1.Worker("./database/imageDatabaseWorker"));
-    const udb_path = "C:\\Users\\User\\";
     await asyncImageDb.init(uValue, udb_path);
     const metas = await asyncImageDb.getUserMeta(userOverride ?? uValue);
     /* init ptr db */

@@ -12,6 +12,7 @@ const uValue = (argv as any).u;
 const key = (argv as any).k;
 const secret = (argv as any).s;
 const userOverride = (argv as any).o;
+const udb_path = (argv as any).p;
 
 // Check if the "u" argument exists and log its value
 if (uValue) {
@@ -26,7 +27,6 @@ async function main() {
 
     /* init user img db */
     const asyncImageDb = await spawn<imageDatabaseWorker>(new Worker("./database/imageDatabaseWorker"));
-    const udb_path = "C:\\Users\\User\\";
     await asyncImageDb.init(uValue, udb_path);
     const metas = await asyncImageDb.getUserMeta(userOverride ?? uValue);
 
