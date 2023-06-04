@@ -26,11 +26,14 @@ class IthilHttpsServer {
         // Start the https server with cors on main port
         const serverExpress = express();
         serverExpress.use(cors());
-        const server = https.createServer({
+
+        const certConfig = certPath === "" ? {} : {
             key: fs.readFileSync(certPath + '/privkey.pem', 'utf8'),
             cert: fs.readFileSync(certPath + '/cert.pem', 'utf8'),
             ca: fs.readFileSync(certPath + '/chain.pem', 'utf8')
-        }, serverExpress);
+        };
+
+        const server = https.createServer(certConfig, serverExpress);
 
         this.httpsServer = server;
     }

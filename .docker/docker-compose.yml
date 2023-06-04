@@ -4,3 +4,6 @@ services:
   ithil-rebirth:
     container_name: ithil-rebirth
     image: "ghcr.io/toobeeh/ithil-rebirth/ithil-rebirth:latest"
+    environment:
+      - DB_DOMAIN_NAME=108.61.190.186
+      

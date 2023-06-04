@@ -77,8 +77,6 @@ portscanner.findAPortNotInUse(
         /**
          * Database worker to validate incoming member requests
          */
-        /* const databaseWorker = await spawn<palantirDatabaseWorker>(new Worker("./database/palantirDatabaseWorker"));
-        await databaseWorker.init(config.palantirDbPath); */
         const database = new PalantirDatabase();
         await database.open(config.dbUser, config.dbPassword, config.dbHost);
 

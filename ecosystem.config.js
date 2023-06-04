@@ -32,6 +32,7 @@ module.exports = {
         dropPort: 4001,
         workerRange: [4002, 4010],
         minAvailableWorker: 7,
+        certificatePath: "",
         dbUser: "ithil",
         dbHost: "DB_DOMAIN_NAME_SED_PLACEHOLDER",
         dbPassword: ""
