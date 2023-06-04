@@ -18,7 +18,7 @@ RUN echo "Installing npm modules..." && \
 
 # Build for production env
 RUN echo "Building app...\n" && \
-    npm run build \
+    npm run build && \
     echo "build was completed."
 
 FROM keymetrics/pm2:latest-alpine
