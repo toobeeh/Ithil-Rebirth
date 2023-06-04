@@ -33,7 +33,7 @@ module.exports = {
         workerRange: [4002, 4010],
         minAvailableWorker: 7,
         dbUser: "ithil",
-        dbHost: env.DB_DOMAIN_NAME,
+        dbHost: "DB_DOMAIN_NAME_SED_PLACEHOLDER",
         dbPassword: ""
     }
 };
