@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.S3CloudConnection = void 0;
 const client_s3_1 = require("@aws-sdk/client-s3");
-const nodejs_snowflake_1 = require("nodejs-snowflake");
+const snowflake_1 = require("@theinternetfolks/snowflake");
 class S3CloudConnection {
     constructor(key, secret, palantirToken, database) {
         this.palantirToken = palantirToken;
@@ -78,7 +78,7 @@ class S3CloudConnection {
      * uploads meta, image and commands to s3
      */
     async saveDrawing(drawing) {
-        const uuid = new nodejs_snowflake_1.Snowflake().getUniqueID();
+        const uuid = snowflake_1.Snowflake.generate().toString();
         const image = Buffer.from(drawing.uri.replace(/^data:image\/\w+;base64,/, ''), 'base64');
         const commandsString = JSON.stringify(drawing.commands);
         const meta = typeof drawing.meta === 'string' ? JSON.parse(drawing.meta) : drawing.meta;

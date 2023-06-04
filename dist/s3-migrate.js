@@ -45,9 +45,6 @@ async function main() {
             const meta = metas.result[i];
             const drawing = await asyncImageDb.getDrawing(meta.id);
             await s3.saveDrawing(drawing.result);
-            await new Promise(resolve => {
-                setTimeout(() => { resolve(); }, 50);
-            });
         }
         catch (e) {
             errorCount++;
@@ -60,7 +57,7 @@ async function main() {
             }
         }
     }
-    console.log("finished import");
+    console.log("finished import with " + errorCount + " errors");
     const results = await s3.searchObjectsByTags({ own: true });
     console.log(results);
     /* for (let r of results) {

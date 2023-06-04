@@ -1,7 +1,7 @@
 import { CreateBucketCommand, DeleteObjectCommand, HeadBucketCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { imageData, imageMeta } from "../database/types";
 import PalantirDatabase from "../database/mysql/palantirDatabase";
-import { Snowflake } from 'nodejs-snowflake';
+import { Snowflake } from "@theinternetfolks/snowflake";
 
 export interface metaTags {
     title: string;
@@ -94,7 +94,7 @@ export class S3CloudConnection {
      * uploads meta, image and commands to s3
      */
     async saveDrawing(drawing: imageData) {
-        const uuid = new Snowflake().getUniqueID();
+        const uuid = Snowflake.generate().toString();
 
         const image = Buffer.from(drawing.uri.replace(/^data:image\/\w+;base64,/, ''), 'base64');
         const commandsString = JSON.stringify(drawing.commands);
