@@ -78,7 +78,7 @@ class S3CloudConnection {
      * uploads meta, image and commands to s3
      */
     async saveDrawing(drawing) {
-        const uuid = snowflake_1.Snowflake.generate().toString();
+        const uuid = snowflake_1.Snowflake.generate();
         const image = Buffer.from(drawing.uri.replace(/^data:image\/\w+;base64,/, ''), 'base64');
         const commandsString = JSON.stringify(drawing.commands);
         const meta = typeof drawing.meta === 'string' ? JSON.parse(drawing.meta) : drawing.meta;

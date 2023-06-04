@@ -24,7 +24,6 @@ const balancer_1 = __importDefault(require("./balancer"));
 const drops_1 = __importDefault(require("./drops"));
 const ipc_1 = require("./ipc");
 const dataObserver_1 = __importDefault(require("./dataObserver"));
-const statDatabase_1 = __importDefault(require("./database/statDatabase"));
 const palantirDatabase_1 = __importDefault(require("./database/mysql/palantirDatabase"));
 const config = require("../ecosystem.config").config;
 // async setup
@@ -39,10 +38,6 @@ async function setup() {
      */
     const dataDb = new palantirDatabase_1.default();
     await dataDb.open(config.dbUser, config.dbPassword, config.dbHost);
-    /**
-     * Statistics database for logging user count
-     */
-    const statDb = new statDatabase_1.default(config.statDbPath);
     /**
      * Ithil workers load balancer
      */
@@ -93,7 +88,6 @@ async function setup() {
         socket.on("request port", async (data) => {
             // find and respond the least busy port, log client and close socket
             const port = (await balancer.getBalancedWorker()).port;
-            statDb.updateClientContact(data.client);
             socket.emit("balanced port", { port: port });
             socket.disconnect();
             console.log("Sent client to port " + port);

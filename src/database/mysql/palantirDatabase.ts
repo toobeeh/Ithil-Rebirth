@@ -519,7 +519,7 @@ class PalantirDatabase {
         return result;
     }
 
-    async addCloudMeta(meta: metaTags, ownerLogin: string, uuid: BigInt) {
+    async addCloudMeta(meta: metaTags, ownerLogin: string, uuid: string) {
         let success = false;
         try {
             await this.update("INSERT INTO CloudTags VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [ownerLogin, uuid, meta.title, meta.author, meta.own, meta.date, meta.language, meta.private]);

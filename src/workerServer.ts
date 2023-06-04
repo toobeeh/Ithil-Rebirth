@@ -19,9 +19,6 @@
 // import libs and local modules
 import * as types from "./database/types";
 import * as ithilSocketServer from './ithilSocketServer';
-import { palantirDatabaseWorker } from './database/palantirDatabaseWorker';
-import { imageDatabaseWorker } from './database/imageDatabaseWorker';
-import { spawn, Worker } from "threads";
 import { IthilIPCClient } from './ipc';
 import TypoClient from "./typoClient";
 import portscanner from "portscanner";
