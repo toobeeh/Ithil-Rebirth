@@ -1,5 +1,5 @@
 import portscanner from "portscanner";
-import {IpcClient} from "./ipc";
+import { IpcClient } from "./ipc";
 
 /**
  * Describes important details of a connected worker
@@ -24,10 +24,10 @@ interface worker {
 /**
  * Balancer object to balance load equally between worker servers
  */
- export default class Balancer {
-     /**
-     * Collection of currently connected workers
-     */
+export default class Balancer {
+    /**
+    * Collection of currently connected workers
+    */
     workers: Array<worker>;
 
     /**
@@ -43,39 +43,38 @@ interface worker {
     /**
     * Init new empty balancer
     */
-    constructor(config: any){
+    constructor(config: any) {
         this.workers = [];
         this.queue = [];
         this.config = config;
     }
-    
+
     /**
      * Add a worker
      * @param port The worker's socketio port
      * @param socket The worker's IPC socket
      */
-    addWorker(port:number, socket: IpcClient){
+    addWorker(port: number, socket: IpcClient) {
         // add worker to list
         this.workers.push({ port: port, socket: socket, clients: 0 });
         // resolve queues if present
-        if (this.workers.length >= this.config.minAvailableWorker) { 
-            this.queue.forEach(resolve => resolve()); 
-            this.queue = [] 
+        if (this.workers.length >= this.config.minAvailableWorker) {
+            this.queue.forEach(resolve => resolve());
+            this.queue = []
         };
         console.log("New Ithil Worker online on port " + port);
     }
 
-    
     /**
      * Remove a worker
      * @param port The worker's  socketio port
      */
     removeWorker(port: number) {
         // remove worker
-        this.workers.splice(this.workers.findIndex(worker => worker.port == port), 1); 
+        this.workers.splice(this.workers.findIndex(worker => worker.port == port), 1);
         console.log("Ithil Worker disconnected on port " + port);
     }
-    
+
     /**
      * Refresh list of online workers, necessary if a worker crashes
      */
@@ -94,21 +93,21 @@ interface worker {
     updateClients(port: number, clients: number) {
         let worker = this.workers.find(worker => worker.port == port);
         if (worker) worker.clients = clients;
-    } 
+    }
 
     /**
      * Get the least busy worker of all
      * @returns A worker object which is the least busy of all
      */
     async getBalancedWorker() {
-         // wait until minimum of workers are online
+        // wait until minimum of workers are online
         await new Promise((resolve, reject) => {
             if (this.workers.length < this.config.minAvailableWorker) this.queue.push(resolve);
             else resolve(true);
         });
 
         // return worker with fewest clients
-        return this.workers.sort((a, b) => a.clients - b.clients)[0]; 
+        return this.workers.sort((a, b) => a.clients - b.clients)[0];
     }
 
     /**
@@ -116,8 +115,8 @@ interface worker {
      * @returns A string containing the balancing
      */
     currentBalancing() {
-        return this.workers.reduce((sum, worker) => sum + Number(worker.clients), 0) 
-            + " clients | " 
+        return this.workers.reduce((sum, worker) => sum + Number(worker.clients), 0)
+            + " clients | "
             + this.workers.map(worker => `${worker.clients}@:${worker.port}`).join(", ");
     }
 }
