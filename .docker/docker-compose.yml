@@ -1,6 +1,6 @@
 version: "3.0"
 
 services:
-  ithil:
-    container_name: ithil
-    image: "ghcr.io/toobeeh/ithil/ithil:latest"
+  ithil-rebirth:
+    container_name: ithil-rebirth
+    image: "ghcr.io/toobeeh/ithil-rebirth/ithil-rebirth:latest"
