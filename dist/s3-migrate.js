@@ -37,15 +37,28 @@ async function main() {
     const s3 = new cloud_1.S3CloudConnection(key, secret, uValue, database);
     await s3.init();
     console.log("started import");
+    let errorCount = 0;
     //upload all drawings
     for (let i = 0; i < metas.result.length; i++) {
         console.log("processing drawing " + i + " of " + metas.result.length);
-        const meta = metas.result[i];
-        const drawing = await asyncImageDb.getDrawing(meta.id);
-        s3.saveDrawing(drawing.result);
-        await new Promise(resolve => {
-            setTimeout(() => { resolve(); }, 50);
-        });
+        try {
+            const meta = metas.result[i];
+            const drawing = await asyncImageDb.getDrawing(meta.id);
+            await s3.saveDrawing(drawing.result);
+            await new Promise(resolve => {
+                setTimeout(() => { resolve(); }, 50);
+            });
+        }
+        catch (e) {
+            errorCount++;
+            console.log(e);
+            try {
+                await s3.removeDrawing(metas.result[i].id);
+            }
+            catch (e) {
+                console.log("failed to remove failed drawing", e);
+            }
+        }
     }
     console.log("finished import");
     const results = await s3.searchObjectsByTags({ own: true });

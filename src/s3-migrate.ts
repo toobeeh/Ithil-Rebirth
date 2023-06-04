@@ -40,17 +40,32 @@ async function main() {
 
     console.log("started import");
 
+    let errorCount = 0;
+
     //upload all drawings
     for (let i = 0; i < metas.result.length; i++) {
         console.log("processing drawing " + i + " of " + metas.result.length);
-        const meta = metas.result[i];
-        const drawing = await asyncImageDb.getDrawing(meta.id);
+        try {
 
-        s3.saveDrawing(drawing.result);
+            const meta = metas.result[i];
+            const drawing = await asyncImageDb.getDrawing(meta.id);
 
-        await new Promise<void>(resolve => {
-            setTimeout(() => { resolve(); }, 50);
-        });
+            await s3.saveDrawing(drawing.result);
+
+            await new Promise<void>(resolve => {
+                setTimeout(() => { resolve(); }, 50);
+            });
+        }
+        catch (e) {
+            errorCount++;
+            console.log(e);
+            try {
+                await s3.removeDrawing(metas.result[i].id);
+            }
+            catch (e) {
+                console.log("failed to remove failed drawing", e);
+            }
+        }
     }
 
     console.log("finished import");
