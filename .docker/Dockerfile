@@ -22,14 +22,6 @@ RUN npm install pm2 -g
 ARG DB_DOMAIN_NAME="db.domain.tld"
 ENV DB_DOMAIN_NAME "${DB_DOMAIN_NAME}"
 
-# default env values for socket domain name
-ARG DB_DOMAIN_NAME="socket.domain.tld"
-ENV DB_DOMAIN_NAME "${SOCKET_DOMAIN_NAME}"
-
-# default env values for cert email
-ARG LETSENCRYPT_EMAIL="admin@example.com"
-ENV LETSENCRYPT_EMAIL "${LETSENCRYPT_EMAIL}"
-
 # Install Certbot
 RUN apk add --no-cache certbot
 
