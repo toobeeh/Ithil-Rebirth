@@ -1,4 +1,5 @@
 import https from 'https';
+import http from 'http';
 import fs from 'fs';
 import cors from 'cors';
 import express from "express";
@@ -15,7 +16,7 @@ class IthilHttpsServer {
     /**
      * The https server
      */
-    httpsServer: https.Server;
+    httpsServer: https.Server | http.Server;
 
     /**
      * Init https & express server
@@ -27,13 +28,13 @@ class IthilHttpsServer {
         const serverExpress = express();
         serverExpress.use(cors());
 
-        const certConfig = certPath === "" ? {} : {
-            key: fs.readFileSync(certPath + '/privkey.pem', 'utf8'),
-            cert: fs.readFileSync(certPath + '/cert.pem', 'utf8'),
-            ca: fs.readFileSync(certPath + '/chain.pem', 'utf8')
-        };
-
-        const server = https.createServer(certConfig, serverExpress);
+        const server = certPath === "" ?
+            http.createServer(serverExpress) :
+            https.createServer({
+                key: fs.readFileSync(certPath + '/privkey.pem', 'utf8'),
+                cert: fs.readFileSync(certPath + '/cert.pem', 'utf8'),
+                ca: fs.readFileSync(certPath + '/chain.pem', 'utf8')
+            }, serverExpress);
 
         this.httpsServer = server;
     }
