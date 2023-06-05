@@ -6,8 +6,6 @@ services:
     image: "ghcr.io/toobeeh/ithil-rebirth/ithil-rebirth:latest"
     environment:
       - DB_DOMAIN_NAME=108.61.190.186
-      - SOCKET_DOMAIN_NAME=socket.example.domain
-      - LETSENCRYPT_EMAIL=email@example.com
     ports: 
       - "4000-4010:4000-4010"
 
