@@ -22,12 +22,6 @@ RUN npm install pm2 -g
 ARG DB_DOMAIN_NAME="db.domain.tld"
 ENV DB_DOMAIN_NAME "${DB_DOMAIN_NAME}"
 
-# Install Certbot
-RUN apk add --no-cache certbot
-
-# add cert auto renewal
-RUN echo "0 0 * * * certbot renew" >> /var/spool/cron/crontabs/root
-
 WORKDIR /app/
 COPY --from=node-builder /app /app
 
