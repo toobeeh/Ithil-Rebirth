@@ -10,12 +10,6 @@ RUN echo "Installing npm modules..." && \
     echo "npm modules installed." && \
     npm cache clean --force
 
-# install over idk
-RUN echo "Installing npm modules..." && \
-    npm install || exit 1 && \
-    echo "npm modules installed." && \
-    npm cache clean --force
-
 # Build for production env
 RUN echo "Building app...\n" && \
     npm run build && \
@@ -24,9 +18,23 @@ RUN echo "Building app...\n" && \
 FROM node:alpine
 RUN npm install pm2 -g
 
-# default env values for domain name
+# default env values for db domain name
 ARG DB_DOMAIN_NAME="db.domain.tld"
 ENV DB_DOMAIN_NAME "${DB_DOMAIN_NAME}"
+
+# default env values for socket domain name
+ARG DB_DOMAIN_NAME="socket.domain.tld"
+ENV DB_DOMAIN_NAME "${SOCKET_DOMAIN_NAME}"
+
+# default env values for cert email
+ARG LETSENCRYPT_EMAIL="admin@example.com"
+ENV LETSENCRYPT_EMAIL "${LETSENCRYPT_EMAIL}"
+
+# Install Certbot
+RUN apk add --no-cache certbot
+
+# add cert auto renewal
+RUN echo "0 0 * * * certbot renew" >> /var/spool/cron/crontabs/root
 
 WORKDIR /app/
 COPY --from=node-builder /app /app
