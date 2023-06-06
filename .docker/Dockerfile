@@ -22,6 +22,12 @@ RUN npm install pm2 -g
 ARG DB_DOMAIN_NAME="db.domain.tld"
 ENV DB_DOMAIN_NAME "${DB_DOMAIN_NAME}"
 
+# default env values for s3 config
+ARG S3_KEY="S3_KEY"
+ARG S3_SECRET="S3_SECRET"
+ENV S3_KEY "${S3_KEY}"
+ENV S3_SECRET "${S3_SECRET}"
+
 WORKDIR /app/
 COPY --from=node-builder /app /app
 

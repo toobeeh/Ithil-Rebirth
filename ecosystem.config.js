@@ -35,6 +35,8 @@ module.exports = {
         certificatePath: "",
         dbUser: "ithil",
         dbHost: "DB_DOMAIN_NAME_SED_PLACEHOLDER",
-        dbPassword: ""
+        dbPassword: "",
+        s3key: "S3_KEY_SED_PLACEHOLDER",
+        s3secret: "S3_SECRET_SED_PLACEHOLDER",
     }
 };
