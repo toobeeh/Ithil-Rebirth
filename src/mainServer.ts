@@ -103,7 +103,7 @@ async function setup() {
 
             // find and respond the least busy port, log client and close socket
             const port = (await balancer.getBalancedWorker()).port;
-            const alias = `w${port - config.workerRange[0]}`;
+            const alias = `worker-${port - config.workerRange[0] + 1}`;
             socket.emit("balanced port", { port: port, alias: alias });
             socket.disconnect();
 
