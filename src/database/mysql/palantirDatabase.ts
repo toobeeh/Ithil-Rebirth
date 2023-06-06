@@ -1,4 +1,3 @@
-import sqlite3 from "better-sqlite3";
 import Drops from "../../drops";
 import * as types from "../types";
 import * as schema from "./schema";
@@ -555,11 +554,11 @@ class PalantirDatabase {
                 whereParams.push(meta.date);
             }
 
-            let rows = await this.get<schema.CloudTags>("SELECT * FROM CloudTags WHERE OWNER = ? " + where + " ORDER BY ImageID DESC" + (limit > 0 ? " LIMIT " + limit : ""), [ownerLogin, ...whereParams]);
+            let rows = await this.get<schema.CloudTags>("SELECT CAST(ImageID as varchar(20)) as ImageID FROM CloudTags WHERE OWNER = ? " + where + " ORDER BY ImageID DESC" + (limit > 0 ? " LIMIT " + limit : ""), [ownerLogin, ...whereParams]);
             result.result = [];
             rows.forEach(row => {
                 try {
-                    result.result?.push(row.ImageID.toString());
+                    result.result?.push(row["ImageID"].toString());
                 }
                 catch (e) {
                     console.warn("Error adding webhook: ", e);
