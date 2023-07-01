@@ -468,7 +468,7 @@ class PalantirDatabase {
     async isPalantirLobbyOwner(lobbyID: string, lobbyPlayerID: number) {
         let result = this.emptyResult<{ owner: boolean | null, ownerID: number | null }>();
         try {
-            let lobbyplayers = await this.get<{ playerid: number }>("SELECT json_extract(Status, '$.LobbyPlayerID') as playerid from Status where json_extract(Status, '$.LobbyID') = ?", [lobbyID]);
+            let lobbyplayers = await this.get<{ playerid: number }>("SELECT json_unquote(json_extract(Status, '$.LobbyPlayerID')) as playerid from Status where json_extract(Status, '$.LobbyID') = ?", [lobbyID]);
             result.result.owner = !lobbyplayers.some(player => Number(player.playerid) < lobbyPlayerID);
             if (lobbyplayers.length > 0) result.result.ownerID = lobbyplayers.sort((a, b) => a.playerid - b.playerid)[0].playerid;
             else {
