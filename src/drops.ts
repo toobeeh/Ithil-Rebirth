@@ -82,7 +82,7 @@ export default class Drops {
                 const dropTimeout = 5000;
                 const bufferPoll = 30;
                 let lastClaim: ipc.dropClaimEventdata | undefined;
-                let successfulClaims: Array<{ claim: ipc.dropClaimEventdata, leagueWeight: number }> = [];
+                let successfulClaims: Array<{ claim: ipc.dropClaimEventdata, leagueWeight: number, mode: 'league' | 'normal' }> = [];
                 let leagueDropClaimed = false;
 
                 // random league drop extension
@@ -111,6 +111,17 @@ export default class Drops {
                             /* detect if it was caught below 1s => leaguedrop */
                             let leagueDrop = lastClaim.claimTimestamp - dispatchStats.dispatchTimestamp < 1000 + leagueRandom;
 
+                            /* reject if drop was caught in league mode, but no league drop */
+                            if (!leagueDrop && lastClaim.dropMode === 'league') {
+                                console.log("rejected slow league mode");
+                                continue;
+                            }
+
+                            /* set league mode indicator */
+                            if (lastClaim.dropMode === 'league') {
+                                claimTarget.result.EventDropID = -1;
+                            }
+
                             /* time if league drop */
                             let leagueTime = leagueDrop ? lastClaim.claimTimestamp - dispatchStats.dispatchTimestamp : 0;
 
@@ -129,7 +140,7 @@ export default class Drops {
                             this.ipcServer.broadcastClearDrop(clearData);
 
                             /* collect claim */
-                            successfulClaims.push({ claim: lastClaim, leagueWeight: leagueTime });
+                            successfulClaims.push({ claim: lastClaim, leagueWeight: leagueTime, mode: lastClaim.dropMode });
 
                             /* if it was a league drop, accept other drops */
                             if (!leagueDrop) break;
@@ -149,19 +160,9 @@ export default class Drops {
                 console.log("Building ranks...");
                 if (successfulClaims.length > 0 && dispatchStats) {
                     const ranks: Array<string> = [];
-                    /* let firstRank = `<abbr title="`
-                            + `- drop server dispatch delay: ${dispatchStats.dispatchTimestamp - listenStartTimestamp}ms&#013;&#010;`
-                            + `- individual socket dispatch delay: ${dispatchStats.dispatchDelays.find(d => d.claimTicket == lastClaim?.claimTicket)?.delay}ms&#013;&#010;`
-                            + `- individual dispatch position: #${dispatchStats.dispatchDelays.find(d => d.claimTicket == lastClaim?.claimTicket)?.claimTicket}&#013;&#010;`
-                            + `- worker port/ID: ${lastClaim.workerPort}&#013;&#010;`
-                            + `- worker eventloop latency: ${lastClaim.workerEventloopLatency}ms&#013;&#010;`
-                            + `- worker claim verify delay: ${lastClaim.claimVerifyDelay}ms
-                    ">
-                        ${lastClaim.username} (after ${Math.round(lastClaim.claimTimestamp - dispatchStats.dispatchTimestamp)}ms)
-                    </abbr>`;
-                    ranks.push(firstRank); */
 
                     successfulClaims.forEach(claim => {
+                        const emote = claim.leagueWeight != 0 ? (claim.mode === 'normal' ? " 💎 " : " 🧿 ") : "";
                         let successfulRank = `<abbr title="`
                             + `- drop server dispatch delay: ${dispatchStats!.dispatchTimestamp - listenStartTimestamp}ms&#013;&#010;`
                             + `- individual socket dispatch delay: ${dispatchStats!.dispatchDelays.find(d => d.claimTicket == lastClaim?.claimTicket)?.delay}ms&#013;&#010;`
@@ -171,51 +172,15 @@ export default class Drops {
                             + `- worker claim verify delay: ${claim.claim.claimVerifyDelay}ms`
                             + `- worker to main delay: ${claim.claim.workerMasterDelay}ms
                         ">
-                            ${claim.claim.username} (${claim.leagueWeight != 0 ? " 💎 " : ""}after ${Math.round(claim.claim.claimTimestamp - dispatchStats!.dispatchTimestamp)}ms)
+                            ${claim.claim.username} (${emote}after ${Math.round(claim.claim.claimTimestamp - dispatchStats!.dispatchTimestamp)}ms)
                         </abbr>`;
                         ranks.push(successfulRank);
-                    });
-
-                    // disable regular drop ranking
-                    false && claimBuffer.forEach(claim => {
-                        let otherRank = `<abbr title="`
-                            + `- drop server dispatch delay: ${dispatchStats!.dispatchTimestamp - listenStartTimestamp}ms&#013;&#010;`
-                            + `- individual socket dispatch delay: ${dispatchStats?.dispatchDelays.find(d => d.claimTicket == claim.claimTicket)?.delay}ms&#013;&#010;`
-                            + `- individual dispatch position: #${dispatchStats?.dispatchDelays.find(d => d.claimTicket == claim.claimTicket)?.claimTicket}&#013;&#010;`
-                            + `- worker port/ID: ${claim.workerPort}&#013;&#010;`
-                            + `- worker eventloop latency: ${claim.workerEventloopLatency}ms&#013;&#010;`
-                            + `- worker claim verify delay: ${claim.claimVerifyDelay}ms
-                        ">
-                            ${claim.username} (+${Math.round(claim.claimTimestamp - lastClaim!.claimTimestamp)}ms)
-                        </abbr>`;
-                        ranks.push(otherRank);
                     });
 
                     this.ipcServer.broadcastRankDrop({
                         dropID: nextDrop.DropID.toString(),
                         ranks: ranks
                     });
-
-                    // SEND WEBHOOK 
-                    fetch(
-                        'https://discordapp.com/api/webhooks/738983040323289120/mzhXrZz0hqOuUaPUjB_RBTE8XJUFLe8fe9mgeJjQCaxjHX14c3SW3ZR199_CDEI-xT56',
-                        {
-                            method: 'post',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                // the username to be displayed
-                                username: 'Drop Log',
-                                // the avatar to be displayed
-                                avatar_url:
-                                    'https://media.discordapp.net/attachments/334696834322661376/987821727688036352/league_rnk1_drop.gif',
-                                // contents of the message to be sent
-                                content:
-                                    ranks.join("\n")
-                            }),
-                        }
-                    );
                 }
             }
             catch (e) {

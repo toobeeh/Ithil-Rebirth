@@ -59,6 +59,7 @@ export interface dropClaimEventdata {
     workerEventloopLatency: number;
     workerPort: number;
     workerMasterDelay: number;
+    dropMode: 'league' | 'normal';
 }
 
 export interface lobbyReportEventdata {
@@ -357,7 +358,7 @@ export class IthilIPCClient extends IthilIPC {
                 this.server = this.ipc.of[serverID];
 
                 // if client has a port, say hello and tell server which port is in use
-                if(workerPort >= 0){
+                if (workerPort >= 0) {
                     const eventdata: workerConnectEventdata = { port: workerPort };
                     this.emit(ipcEvents.workerConnect, eventdata);
                 }

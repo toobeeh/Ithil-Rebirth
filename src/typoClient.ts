@@ -135,6 +135,15 @@ export default class TypoClient {
         });
     }
 
+    get dropMode() {
+        if (!this.reportData.reportLobby) return 'normal';
+
+        if (this.reportData.reportLobby.Players.every(p => p.Score == 0 && !p.Drawing) && this.reportData.reportLobby.Private) {
+            return 'league';
+        }
+        else return 'normal';
+    }
+
     /** The authentificated member's username */
     username: string;
 
@@ -538,7 +547,8 @@ export default class TypoClient {
                 lobby: updatedLobby
             },
             owner: owner,
-            ownerID: ownerID
+            ownerID: ownerID,
+            dropMode: this.dropMode
         };
         return response;
     }
@@ -750,16 +760,11 @@ export default class TypoClient {
      * @param eventdata Eventdata containing the claim details
      */
     async claimDrop(eventdata: ithilSocketServer.claimDropEventdata) {
-        const flags = await this.flags;
         const claimTimestamp = Date.now();
+        const flags = await this.flags;
         if (flags.dropBan || eventdata.timedOut
             || !this.claimDropCallback || !this.reportData.joinedLobby
             || !this.reportData.reportLobby) throw new Error("Unauthorized drop claim");
-
-        if (this.reportData.reportLobby.Players.every(p => p.Score == 0 && !p.Drawing)) {
-            this.postMessage({ title: "Hold up", message: "The game has not started; you can't catch drops yet." });
-            return;
-        }
 
         const username = this.reportData.reportLobby.Players.find(p => p.Sender)?.Name;
         const lobbyKey = this.reportData.joinedLobby.Key;
@@ -776,7 +781,8 @@ export default class TypoClient {
             claimVerifyDelay: Date.now() - claimTimestamp,
             workerEventloopLatency: 0,
             workerPort: 0,
-            workerMasterDelay: Date.now()
+            workerMasterDelay: Date.now(),
+            dropMode: this.dropMode
         };
         this.claimDropCallback(claimData);
     }

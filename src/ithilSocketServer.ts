@@ -573,6 +573,11 @@ export interface setLobbyResponseEventdata {
      * The actual owner's lobby player ID
      */
     ownerID: number;
+
+    /**
+     * indicator whether caught drops count only for league
+     */
+    dropMode: 'normal' | 'league';
 }
 
 /**
