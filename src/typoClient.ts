@@ -210,9 +210,9 @@ export default class TypoClient {
         this.typosocket.subscribeSetLobbyEvent(this.setLobby.bind(this));
         this.typosocket.subscribeLeaveLobbyEvent(this.leaveLobby.bind(this));
         this.typosocket.subscribeSearchLobbyEvent(this.searchLobby.bind(this));
-        this.typosocket.subscribeStoreDrawingEvent(this.storeDrawing.bind(this));
+        /* this.typosocket.subscribeStoreDrawingEvent(this.storeDrawing.bind(this));
         this.typosocket.subscribeRemoveDrawingEvent(this.removeDrawing.bind(this));
-        this.typosocket.subscribeGetMetaEvent(this.getMeta.bind(this));
+        this.typosocket.subscribeGetMetaEvent(this.getMeta.bind(this)); */
         this.typosocket.subscribeClaimDropEvent(this.claimDrop.bind(this));
         this.typosocket.subscribePostImageEvent(this.postImage.bind(this));
 
