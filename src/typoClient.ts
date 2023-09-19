@@ -138,7 +138,7 @@ export default class TypoClient {
     get dropMode() {
         if (!this.reportData.reportLobby) return 'normal';
 
-        if (this.reportData.reportLobby.Players.every(p => p.Score == 0 && !p.Drawing) && this.reportData.reportLobby.Private) {
+        if (this.reportData.reportLobby.Players.every(p => p.Score == 0 && !p.Drawing)) {
             return 'league';
         }
         else return 'normal';
