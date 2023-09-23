@@ -138,7 +138,12 @@ export default class TypoClient {
     get dropMode() {
         if (!this.reportData.reportLobby) return 'normal';
 
-        if (this.reportData.reportLobby.Players.every(p => p.Score == 0 && !p.Drawing)) {
+        const noOneDrawing = this.reportData.reportLobby.Players.every(p => !p.Drawing);
+        const allPlayersZeroScore = this.reportData.reportLobby.Players.every(p => p.Score == 0);
+        const privateLobby = this.reportData.reportLobby.Private;
+        const aloneInLobby = this.reportData.reportLobby.Players.length === 1;
+
+        if (privateLobby && noOneDrawing && allPlayersZeroScore || !privateLobby && aloneInLobby) {
             return 'league';
         }
         else return 'normal';
