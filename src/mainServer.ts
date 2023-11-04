@@ -21,11 +21,19 @@ import Drops from './drops';
 import { IthilIPCServer } from './ipc';
 import DataObserver from './dataObserver';
 import PalantirDatabase from './database/mysql/palantirDatabase';
+import { Configuration, LobbiesApi } from './api';
 
 const config = require("../ecosystem.config").config;
 
+const api = new LobbiesApi(new Configuration({ basePath: "http://localhost:3000", accessToken: () => "knb76p7ReZxm70kG7ovH5JmWn5qBbgUTCgrpblWfCjBbUkds83FWZnnKVHoQiS63" }));
+
+
 // async setup
 async function setup() {
+
+    const l = await api.getAllLobbies();
+    console.log(l);
+    return;
 
     /**
      * Palantir main database connection

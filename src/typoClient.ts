@@ -681,16 +681,18 @@ export default class TypoClient {
      */
     async storeDrawing(eventdata: ithilSocketServer.storeDrawingEventdata) {
 
+        function isDefined<T>(val: T | null | undefined): val is T { return val === null || val === undefined };
+
         // fill missing meta
         const sanitizedMeta: types.imageMeta = {
-            author: eventdata.meta.author ? eventdata.meta.author : "Unknown",
-            date: eventdata.meta.date ? eventdata.meta.date : (new Date).toString(),
-            language: eventdata.meta.language ? eventdata.meta.language : "Unknown",
+            author: isDefined(eventdata.meta.author) ? eventdata.meta.author : "Unknown",
+            date: isDefined(eventdata.meta.date) ? eventdata.meta.date : (new Date).toString(),
+            language: isDefined(eventdata.meta.language) ? eventdata.meta.language : "Unknown",
             login: this.login,
-            name: eventdata.meta.name ? eventdata.meta.name.substring(0, 30) : "Unknown",
-            own: eventdata.meta.own ? eventdata.meta.own : false,
-            private: eventdata.meta.private ? eventdata.meta.private : true,
-            thumbnail: eventdata.meta.thumbnail ? eventdata.meta.thumbnail : ""
+            name: isDefined(eventdata.meta.name) ? eventdata.meta.name.substring(0, 30) : "Unknown",
+            own: isDefined(eventdata.meta.own) ? eventdata.meta.own : false,
+            private: isDefined(eventdata.meta.private) ? eventdata.meta.private : true,
+            thumbnail: isDefined(eventdata.meta.thumbnail) ? eventdata.meta.thumbnail : ""
         };
 
         const uuid = await this.cloud.saveDrawing({
