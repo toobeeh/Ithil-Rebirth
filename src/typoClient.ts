@@ -681,7 +681,7 @@ export default class TypoClient {
      */
     async storeDrawing(eventdata: ithilSocketServer.storeDrawingEventdata) {
 
-        function isDefined<T>(val: T | null | undefined): val is T { return val === null || val === undefined };
+        function isDefined<T>(val: T | null | undefined): val is T { return val !== null && val !== undefined };
 
         // fill missing meta
         const sanitizedMeta: types.imageMeta = {
