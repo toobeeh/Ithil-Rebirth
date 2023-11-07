@@ -496,7 +496,7 @@ export interface getAwardsResponseEventdata {
     /**
      * The member's available awards grouped by type, containing the inventory id
      */
-    awards: Map<number, number[]>;
+    awards: [number, number[]][];
 }
 
 /**

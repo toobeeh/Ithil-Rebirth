@@ -286,7 +286,9 @@ export default class TypoClient {
      * @returns the users currently availabe awards
      */
     async getAwards(): Promise<ithilSocketServer.getAwardsResponseEventdata> {
-        return { awards: await (sp(this.awardInventory)) };
+        const awards = await (sp(this.awardInventory));
+        const mapped = Array.from(awards);
+        return { awards: mapped };
     }
 
     /**
