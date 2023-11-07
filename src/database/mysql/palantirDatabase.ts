@@ -616,7 +616,7 @@ class PalantirDatabase {
         let result = this.emptyResult<number>();
 
         try {
-            let receiver = await this.first<schema.Status>(`SELECT * FROM Status WHERE json_extract(Status, '$.LobbyID') LIKE ? AND json_extract(Status, '$.LobbyPlayerID') LIKE ?`, [awardeeLobbyPlayerID]);
+            let receiver = await this.first<schema.Status>(`SELECT * FROM Status WHERE json_extract(Status, '$.LobbyID') LIKE ? AND json_extract(Status, '$.LobbyPlayerID') LIKE ?`, [awardeeLobbyID, awardeeLobbyPlayerID]);
             if (receiver == null) throw new Error("award receiver does not exist for " + awardeeLobbyID + ":" + awardeeLobbyPlayerID);
             const receiverLogin = JSON.parse(receiver.Status).PlayerMember.UserLogin;
 

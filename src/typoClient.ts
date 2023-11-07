@@ -309,7 +309,7 @@ export default class TypoClient {
         }
 
         const result = await this.palantirDatabaseWorker.giveAward(lobby.ID, request.lobbyPlayerId, request.awardInventoryId.toString());
-        console.log(this.login + " gave award " + request.awardInventoryId + " to " + result.result);
+        if (result.success) console.log(this.login + " gave award " + request.awardInventoryId + " to " + result.result);
     }
 
     /**
