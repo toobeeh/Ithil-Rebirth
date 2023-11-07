@@ -229,6 +229,8 @@ export default class TypoClient {
         this.typosocket.subscribeGetMetaEvent(this.getMeta.bind(this));
         this.typosocket.subscribeClaimDropEvent(this.claimDrop.bind(this));
         this.typosocket.subscribePostImageEvent(this.postImage.bind(this));
+        this.typosocket.susbcribeGetAwardsEvent(this.getAwards.bind(this));
+        this.typosocket.susbcribeGiveAwardEvent(this.giveAward.bind(this));
 
         // init report data 
         this.reportData = {
@@ -283,8 +285,8 @@ export default class TypoClient {
      * Handler for get user waward inventory event
      * @returns the users currently availabe awards
      */
-    async getAwards() {
-        return await (sp(this.awardInventory));
+    async getAwards(): Promise<ithilSocketServer.getAwardsResponseEventdata> {
+        return { awards: await (sp(this.awardInventory)) };
     }
 
     /**
