@@ -353,9 +353,9 @@ class PalantirDatabase {
             let params = statuses.map(s => [s.session, JSON.stringify(s.status)]).flat();
             this.update(query, params);
 
-            /* insert online rewardee tags */
+            /* insert online rewardee tags and remove old */
             const playing = statuses.filter(s => s.status.Status === "playing");
-            let queryR = "REPLACE INTO OnlineItems VALUES " + playing.map(s => "('rewardee',1,?,?,?, UNIX_TIMESTAMP())").join(", ");
+            let queryR = "DELETE FROM OnlineItems WHERE ItemType LIKE 'rewardee'; INSERT INTO OnlineItems VALUES " + playing.map(s => "('rewardee',1,?,?,?, UNIX_TIMESTAMP())").join(", ");
             let paramsR = playing.map(s => [s.status.LobbyID, s.lobbyKey, s.status.LobbyPlayerID]).flat();
             this.update(queryR, paramsR);
 
