@@ -592,6 +592,46 @@ class PalantirDatabase {
         }
         return success;
     }
+
+    async getUserAwardsInventory(userLogin: string) {
+        let result = this.emptyResult<Map<number, number[]>>();
+
+        try {
+            let rows = await this.get<schema.Awardees>(`SELECT * FROM Awardees WHERE OwnerLogin = ? AND AwardeeLogin IS NULL`, [userLogin]);
+            rows.reduce((map, current) => {
+                const list = map.get(current.Award);
+                if (list === undefined) map.set(current.Award, [current.ID]);
+                else list.push(current.ID);
+                return map;
+            }, new Map<number, number[]>())
+            result.success = true;
+        }
+        catch (e) {
+            console.warn("Error in query: ", e);
+        }
+        return result;
+    }
+
+    async giveAward(awardeeLobbyID: string, awardeeLobbyPlayerID: string, awardInventoryID: string) {
+        let result = this.emptyResult<number>();
+
+        try {
+            let receiver = await this.first<schema.Status>(`SELECT * FROM Status WHERE json_extract(Status, '$.LobbyID') LIKE ? AND json_extract(Status, '$.LobbyPlayerID') LIKE ?`, [awardeeLobbyPlayerID]);
+            if (receiver == null) throw new Error("award receiver does not exist for " + awardeeLobbyID + ":" + awardeeLobbyPlayerID);
+            const receiverLogin = JSON.parse(receiver.Status).PlayerMember.UserLogin;
+
+            let update = await this.update(`UPDATE Awardees SET AwardeeLogin = ? WHERE ID = ?`, [receiverLogin, awardInventoryID]);
+            if (update.affectedRows !== 1) {
+                throw new Error("did not update exactly one awardee");
+            }
+            result.result = receiverLogin;
+            result.success = true;
+        }
+        catch (e) {
+            console.warn("Error in query: ", e);
+        }
+        return result;
+    }
 }
 
 export default PalantirDatabase;

@@ -112,6 +112,15 @@ export default class TypoClient {
         });
     }
 
+    /** Get the member's current award inventory */
+    get awardInventory() {
+        return new Promise<Map<number, number[]>>(async resolve => {
+            const inv = await sp(this.palantirDatabaseWorker.getUserAwardsInventory(this.login));
+            if (inv.success === false) throw new Error("error reading awards");
+            resolve(inv.result);
+        });
+    }
+
     /** Get the authentificated member's flags */
     get flags() {
         return new Promise<types.memberFlags>(async resolve => {
@@ -268,6 +277,35 @@ export default class TypoClient {
         this.palantirDatabaseWorker.close();
 
         console.log(this.username + " disconnected.");
+    }
+
+    /**
+     * Handler for get user waward inventory event
+     * @returns the users currently availabe awards
+     */
+    async getAwards() {
+        return await (sp(this.awardInventory));
+    }
+
+    /**
+     * Handler for give award inventory
+     * Gives a user in the same lobby an award
+     */
+    async giveAward(request: ithilSocketServer.giveAwardEventdata) {
+        if (this.reportData.currentStatus !== "playing") throw new Error("wants to give an award but not playing");
+        const lobby = this.reportData.joinedLobby;
+        if (lobby === undefined) throw new Error("wants to give an award but no report lobby set");
+        const player = this.reportData.reportLobby?.Players.find(p => p.LobbyPlayerID.toString() == request.lobbyPlayerId);
+        if (player === undefined) throw new Error("wants to give an award but no player with that id");
+        if (player.Drawing === false) throw new Error("wants to give an award but target is not drawing");
+
+        const inv = await sp(this.awardInventory);
+        if ([...inv.values()].flat().every(awardId => awardId != request.awardInventoryId)) {
+            throw new Error("wants to give an award but does not posess inventory id");
+        }
+
+        const result = await this.palantirDatabaseWorker.giveAward(lobby.ID, request.lobbyPlayerId, request.awardInventoryId.toString());
+        console.log(this.login + " gave award " + request.awardInventoryId + " to " + result.result);
     }
 
     /**

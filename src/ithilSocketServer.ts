@@ -317,6 +317,22 @@ export class TypoSocketioClient {
         this.subscribeEventAsync<postImageEventdata, void>(eventNames.postImage, handler, false, false);
     }
 
+    /**
+     * Subscribe to the get awards event - client wants to get all available awards
+     * @param handler Handler that processes the clients awards inventory and returns it
+     */
+    susbcribeGetAwardsEvent(handler: () => Promise<getAwardsResponseEventdata>) {
+        this.subscribeEventAsync<void, getAwardsResponseEventdata>(eventNames.getAwards, handler, true, false);
+    }
+
+    /**
+     * Subscribe to the get awards event - client wants to get all available awards
+     * @param handler Handler that processes the clients awards inventory and returns it
+     */
+    susbcribeGiveAwardEvent(handler: (incoming: giveAwardEventdata) => Promise<void>) {
+        this.subscribeEventAsync<giveAwardEventdata, void>(eventNames.giveAward, handler, false, false);
+    }
+
 }
 
 //interfaces and event names for socketio communication
@@ -342,6 +358,8 @@ export const eventNames = Object.freeze({
     removeDrawing: "remove drawing",
     getCommands: "get commands",
     getMeta: "get meta",
+    getAwards: "get awards",
+    giveAward: "give award",
     postImage: "post image"
 });
 
@@ -468,6 +486,33 @@ export interface getUserResponseEventdata {
      * The member's permission flags
      */
     flags: types.memberFlags;
+}
+
+/**
+ * Socketio eventdata for the get award response
+ */
+export interface getAwardsResponseEventdata {
+
+    /**
+     * The member's available awards grouped by type, containing the inventory id
+     */
+    awards: Map<number, number[]>;
+}
+
+/**
+ * Socketio eventdata for the give award request
+ */
+export interface giveAwardEventdata {
+
+    /**
+     * The target lobby player which will receive the award
+     */
+    lobbyPlayerId: string;
+
+    /**
+     * The target lobby player which will receive the award
+     */
+    awardInventoryId: number;
 }
 
 /**
