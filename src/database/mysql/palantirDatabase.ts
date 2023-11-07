@@ -345,12 +345,20 @@ class PalantirDatabase {
       * @param key The session id of the status
       * @returns Indicator if the query succeeded
       */
-    async writePlayerStatusBulk(statuses: Array<{ session: string, status: types.playerStatus }>) {
+    async writePlayerStatusBulk(statuses: Array<{ session: string, status: types.playerStatus, lobbyKey: string, login: number }>) {
         let success = false;
         try {
+            /* insert statuses */
             let query = "REPLACE INTO Status VALUES " + statuses.map(s => "(?, ?, CURRENT_TIMESTAMP)").join(", ");
             let params = statuses.map(s => [s.session, JSON.stringify(s.status)]).flat();
             this.update(query, params);
+
+            /* insert online rewardee tags */
+            const playing = statuses.filter(s => s.status.Status === "playing");
+            let queryR = "REPLACE INTO OnlineItems VALUES " + playing.map(s => "('rewardee',1,?,?,?, UNIX_TIMESTAMP()").join(", ");
+            let paramsR = playing.map(s => [s.status.LobbyID, s.lobbyKey, s.status.LobbyPlayerID]).flat();
+            this.update(queryR, paramsR);
+
             success = true;
         }
         catch (e) {

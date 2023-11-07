@@ -653,7 +653,7 @@ export default class TypoClient {
                     LobbyPlayerID: (lobbyPlayerID ? lobbyPlayerID : 0).toString()
                 }
                 //await sp(this.palantirDatabaseWorker.writePlayerStatus(status, this.typosocket.socket.id));
-                if (this.reportStatusCallback) this.reportStatusCallback({ session: this.typosocket.socket.id, status: status });
+                if (this.reportStatusCallback) this.reportStatusCallback({ session: this.typosocket.socket.id, status: status, lobbyKey: guildReportTemplate.Key, login: Number(this.login) });
             }
         }
         else if (statusIsAnyOf("searching", "waiting")) {
@@ -667,7 +667,7 @@ export default class TypoClient {
                 LobbyPlayerID: ""
             }
             //await sp(this.palantirDatabaseWorker.writePlayerStatus(status, this.typosocket.socket.id));
-            if (this.reportStatusCallback) this.reportStatusCallback({ session: this.typosocket.socket.id, status: status });
+            if (this.reportStatusCallback) this.reportStatusCallback({ session: this.typosocket.socket.id, status: status, lobbyKey: "", login: Number(this.login) });
         }
         else if (statusIsAnyOf("idle")) {
             // do nothing. user is idling. yay.

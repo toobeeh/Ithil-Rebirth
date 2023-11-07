@@ -69,7 +69,9 @@ export interface lobbyReportEventdata {
 
 export interface lobbyStatusEventdata {
     status: types.playerStatus;
-    session: string
+    session: string;
+    lobbyKey: string;
+    login: number;
 }
 
 export interface clearDropEventdata {

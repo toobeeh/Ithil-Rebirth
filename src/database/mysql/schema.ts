@@ -32,6 +32,62 @@ export interface AccessTokensWithDefaults {
   CreatedAt?: Date
 }
 /**
+ * Exposes all fields present in Awardees as a typescript
+ * interface.
+ */
+export interface Awardees {
+  ID: number
+  Award: number
+  OwnerLogin: number
+  /**  Defaults to: NULL. */
+  AwardeeLogin?: number | null
+  /**  Defaults to: NULL. */
+  Date?: string | null
+}
+
+/**
+ * Exposes the same fields as Awardees,
+ * but makes every field containing a DEFAULT value optional.
+ *
+ * This is especially useful when generating inserts, as you
+ * should be able to omit these fields if you'd like
+ */
+export interface AwardeesWithDefaults {
+  ID?: number
+  Award: number
+  OwnerLogin: number
+  /**  Defaults to: NULL. */
+  AwardeeLogin?: number | null
+  /**  Defaults to: NULL. */
+  Date?: string | null
+}
+/**
+ * Exposes all fields present in Awards as a typescript
+ * interface.
+ */
+export interface Awards {
+  ID: number
+  Name: string
+  URL: string
+  Rarity: number
+  Description: string
+}
+
+/**
+ * Exposes the same fields as Awards,
+ * but makes every field containing a DEFAULT value optional.
+ *
+ * This is especially useful when generating inserts, as you
+ * should be able to omit these fields if you'd like
+ */
+export interface AwardsWithDefaults {
+  ID?: number
+  Name: string
+  URL: string
+  Rarity: number
+  Description: string
+}
+/**
  * Exposes all fields present in BoostSplits as a typescript
  * interface.
  */
@@ -470,7 +526,7 @@ export interface PalantiriWithDefaults {
   Palantir: string
 }
 /**
- * Exposes all fields present in PalantiriNightly as a typescript        
+ * Exposes all fields present in PalantiriNightly as a typescript
  * interface.
  */
 export interface PalantiriNightly {

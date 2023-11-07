@@ -4,7 +4,7 @@ import * as types from "./database/types";
 /**
  * Class that observes changes in the palantir db and broadcasts data if new data is found
  */
-export default class DataObserver{
+export default class DataObserver {
     /**
      * The source database
      */
@@ -22,7 +22,7 @@ export default class DataObserver{
 
     clientLobbyReports: Map<string, types.guildLobby[]>;
 
-    clientPlayerStatuses: Map<string, types.playerStatus>;
+    clientPlayerStatuses: Map<string, { status: types.playerStatus, lobbyKey: string, login: number }>;
 
     /**
      * The callback which fires when changes in active lobbies were found
@@ -32,7 +32,7 @@ export default class DataObserver{
     /**
      * The callback which fires when changes in active lobbies were found
      */
-     onPublicDataChanged?: (data: types.publicData) => void;
+    onPublicDataChanged?: (data: types.publicData) => void;
 
     /**
      * The interval in which active lobbies are monitored
@@ -77,7 +77,7 @@ export default class DataObserver{
     /**
      * Inits a new observer; dont forget to start!
      */
-    constructor(database: PalantirDatabase){
+    constructor(database: PalantirDatabase) {
         this.database = database;
         this.activeLobbies = [];
         this.clientLobbyReports = new Map();
@@ -95,11 +95,11 @@ export default class DataObserver{
     /**
      * Checks for changes in active lobbies and invoke callback if set
      */
-    async refreshActiveLobbies(){
+    async refreshActiveLobbies() {
         let dbResult = await this.database.getActiveLobbies();
-        if(dbResult.success && dbResult.result != null){
-            if(JSON.stringify(this.activeLobbies) != JSON.stringify(dbResult.result)
-                && this.onActiveLobbiesChanged){
+        if (dbResult.success && dbResult.result != null) {
+            if (JSON.stringify(this.activeLobbies) != JSON.stringify(dbResult.result)
+                && this.onActiveLobbiesChanged) {
                 this.onActiveLobbiesChanged(dbResult.result);
             }
             this.activeLobbies = dbResult.result;
@@ -109,13 +109,13 @@ export default class DataObserver{
     /**
      * Checks for changes in public data and invoke callback if set
      */
-    async refreshPublicData(){
+    async refreshPublicData() {
         let dbResult = await this.database.getPublicData();
-        if(dbResult.success && dbResult.result != null){
-            if((JSON.stringify(this.publicData.onlineScenes) != JSON.stringify(dbResult.result.onlineScenes) 
+        if (dbResult.success && dbResult.result != null) {
+            if ((JSON.stringify(this.publicData.onlineScenes) != JSON.stringify(dbResult.result.onlineScenes)
                 || JSON.stringify(this.publicData.onlineSprites) != JSON.stringify(dbResult.result.onlineSprites)
                 || JSON.stringify(this.publicData.onlineItems) != JSON.stringify(dbResult.result.onlineItems))
-                && this.onPublicDataChanged){
+                && this.onPublicDataChanged) {
                 this.onPublicDataChanged(dbResult.result);
             }
             this.publicData = dbResult.result;
@@ -128,32 +128,32 @@ export default class DataObserver{
     async clearVolatile() {
         await this.database.clearVolatile();
     }
-    
-    async writeClientReports(){
+
+    async writeClientReports() {
         let reports = [...this.clientLobbyReports.values()].flat();
-        let statuses = [...this.clientPlayerStatuses.entries()].map(e => ({session: e[0], status: e[1]}));
+        let statuses = [...this.clientPlayerStatuses.entries()].map(e => ({ session: e[0], ...e[1] }));
 
         this.clientLobbyReports.clear();
         this.clientPlayerStatuses.clear();
 
-        if(reports.length > 0) await this.database.writePlayerStatusBulk(statuses);
-        if(statuses.length > 0) await this.database.writeReport(reports);
+        if (reports.length > 0) await this.database.writePlayerStatusBulk(statuses);
+        if (statuses.length > 0) await this.database.writeReport(reports);
     }
 
     /**
      * Start data observation
      */
-    observe(){
-        if(!this.lobbiesInterval) {
+    observe() {
+        if (!this.lobbiesInterval) {
             this.lobbiesInterval = setInterval(() => this.refreshActiveLobbies(), this.lobbiesRefreshRate);
         }
-        if(!this.dataInterval) {
+        if (!this.dataInterval) {
             this.dataInterval = setInterval(() => this.refreshPublicData(), this.dataRefreshRate);
         }
-        if(!this.clearInterval){
+        if (!this.clearInterval) {
             this.clearInterval = setInterval(() => this.clearVolatile(), this.clearRate);
         }
-        if(!this.clientDataWriteInterval){
+        if (!this.clientDataWriteInterval) {
             this.clientDataWriteInterval = setInterval(() => this.writeClientReports(), this.clientDataWriteRate);
         }
     }
@@ -161,20 +161,20 @@ export default class DataObserver{
     /**
      * Stop observation of data
      */
-    stop(){
-        if(this.lobbiesInterval) {
+    stop() {
+        if (this.lobbiesInterval) {
             clearInterval(this.lobbiesInterval);
             this.lobbiesInterval = null;
         }
-        if(this.dataInterval) {
+        if (this.dataInterval) {
             clearInterval(this.dataInterval);
             this.dataInterval = null;
         }
-        if(this.clearInterval) {
+        if (this.clearInterval) {
             clearInterval(this.clearInterval);
             this.clearInterval = null;
         }
-        if(this.clientDataWriteInterval) {
+        if (this.clientDataWriteInterval) {
             clearInterval(this.clientDataWriteInterval);
             this.clientDataWriteInterval = null;
         }

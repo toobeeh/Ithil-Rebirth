@@ -86,7 +86,7 @@ async function setup() {
     }
 
     ipcServer.onStatusReport = (data, socket) => {
-        dataObserver.clientPlayerStatuses.set(data.session, data.status);
+        dataObserver.clientPlayerStatuses.set(data.session, { status: data.status, lobbyKey: data.lobbyKey, login: data.login });
     }
 
     // add callbacks to data observer events
