@@ -351,13 +351,14 @@ class PalantirDatabase {
             /* insert statuses */
             let query = "REPLACE INTO Status VALUES " + statuses.map(s => "(?, ?, CURRENT_TIMESTAMP)").join(", ");
             let params = statuses.map(s => [s.session, JSON.stringify(s.status)]).flat();
-            this.update(query, params);
+            await this.update(query, params);
 
             /* insert online rewardee tags and remove old */
             const playing = statuses.filter(s => s.status.Status === "playing");
-            let queryR = "DELETE FROM OnlineItems WHERE ItemType LIKE 'rewardee'; INSERT INTO OnlineItems VALUES " + playing.map(s => "('rewardee',1,?,?,?, UNIX_TIMESTAMP())").join(", ");
+            await this.update("DELETE FROM OnlineItems WHERE ItemType LIKE 'rewardee'", []);
+            let queryR = "INSERT INTO OnlineItems VALUES " + playing.map(s => "('rewardee',1,?,?,?, UNIX_TIMESTAMP())").join(", ");
             let paramsR = playing.map(s => [s.status.LobbyID, s.lobbyKey, s.status.LobbyPlayerID]).flat();
-            this.update(queryR, paramsR);
+            await this.update(queryR, paramsR);
 
             success = true;
         }
