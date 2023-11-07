@@ -355,7 +355,7 @@ class PalantirDatabase {
 
             /* insert online rewardee tags */
             const playing = statuses.filter(s => s.status.Status === "playing");
-            let queryR = "REPLACE INTO OnlineItems VALUES " + playing.map(s => "('rewardee',1,?,?,?, UNIX_TIMESTAMP()").join(", ");
+            let queryR = "REPLACE INTO OnlineItems VALUES " + playing.map(s => "('rewardee',1,?,?,?, UNIX_TIMESTAMP())").join(", ");
             let paramsR = playing.map(s => [s.status.LobbyID, s.lobbyKey, s.status.LobbyPlayerID]).flat();
             this.update(queryR, paramsR);
 
