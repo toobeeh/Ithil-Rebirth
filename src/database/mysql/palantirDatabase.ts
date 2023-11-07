@@ -598,12 +598,12 @@ class PalantirDatabase {
 
         try {
             let rows = await this.get<schema.Awardees>(`SELECT * FROM Awardees WHERE OwnerLogin = ? AND AwardeeLogin IS NULL`, [userLogin]);
-            rows.reduce((map, current) => {
+            result.result = rows.reduce((map, current) => {
                 const list = map.get(current.Award);
                 if (list === undefined) map.set(current.Award, [current.ID]);
                 else list.push(current.ID);
                 return map;
-            }, new Map<number, number[]>())
+            }, new Map<number, number[]>());
             result.success = true;
         }
         catch (e) {
