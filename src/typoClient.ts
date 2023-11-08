@@ -276,7 +276,6 @@ export default class TypoClient {
         }
 
         this.palantirDatabaseWorker.close();
-        this.palantirDatabaseWorker.close();
 
         console.log(this.username + " disconnected.");
     }

@@ -78,7 +78,7 @@ portscanner.findAPortNotInUse(
          * Database worker to validate incoming member requests
          */
         const database = new PalantirDatabase();
-        await database.open(config.dbUser, config.dbPassword, config.dbHost);
+        await database.open(config.dbUser, config.dbPassword, config.dbHost, 20);
 
         /**
          * The IPC connection to the main server
@@ -216,9 +216,11 @@ portscanner.findAPortNotInUse(
 
                     const memberResult = await asyncPalantirDb.getUserByLogin(loginResult.result.login);
 
+                    console.log("Init S3 for " + memberResult.result.member.UserName);
                     const s3 = new S3CloudConnection(config.s3key, config.s3secret, Number(memberResult.result.member.UserLogin), asyncPalantirDb);
                     await s3.init();
 
+                    console.log("Init client for " + memberResult.result.member.UserName);
                     const client = new TypoClient(clientSocket, asyncPalantirDb, s3, memberResult.result, workerCache);
                     client.claimDropCallback = (eventdata) => {
                         eventdata.workerEventloopLatency = eventLoopLatency;
