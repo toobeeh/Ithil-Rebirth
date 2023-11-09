@@ -187,8 +187,6 @@ portscanner.findAPortNotInUse(
             else workerSocketServer.volatile.emit(data.eventName, eventData);
         };
 
-        ipcClient.sendSocketBroadcastRequest?.({ eventData: { hi: "hello" }, eventName: "hi", onlyForLoggedIn: false });
-
         // listen for new socket connections
         workerSocketServer.on("connection", (socket) => {
 
