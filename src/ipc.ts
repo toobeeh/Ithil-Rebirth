@@ -6,6 +6,8 @@ let ipcAbused = new IPC().of[""];
 export type IpcClient = typeof ipcAbused;
 
 export const ipcEvents = Object.freeze({
+    requestSocketBroadcast: "requestSocketBroadcast",
+    socketBroadcast: "socketBroadcast",
     workerConnect: "workerConnect",
     workerDisconnect: "socket.disconnected",
     updateBalance: "updatePortBalance",
@@ -22,6 +24,12 @@ export const ipcEvents = Object.freeze({
 
 export interface workerConnectEventdata {
     port: number;
+}
+
+export interface socketBroadcastEventdata {
+    onlyForLoggedIn: boolean;
+    eventName: string;
+    eventData: any;
 }
 
 export interface updatePortBalanceEventdata {
@@ -125,6 +133,13 @@ export class IthilIPCServer extends IthilIPC {
     onWorkerConnected?: (data: workerConnectEventdata, socket: IpcClient) => void;
 
     /**
+     * Callback when a worker requests to boradcast an event to all sockets in all workers
+     * @param data {@link socketBroadcastEventdata}
+     * @param socket The worker's ipc socket
+     */
+    onSocketBroadcastRequest?: (data: socketBroadcastEventdata, socket: IpcClient) => void;
+
+    /**
      * Callback when the IPC connection to a worker crashes, most likely due to a crash on the worker
      * @param socketID The disconnected socket's ID
      * @param socket The dsiconnected worker's ipc socket
@@ -219,6 +234,11 @@ export class IthilIPCServer extends IthilIPC {
                 if (this.onWorkerConnected) this.onWorkerConnected(data, socket);
             });
 
+            // broadcast event when requested
+            this.on(ipcEvents.requestSocketBroadcast, (data: socketBroadcastEventdata, socket: IpcClient) => {
+                this.broadcast(ipcEvents.socketBroadcast, data);
+            });
+
             this.on(ipcEvents.updateBalance, (data: updatePortBalanceEventdata, socket: IpcClient) => {
                 if (this.onBalanceChanged) this.onBalanceChanged(data, socket);
             });
@@ -301,6 +321,12 @@ export class IthilIPCClient extends IthilIPC {
     sendLobbyReport?: (data: lobbyReportEventdata) => void;
 
     /**
+     * Emit an event to the main server containing a request for a socket broadcast
+     * @param data Event data containing the socket event data
+     */
+    sendSocketBroadcastRequest?: (data: socketBroadcastEventdata) => void;
+
+    /**
      * Emit an event to the main server containing a drop claim request.
      * @param data Event data containing the dro pclaim
      */
@@ -337,6 +363,12 @@ export class IthilIPCClient extends IthilIPC {
     onDropRank?: (data: rankDropEventdata) => void;
 
     /**
+     * Callback when the server emits data for a socket broadcast
+     * @param data {@link EventdataInterfaces.socketBroadcastEventdata}
+     */
+    onSocketBroadcast?: (data: socketBroadcastEventdata) => void;
+
+    /**
      * Create a new ithil client ipc socket
      * @param id The ID of the ipc socket
      */
@@ -371,6 +403,7 @@ export class IthilIPCClient extends IthilIPC {
                 this.claimDrop = (data) => this.emit(ipcEvents.dropClaim, data);
                 this.sendLobbyReport = data => this.emit(ipcEvents.lobbyReport, data);
                 this.sendLobbyStatus = data => this.emit(ipcEvents.statusReport, data);
+                this.sendSocketBroadcastRequest = data => this.emit(ipcEvents.requestSocketBroadcast, data);
 
                 // init predefined events
                 this.on(ipcEvents.activeLobbies, (data, socket) => {
@@ -391,6 +424,10 @@ export class IthilIPCClient extends IthilIPC {
 
                 this.on(ipcEvents.rankDrop, (data, socket) => {
                     this.onDropRank?.(data);
+                });
+
+                this.on(ipcEvents.socketBroadcast, (data, socket) => {
+                    this.onSocketBroadcast?.(data);
                 });
 
                 resolve();

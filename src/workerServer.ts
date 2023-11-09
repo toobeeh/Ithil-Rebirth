@@ -176,6 +176,19 @@ portscanner.findAPortNotInUse(
          */
         let connectedSockets: Array<ithilSocketServer.TypoSocketioClient> = [];
 
+        /* broadcast data */
+        ipcClient.onSocketBroadcast = (data) => {
+            console.log(data);
+            const eventData: ithilSocketServer.eventBase<ithilSocketServer.rankDropEventdata> = {
+                event: data.eventName,
+                payload: data.eventData
+            };
+            if (data.onlyForLoggedIn === true) workerSocketServer.volatile.to("authorized").emit(data.eventName, eventData);
+            else workerSocketServer.volatile.emit(data.eventName, eventData);
+        };
+
+        ipcClient.sendSocketBroadcastRequest?.({ eventData: { hi: "hello" }, eventName: "hi", onlyForLoggedIn: false });
+
         // listen for new socket connections
         workerSocketServer.on("connection", (socket) => {
 
@@ -222,6 +235,7 @@ portscanner.findAPortNotInUse(
 
                     console.log("Init client for " + memberResult.result.member.UserName);
                     const client = new TypoClient(clientSocket, asyncPalantirDb, s3, memberResult.result, workerCache);
+                    clientSocket.socket.join("authorized");
                     client.claimDropCallback = (eventdata) => {
                         eventdata.workerEventloopLatency = eventLoopLatency;
                         eventdata.workerPort = workerPort;
@@ -229,6 +243,7 @@ portscanner.findAPortNotInUse(
                     };
                     client.reportLobbyCallback = eventdata => { ipcClient.sendLobbyReport?.(eventdata); }
                     client.reportStatusCallback = eventdata => { ipcClient.sendLobbyStatus?.(eventdata); }
+                    client.requestDataBroadcast = eventdata => { ipcClient.sendSocketBroadcastRequest?.(eventdata); }
 
                     memberResult.result.member.Guilds.forEach(guild => clientSocket.socket.join("guild" + guild.GuildID));
 

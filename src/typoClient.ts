@@ -1,6 +1,6 @@
 import * as types from "./database/types";
 import * as ithilSocketServer from "./ithilSocketServer";
-import { dropClaimEventdata, lobbyReportEventdata, lobbyStatusEventdata } from './ipc';
+import { dropClaimEventdata, lobbyReportEventdata, lobbyStatusEventdata, socketBroadcastEventdata } from './ipc';
 import fetch from 'make-fetch-happen';
 import { eventNames } from './ithilSocketServer';
 import PalantirDatabase from './database/mysql/palantirDatabase';
@@ -179,6 +179,9 @@ export default class TypoClient {
     /** callback to report the clients status */
     reportStatusCallback?: (eventdata: lobbyStatusEventdata) => void = undefined;
 
+    /** callback to report the clients status */
+    requestDataBroadcast?: (broadcast: socketBroadcastEventdata) => void = undefined;
+
     /** Object that represents the state of the socket for reporting playing status */
     reportData: {
 
@@ -303,12 +306,22 @@ export default class TypoClient {
         if (player.Drawing === false) throw new Error("wants to give an award but target is not drawing");
 
         const inv = await sp(this.awardInventory);
-        if ([...inv.values()].flat().every(awardId => awardId != request.awardInventoryId)) {
+        const item = [...inv.values()].flat().find(awardId => awardId == request.awardInventoryId);
+        if (item === undefined) {
             throw new Error("wants to give an award but does not posess inventory id");
         }
+        const itemAwardId = [...inv.keys()].find(key => inv.get(key)?.includes(item) === true);
 
         const result = await this.palantirDatabaseWorker.giveAward(lobby.ID, request.lobbyPlayerId, request.awardInventoryId.toString());
-        if (result.success) console.log(this.login + " gave award " + request.awardInventoryId + " to " + result.result);
+        if (result.success) {
+            console.log(this.login + " gave award " + itemAwardId + " to " + result.result);
+            const awardResult = {
+                lobbyKey: lobby.Key,
+                lobbyPlayerID: player.LobbyPlayerID,
+                awardId: itemAwardId
+            };
+            this.requestDataBroadcast?.({ eventName: "drawingAwarded", eventData: awardResult, onlyForLoggedIn: false });
+        }
     }
 
     /**
