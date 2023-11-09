@@ -317,8 +317,9 @@ export default class TypoClient {
             console.log(this.login + " gave award " + itemAwardId + " to " + result.result);
             const awardResult = {
                 lobbyKey: lobby.Key,
-                lobbyPlayerID: player.LobbyPlayerID,
-                awardId: itemAwardId
+                lobbyPlayerId: player.LobbyPlayerID,
+                awardId: itemAwardId,
+                from: this.reportData.reportLobby?.Players.find(p => p.Sender)?.LobbyPlayerID
             };
             this.requestDataBroadcast?.({ eventName: "drawingAwarded", eventData: awardResult, onlyForLoggedIn: false });
         }
