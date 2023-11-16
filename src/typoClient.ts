@@ -312,7 +312,7 @@ export default class TypoClient {
         }
         const itemAwardId = [...inv.keys()].find(key => inv.get(key)?.includes(item) === true);
 
-        const result = await this.palantirDatabaseWorker.giveAward(lobby.ID, request.lobbyPlayerId, request.awardInventoryId.toString());
+        const result = await this.palantirDatabaseWorker.giveAward(lobby.ID, request.lobbyPlayerId, request.awardInventoryId.toString(), itemAwardId + "", lobby.Key);
         if (result.success) {
             console.log(this.login + " gave award " + itemAwardId + " to " + result.result);
             const awardResult = {

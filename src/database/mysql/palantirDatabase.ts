@@ -243,7 +243,7 @@ class PalantirDatabase {
             const scenes = await this.get<schema.Scenes>("SELECT * FROM Scenes", []);
 
             // get online items
-            let now = Math.round(Date.now() / 1000)
+            let now = Math.round(Date.now() / 1000);
             const onlineitems = await this.get<schema.OnlineItems>("SELECT * FROM OnlineItems WHERE Date > " + (now - 25).toString() + "", []);
 
             result.result = {
@@ -378,7 +378,8 @@ class PalantirDatabase {
             await this.get("DELETE FROM Reports WHERE Date < DATE_ADD(CURRENT_TIMESTAMP, INTERVAL -30 SECOND)", []);
             await this.get("DELETE FROM Status WHERE Date < DATE_ADD(CURRENT_TIMESTAMP, INTERVAL -10 SECOND)", []);
             await this.get("DELETE FROM OnlineSprites WHERE Date < DATE_ADD(CURRENT_TIMESTAMP, INTERVAL -30 SECOND)", []);
-            await this.get("DELETE FROM OnlineItems WHERE FROM_UNIXTIME(Date) < DATE_ADD(CURRENT_TIMESTAMP, INTERVAL -30 SECOND)", []);
+            await this.get("DELETE FROM OnlineItems WHERE FROM_UNIXTIME(Date) < DATE_ADD(CURRENT_TIMESTAMP, INTERVAL -30 SECOND) AND NOT (ItemType = 'lobbyAwardee')", []);
+            await this.get("DELETE FROM OnlineItems WHERE FROM_UNIXTIME(Date) < DATE_ADD(CURRENT_TIMESTAMP, INTERVAL -2 DAY) AND (ItemType = 'lobbyAwardee')", []);
             await this.get("DELETE FROM Lobbies WHERE json_extract(Lobby, '$.ID') NOT IN (SELECT DISTINCT json_extract(Status, '$.LobbyID') FROM Status WHERE json_extract(Status, '$.LobbyID') IS NOT NULL) AND FROM_UNIXTIME(LobbyID / 1000) < DATE_ADD(CURRENT_TIMESTAMP, INTERVAL -24 HOUR);", []);
 
             // delete duplicate keys with different IDs
@@ -613,7 +614,7 @@ class PalantirDatabase {
         return result;
     }
 
-    async giveAward(awardeeLobbyID: string, awardeeLobbyPlayerID: string, awardInventoryID: string) {
+    async giveAward(awardeeLobbyID: string, awardeeLobbyPlayerID: string, awardInventoryID: string, awardId: string, awardeeLobbyKey: string) {
         let result = this.emptyResult<number>();
 
         try {
@@ -625,6 +626,11 @@ class PalantirDatabase {
             if (update.affectedRows !== 1) {
                 throw new Error("did not update exactly one awardee");
             }
+
+            /* add to online items */
+            let now = Math.round(Date.now() / 1000);
+            update = await this.update(`UPDATE INTO OnlineItems VALUES ('lobbyAward', ?, ?, ?, ?, ?)`, [awardId, awardId, awardeeLobbyKey, awardeeLobbyPlayerID, now]);
+
             result.result = receiverLogin;
             result.success = true;
         }
