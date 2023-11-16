@@ -378,8 +378,8 @@ class PalantirDatabase {
             await this.get("DELETE FROM Reports WHERE Date < DATE_ADD(CURRENT_TIMESTAMP, INTERVAL -30 SECOND)", []);
             await this.get("DELETE FROM Status WHERE Date < DATE_ADD(CURRENT_TIMESTAMP, INTERVAL -10 SECOND)", []);
             await this.get("DELETE FROM OnlineSprites WHERE Date < DATE_ADD(CURRENT_TIMESTAMP, INTERVAL -30 SECOND)", []);
-            await this.get("DELETE FROM OnlineItems WHERE FROM_UNIXTIME(Date) < DATE_ADD(CURRENT_TIMESTAMP, INTERVAL -30 SECOND) AND NOT (ItemType = 'lobbyAwardee')", []);
-            await this.get("DELETE FROM OnlineItems WHERE FROM_UNIXTIME(Date) < DATE_ADD(CURRENT_TIMESTAMP, INTERVAL -2 DAY) AND (ItemType = 'lobbyAwardee')", []);
+            await this.get("DELETE FROM OnlineItems WHERE FROM_UNIXTIME(Date) < DATE_ADD(CURRENT_TIMESTAMP, INTERVAL -30 SECOND) AND ItemType NOT LIKE 'award'", []);
+            await this.get("DELETE FROM OnlineItems WHERE FROM_UNIXTIME(Date) < DATE_ADD(CURRENT_TIMESTAMP, INTERVAL -2 DAY) AND ItemType LIKE 'award'", []);
             await this.get("DELETE FROM Lobbies WHERE json_extract(Lobby, '$.ID') NOT IN (SELECT DISTINCT json_extract(Status, '$.LobbyID') FROM Status WHERE json_extract(Status, '$.LobbyID') IS NOT NULL) AND FROM_UNIXTIME(LobbyID / 1000) < DATE_ADD(CURRENT_TIMESTAMP, INTERVAL -24 HOUR);", []);
 
             // delete duplicate keys with different IDs
@@ -629,7 +629,7 @@ class PalantirDatabase {
 
             /* add to online items */
             let now = Math.round(Date.now() / 1000);
-            update = await this.update(`UPDATE INTO OnlineItems VALUES ('lobbyAward', ?, ?, ?, ?, ?)`, [awardId, awardId, awardeeLobbyKey, awardeeLobbyPlayerID, now]);
+            update = await this.update(`REPLACE INTO OnlineItems VALUES ('award', ?, ?, ?, ?, ?)`, [awardId, awardId, awardeeLobbyKey, awardeeLobbyPlayerID, now]);
 
             result.result = receiverLogin;
             result.success = true;
