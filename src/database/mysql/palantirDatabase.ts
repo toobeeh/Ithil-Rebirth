@@ -638,7 +638,7 @@ class PalantirDatabase {
         let result = this.emptyResult<boolean>();
 
         try {
-            let update = await this.update(`UPDATE Awardees SET ImageID = ? WHERE ID = ? AND AwardeeLogin ? `, [imageID, awardInventoryID, ownerLogin]);
+            let update = await this.update(`UPDATE Awardees SET ImageID = ? WHERE ID = ? AND AwardeeLogin = ? `, [imageID, awardInventoryID, ownerLogin]);
             result.result = update.affectedRows === 1;
             result.success = true;
         }

@@ -178,7 +178,6 @@ portscanner.findAPortNotInUse(
 
         /* broadcast data */
         ipcClient.onSocketBroadcast = (data) => {
-            console.log(data);
             const eventData: ithilSocketServer.eventBase<ithilSocketServer.rankDropEventdata> = {
                 event: data.eventName,
                 payload: data.eventData
