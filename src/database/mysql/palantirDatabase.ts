@@ -244,7 +244,7 @@ class PalantirDatabase {
 
             // get online items
             let now = Math.round(Date.now() / 1000);
-            const onlineitems = await this.get<schema.OnlineItems>("SELECT * FROM OnlineItems WHERE Date > " + (now - 25).toString() + "", []);
+            const onlineitems = await this.get<schema.OnlineItems>("SELECT * FROM OnlineItems WHERE ItemType LIKE 'award' OR Date > " + (now - 25).toString() + "", []);
 
             result.result = {
                 drops: eventdrops.map(d => ({ EventDropID: d.EventDropID, EventID: d.EventID, Name: d.Name, URL: d.URL })),
