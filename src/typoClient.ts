@@ -319,6 +319,7 @@ export default class TypoClient {
                 lobbyKey: lobby.Key,
                 lobbyPlayerId: player.LobbyPlayerID,
                 awardId: itemAwardId,
+                awardInventoryId: item,
                 from: this.reportData.reportLobby?.Players.find(p => p.Sender)?.LobbyPlayerID
             };
             this.requestDataBroadcast?.({ eventName: "drawingAwarded", eventData: awardResult, onlyForLoggedIn: false });
@@ -755,6 +756,11 @@ export default class TypoClient {
             commands: eventdata.commands,
             uri: eventdata.uri
         });
+
+        /* try to claim award drawing */
+        if (eventdata.linkAwardId !== undefined) {
+            await this.palantirDatabaseWorker.linkAwardToImage(eventdata.linkAwardId, uuid, this.login);
+        }
 
         const response: ithilSocketServer.drawingIDEventdata = {
             id: uuid.toString()

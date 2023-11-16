@@ -531,6 +531,7 @@ class PalantirDatabase {
         let success = false;
         try {
             await this.update("INSERT INTO CloudTags VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [ownerLogin, uuid, meta.title, meta.author, meta.own, meta.date, meta.language, meta.private]);
+
             success = true;
         }
         catch (e) {
@@ -620,11 +621,25 @@ class PalantirDatabase {
             if (receiver == null) throw new Error("award receiver does not exist for " + awardeeLobbyID + ":" + awardeeLobbyPlayerID);
             const receiverLogin = JSON.parse(receiver.Status).PlayerMember.UserLogin;
 
-            let update = await this.update(`UPDATE Awardees SET AwardeeLogin = ? WHERE ID = ?`, [receiverLogin, awardInventoryID]);
+            let update = await this.update(`UPDATE Awardees SET AwardeeLogin = ?, Date = ? WHERE ID = ?`, [receiverLogin, Date.now(), awardInventoryID]);
             if (update.affectedRows !== 1) {
                 throw new Error("did not update exactly one awardee");
             }
             result.result = receiverLogin;
+            result.success = true;
+        }
+        catch (e) {
+            console.warn("Error in query: ", e);
+        }
+        return result;
+    }
+
+    async linkAwardToImage(awardInventoryID: number, imageID: string, ownerLogin: string) {
+        let result = this.emptyResult<boolean>();
+
+        try {
+            let update = await this.update(`UPDATE Awardees SET ImageID = ? WHERE ID = ? AND AwardeeLogin ? `, [imageID, awardInventoryID, ownerLogin]);
+            result.result = update.affectedRows === 1;
             result.success = true;
         }
         catch (e) {

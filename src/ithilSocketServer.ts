@@ -672,6 +672,11 @@ export interface storeDrawingEventdata {
     uri: string;
 
     /**
+     * The id of the potential award for this drawing
+     */
+    linkAwardId?: number;
+
+    /**
      * The image's draw commands, see {@link types.imageData.commands}
      */
     commands: Array<Array<Array<number> | number>>;
