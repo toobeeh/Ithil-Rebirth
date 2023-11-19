@@ -614,6 +614,20 @@ class PalantirDatabase {
         return result;
     }
 
+    async getAwards() {
+        let result = this.emptyResult<schema.Awards[]>();
+
+        try {
+            let rows = await this.get<schema.Awards>(`SELECT * FROM Awards`, []);
+            result.result = rows;
+            result.success = true;
+        }
+        catch (e) {
+            console.warn("Error in query: ", e);
+        }
+        return result;
+    }
+
     async giveAward(awardeeLobbyID: string, awardeeLobbyPlayerID: string, awardInventoryID: string, awardId: string, awardeeLobbyKey: string) {
         let result = this.emptyResult<number>();
 
@@ -646,6 +660,19 @@ class PalantirDatabase {
         try {
             let update = await this.update(`UPDATE Awardees SET ImageID = ? WHERE ID = ? AND AwardeeLogin = ? `, [imageID, awardInventoryID, ownerLogin]);
             result.result = update.affectedRows === 1;
+            result.success = true;
+        }
+        catch (e) {
+            console.warn("Error in query: ", e);
+        }
+        return result;
+    }
+
+    async rewardSplits(receiverLogin: number, splitId: number, comment: string, valueOverride: number = -1) {
+        let result = this.emptyResult<boolean>();
+
+        try {
+            let update = await this.update(`INSERT INTO SplitCredits VALUES (?, ?, DATE_FORMAT(NOW(), '%d/%m/%Y'), ?, ?)`, [receiverLogin, splitId, comment, valueOverride]);
             result.success = true;
         }
         catch (e) {

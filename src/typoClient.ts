@@ -311,8 +311,20 @@ export default class TypoClient {
             throw new Error("wants to give an award but does not posess inventory id");
         }
         const itemAwardId = [...inv.keys()].find(key => inv.get(key)?.includes(item) === true);
+        const awards = await this.palantirDatabaseWorker.getAwards();
+        const rarity = awards.result.find(a => a.ID == itemAwardId)?.Rarity
 
         const result = await this.palantirDatabaseWorker.giveAward(lobby.ID, request.lobbyPlayerId, request.awardInventoryId.toString(), itemAwardId + "", lobby.Key);
+
+        if (rarity && rarity > 2) {
+            const name = this.reportData.reportLobby?.Players.find(p => p.Drawing)?.Name ?? "Unknown";
+            await this.palantirDatabaseWorker.rewardSplits(
+                result.result,
+                rarity == 3 ? 20 : 21,
+                "Awarded from " + name
+            );
+        }
+
         if (result.success) {
             console.log(this.login + " gave award " + itemAwardId + " to " + result.result);
             const awardResult = {
