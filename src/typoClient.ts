@@ -317,7 +317,7 @@ export default class TypoClient {
         const result = await this.palantirDatabaseWorker.giveAward(lobby.ID, request.lobbyPlayerId, request.awardInventoryId.toString(), itemAwardId + "", lobby.Key);
 
         if (rarity && rarity > 2) {
-            const name = this.reportData.reportLobby?.Players.find(p => p.Drawing)?.Name ?? "Unknown";
+            const name = this.reportData.reportLobby?.Players.find(p => p.Sender)?.Name ?? "Unknown";
             await this.palantirDatabaseWorker.rewardSplits(
                 result.result,
                 rarity == 3 ? 20 : 21,
