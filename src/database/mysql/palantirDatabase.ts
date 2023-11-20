@@ -628,13 +628,14 @@ class PalantirDatabase {
         return result;
     }
 
-    async giveAward(awardeeLobbyID: string, awardeeLobbyPlayerID: string, awardInventoryID: string, awardId: string, awardeeLobbyKey: string) {
+    async giveAward(awardeeLobbyID: string, awardeeLobbyPlayerID: string, awardInventoryID: string, awardId: string, awardeeLobbyKey: string, awarderLogin: string) {
         let result = this.emptyResult<number>();
 
         try {
             let receiver = await this.first<schema.Status>(`SELECT * FROM Status WHERE json_extract(Status, '$.LobbyID') = ? AND json_extract(Status, '$.LobbyPlayerID') = ?`, [awardeeLobbyID, awardeeLobbyPlayerID]);
             if (receiver == null) throw new Error("award receiver does not exist for " + awardeeLobbyID + ":" + awardeeLobbyPlayerID);
             const receiverLogin = JSON.parse(receiver.Status).PlayerMember.UserLogin;
+            if (receiverLogin == awarderLogin) throw new Error("receiver and giver are the same");
 
             let update = await this.update(`UPDATE Awardees SET AwardeeLogin = ?, Date = ? WHERE ID = ?`, [receiverLogin, Date.now(), awardInventoryID]);
             if (update.affectedRows !== 1) {

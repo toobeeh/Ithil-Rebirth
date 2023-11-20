@@ -314,7 +314,16 @@ export default class TypoClient {
         const awards = await this.palantirDatabaseWorker.getAwards();
         const rarity = awards.result.find(a => a.ID == itemAwardId)?.Rarity
 
-        const result = await this.palantirDatabaseWorker.giveAward(lobby.ID, request.lobbyPlayerId, request.awardInventoryId.toString(), itemAwardId + "", lobby.Key);
+        let result;
+        try {
+            result = await this.palantirDatabaseWorker.giveAward(lobby.ID, request.lobbyPlayerId, request.awardInventoryId.toString(), itemAwardId + "", lobby.Key, this.login);
+        }
+        catch (e: any) {
+            if (e.message == "receiver and giver are the same") {
+                this.postMessage({ message: "You can't give yourself awards.", title: "Sneaky one!" })
+            }
+            return;
+        }
 
         if (rarity && rarity > 2) {
             const name = this.reportData.reportLobby?.Players.find(p => p.Sender)?.Name ?? "Unknown";
