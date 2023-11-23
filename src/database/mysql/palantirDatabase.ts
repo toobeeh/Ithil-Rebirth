@@ -673,7 +673,7 @@ class PalantirDatabase {
         let result = this.emptyResult<boolean>();
 
         try {
-            let update = await this.update(`INSERT INTO SplitCredits VALUES (?, ?, DATE_FORMAT(NOW(), '%d/%m/%Y'), ?, ?)`, [receiverLogin, splitId, comment, valueOverride]);
+            let update = await this.update(`INSERT INTO SplitCredits VALUES (DEFAULT, ?, ?, DATE_FORMAT(NOW(), '%d/%m/%Y'), ?, ?)`, [receiverLogin, splitId, comment, valueOverride]);
             result.success = true;
         }
         catch (e) {

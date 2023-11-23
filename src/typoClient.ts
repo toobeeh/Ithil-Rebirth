@@ -313,13 +313,14 @@ export default class TypoClient {
         const itemAwardId = [...inv.keys()].find(key => inv.get(key)?.includes(item) === true);
         const awards = await this.palantirDatabaseWorker.getAwards();
         const rarity = awards.result.find(a => a.ID == itemAwardId)?.Rarity
+        const awardName = awards.result.find(a => a.ID == itemAwardId)?.Name
 
         let result;
         try {
             result = await this.palantirDatabaseWorker.giveAward(lobby.ID, request.lobbyPlayerId, request.awardInventoryId.toString(), itemAwardId + "", lobby.Key, this.login);
         }
         catch (e: any) {
-            if (e.message == "receiver and giver are the same") {
+            if (e.message == "receiver and giver are the same") { // somehow not working?
                 this.postMessage({ message: "You can't give yourself awards.", title: "Sneaky one!" })
             }
             return;
@@ -330,7 +331,7 @@ export default class TypoClient {
             await this.palantirDatabaseWorker.rewardSplits(
                 result.result,
                 rarity == 3 ? 20 : 21,
-                "Awarded from " + name
+                awardName + " awarded from " + name
             );
         }
 
