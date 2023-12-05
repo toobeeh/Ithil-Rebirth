@@ -40,7 +40,7 @@ export class S3CloudConnection {
      */
     async init() {
         this.userID = await this.getUserDiscordID();
-        await this.ensureBucketExists(this.bucketName);
+        // await this.ensureBucketExists(this.bucketName); skip this for performance; ASSUME bucket exists!
     }
 
     /**
