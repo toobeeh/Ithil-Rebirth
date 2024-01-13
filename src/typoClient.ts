@@ -448,6 +448,9 @@ export default class TypoClient {
      * @param eventdata Eventdata containing webhook name, server id, image URI
      */
     async postImage(eventdata: ithilSocketServer.postImageEventdata) {
+
+        console.log(`${this.login} posted to ${eventdata.webhookName}`);
+
         const memberServers = (await this.getUser()).user.member.Guilds;
         const postServer = memberServers.find(server => server.GuildID == eventdata.serverID);
 
