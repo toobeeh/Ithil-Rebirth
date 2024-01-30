@@ -102,8 +102,11 @@ export class S3CloudConnection {
             }
         };
 
-        console.log("would delete " + idParam.length + " images: " + idParam[0].Key + " - " + idParam[idParam.length - 1].Key);
-        //await this.client.send(new DeleteObjectsCommand(deleteParams));
+        //console.log("would delete " + idParam.length + " images: " + idParam[0].Key + " - " + idParam[idParam.length - 1].Key);
+        await this.client.send(new DeleteObjectsCommand(deleteParams));
+        await this.database.removeCloudMeta(ids.result, this.palantirToken.toString());
+
+        console.log(`removed ${idParam.length} drawings from the cloud of ${this.palantirToken}`);
     }
 
     /**
