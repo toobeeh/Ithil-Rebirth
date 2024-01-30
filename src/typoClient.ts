@@ -276,6 +276,7 @@ export default class TypoClient {
         const flags = await sp(this.flags);
         if (!flags.admin || !flags.patron || !flags.unlimitedCloud) {
             /* TODO REMOVE CLOUD CONTENT */
+            await this.cloud.bulkDeleteOlderThan(180);
         }
 
         this.palantirDatabaseWorker.close();

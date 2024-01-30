@@ -595,6 +595,33 @@ class PalantirDatabase {
         return success;
     }
 
+    async getDeletableCloudMetaOlderThan(days: number, ownerLogin: number) {
+
+        let result = this.emptyResult<Array<string>>();
+        const deleteFrom = Date.now() - (days * 24 * 60 * 60 * 1000);
+
+        try {
+
+            let rows = await this.get<schema.CloudTags>(`
+                SELECT CAST(ImageID as varchar(20)) as ImageID FROM CloudTags 
+                WHERE OWNER = ? AND Date < ?  AND (ImageID NOT IN (SELECT ImageID FROM Awardees WHERE Awardees.AwardeeLogin = ? AND ImageID IS NOT NULL))`, [ownerLogin, deleteFrom, ownerLogin]);
+            result.result = [];
+            rows.forEach(row => {
+                try {
+                    result.result?.push(row["ImageID"].toString());
+                }
+                catch (e) {
+                    console.warn("Error getting meta older than: ", e);
+                }
+            });
+            result.success = true;
+        }
+        catch (e) {
+            console.warn("Error in query: ", e);
+        }
+        return result;
+    }
+
     async getUserAwardsInventory(userLogin: string) {
         let result = this.emptyResult<Map<number, number[]>>();
 

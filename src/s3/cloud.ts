@@ -1,4 +1,4 @@
-import { CreateBucketCommand, DeleteObjectCommand, HeadBucketCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { CreateBucketCommand, DeleteObjectCommand, DeleteObjectsCommand, DeleteObjectsCommandInput, HeadBucketCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { imageData, imageMeta } from "../database/types";
 import PalantirDatabase from "../database/mysql/palantirDatabase";
 import { Snowflake } from "@theinternetfolks/snowflake";
@@ -88,6 +88,22 @@ export class S3CloudConnection {
 
         const command = new PutObjectCommand(params);
         await this.client.send(command);
+    }
+
+    public async bulkDeleteOlderThan(days: number) {
+
+        const ids = await this.database.getDeletableCloudMetaOlderThan(days, this.palantirToken);
+        const idParam = ids.result.map(id => ({ Key: id }));
+
+        const deleteParams: DeleteObjectsCommandInput = {
+            Bucket: this.bucketName,
+            Delete: {
+                Objects: idParam
+            }
+        };
+
+        console.log("would delete " + idParam.length + " images: " + idParam[0].Key + " - " + idParam[idParam.length - 1].Key);
+        //await this.client.send(new DeleteObjectsCommand(deleteParams));
     }
 
     /**
