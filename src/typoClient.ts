@@ -274,8 +274,7 @@ export default class TypoClient {
      */
     async onDisconnect(reason: string) {
         const flags = await sp(this.flags);
-        if (!flags.admin || !flags.patron || !flags.unlimitedCloud) {
-            /* TODO REMOVE CLOUD CONTENT */
+        if (!flags.admin && !flags.patron && !flags.unlimitedCloud) {
             await this.cloud.bulkDeleteOlderThan(180);
         }
 
