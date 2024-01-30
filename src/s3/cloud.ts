@@ -98,9 +98,9 @@ export class S3CloudConnection {
 
         // loop through 300s batches, limited by s3 api
         const stack = ids.result;
+        let deleted = 0;
         while (stack.length > 0) {
             const head = stack.splice(0, 500);
-
 
             const idParam = head.map(id => [
                 { Key: `${this.userFolder}/${id}/image.png` },
@@ -116,11 +116,12 @@ export class S3CloudConnection {
             };
 
             //console.log("would delete " + idParam.length + " images: " + idParam[0].Key + " - " + idParam[idParam.length - 1].Key);
-            await this.client.send(new DeleteObjectsCommand(deleteParams));
+            const response = await this.client.send(new DeleteObjectsCommand(deleteParams));
+            deleted += response.Deleted?.length ?? 0;
             await this.database.removeCloudMeta(head, this.palantirToken.toString());
         }
 
-        console.log(`removed ${count} drawings from the cloud of ${this.palantirToken}`);
+        console.log(`removed ${deleted} drawings from the cloud of ${this.palantirToken}`);
     }
 
     /**
