@@ -140,15 +140,15 @@ export class S3CloudConnection {
         const matches = await this.database.getCloudMetaMatch(tags, this.palantirToken.toString(), limit === -1 ? 1000 : limit);
         return matches.result.map(m => ({
             uuid: m,
-            meta: `https://eu2.contabostorage.com/45a0651c8baa459daefd432c0307bb5b:cloud/${this.userFolder}/${m}/meta.json`,
-            commands: `https://eu2.contabostorage.com/45a0651c8baa459daefd432c0307bb5b:cloud/${this.userFolder}/${m}/commands.json`,
-            image: `https://eu2.contabostorage.com/45a0651c8baa459daefd432c0307bb5b:cloud/${this.userFolder}/${m}/image.png`
+            meta: `https://cloud.typo.rip/${this.userFolder}/${m}/meta.json`,
+            commands: `https://cloud.typo.rip/${this.userFolder}/${m}/commands.json`,
+            image: `https://cloud.typo.rip/${this.userFolder}/${m}/image.png`
         }));
     }
 
     async removeDrawing(uuid: string) {
 
-        await this.database.removeCloudMeta(uuid, this.palantirToken.toString());
+        await this.database.removeCloudMeta([uuid], this.palantirToken.toString());
 
         // remove folder from s3
         const params = {

@@ -583,10 +583,10 @@ class PalantirDatabase {
         return result;
     }
 
-    async removeCloudMeta(imageID: string, ownerLogin: string) {
+    async removeCloudMeta(imageIDs: string[], ownerLogin: string) {
         let success = false;
         try {
-            await this.update("DELETE FROM CloudTags WHERE Owner = ? AND ImageID = ?", [ownerLogin, imageID]);
+            await this.update("DELETE FROM CloudTags WHERE Owner = ? AND ImageID IN (?)", [ownerLogin, imageIDs]);
             success = true;
         }
         catch (e) {
