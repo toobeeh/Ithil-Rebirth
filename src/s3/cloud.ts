@@ -96,12 +96,17 @@ export class S3CloudConnection {
         const count = ids.result.length;
         if (count == 0) return;
 
-        // loop through 1000s batches, limited by s3 api
+        // loop through 300s batches, limited by s3 api
         const stack = ids.result;
         while (stack.length > 0) {
             const head = stack.splice(0, 500);
 
-            const idParam = head.map(id => ({ Key: id }));
+
+            const idParam = head.map(id => [
+                { Key: `${this.userFolder}/${id}/image.png` },
+                { Key: `${this.userFolder}/${id}/meta.json` },
+                { Key: `${this.userFolder}/${id}/commands.json` }
+            ]).flat();
 
             const deleteParams: DeleteObjectsCommandInput = {
                 Bucket: this.bucketName,
