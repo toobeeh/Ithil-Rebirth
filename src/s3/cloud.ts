@@ -95,20 +95,26 @@ export class S3CloudConnection {
         const ids = await this.database.getDeletableCloudMetaOlderThan(days, this.palantirToken);
         if (ids.result.length == 0) return;
 
-        const idParam = ids.result.map(id => ({ Key: id }));
+        // loop through 1000s batches, limited by s3 api
+        const stack = ids.result;
+        while (stack.length > 0) {
+            const head = stack.splice(0, 500);
 
-        const deleteParams: DeleteObjectsCommandInput = {
-            Bucket: this.bucketName,
-            Delete: {
-                Objects: idParam
-            }
-        };
+            const idParam = head.map(id => ({ Key: id }));
 
-        //console.log("would delete " + idParam.length + " images: " + idParam[0].Key + " - " + idParam[idParam.length - 1].Key);
-        await this.client.send(new DeleteObjectsCommand(deleteParams));
-        await this.database.removeCloudMeta(ids.result, this.palantirToken.toString());
+            const deleteParams: DeleteObjectsCommandInput = {
+                Bucket: this.bucketName,
+                Delete: {
+                    Objects: idParam
+                }
+            };
 
-        console.log(`removed ${idParam.length} drawings from the cloud of ${this.palantirToken}`);
+            //console.log("would delete " + idParam.length + " images: " + idParam[0].Key + " - " + idParam[idParam.length - 1].Key);
+            await this.client.send(new DeleteObjectsCommand(deleteParams));
+            await this.database.removeCloudMeta(head, this.palantirToken.toString());
+        }
+
+        console.log(`removed ${ids.result.length} drawings from the cloud of ${this.palantirToken}`);
     }
 
     /**
