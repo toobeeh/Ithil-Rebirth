@@ -93,6 +93,8 @@ export class S3CloudConnection {
     public async bulkDeleteOlderThan(days: number) {
 
         const ids = await this.database.getDeletableCloudMetaOlderThan(days, this.palantirToken);
+        if (ids.result.length == 0) return;
+
         const idParam = ids.result.map(id => ({ Key: id }));
 
         const deleteParams: DeleteObjectsCommandInput = {
