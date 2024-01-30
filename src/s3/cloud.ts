@@ -100,7 +100,7 @@ export class S3CloudConnection {
         const stack = ids.result;
         let deleted = 0;
         while (stack.length > 0) {
-            const head = stack.splice(0, 500);
+            const head = stack.splice(0, 300);
 
             const idParam = head.map(id => [
                 { Key: `${this.userFolder}/${id}/image.png` },
