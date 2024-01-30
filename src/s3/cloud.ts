@@ -93,7 +93,8 @@ export class S3CloudConnection {
     public async bulkDeleteOlderThan(days: number) {
 
         const ids = await this.database.getDeletableCloudMetaOlderThan(days, this.palantirToken);
-        if (ids.result.length == 0) return;
+        const count = ids.result.length;
+        if (true || count == 0) return;
 
         // loop through 1000s batches, limited by s3 api
         const stack = ids.result;
@@ -114,7 +115,7 @@ export class S3CloudConnection {
             await this.database.removeCloudMeta(head, this.palantirToken.toString());
         }
 
-        console.log(`removed ${ids.result.length} drawings from the cloud of ${this.palantirToken}`);
+        console.log(`removed ${count} drawings from the cloud of ${this.palantirToken}`);
     }
 
     /**
