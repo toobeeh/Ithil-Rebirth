@@ -116,9 +116,14 @@ export class S3CloudConnection {
             };
 
             //console.log("would delete " + idParam.length + " images: " + idParam[0].Key + " - " + idParam[idParam.length - 1].Key);
-            const response = await this.client.send(new DeleteObjectsCommand(deleteParams));
-            deleted += response.Deleted?.length ?? 0;
-            await this.database.removeCloudMeta(head, this.palantirToken.toString());
+            try {
+                const response = await this.client.send(new DeleteObjectsCommand(deleteParams));
+                deleted += response.Deleted?.length ?? 0;
+                await this.database.removeCloudMeta(head, this.palantirToken.toString());
+            }
+            catch (e) {
+                console.log(`Failed to remove a batch of ${head.length} from the cloud of ${this.palantirToken}`, e);
+            }
         }
 
         console.log(`removed ${deleted} drawings from the cloud of ${this.palantirToken}`);
