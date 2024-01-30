@@ -94,7 +94,7 @@ export class S3CloudConnection {
 
         const ids = await this.database.getDeletableCloudMetaOlderThan(days, this.palantirToken);
         const count = ids.result.length;
-        if (true || count == 0) return;
+        if (count == 0) return;
 
         // loop through 1000s batches, limited by s3 api
         const stack = ids.result;
