@@ -152,7 +152,7 @@ export default class TypoClient {
         const privateLobby = this.reportData.reportLobby.Private;
         const aloneInLobby = this.reportData.reportLobby.Players.length === 1;
 
-        if (privateLobby && noOneDrawing && allPlayersZeroScore || !privateLobby && aloneInLobby) {
+        if (privateLobby && allPlayersZeroScore || !privateLobby && aloneInLobby) {
             return 'league';
         }
         else return 'normal';
