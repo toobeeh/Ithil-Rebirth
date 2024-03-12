@@ -234,9 +234,9 @@ class PalantirDatabase {
         try {
             const eventdrops = await this.get<schema.EventDrops>("SELECT * FROM EventDrops LEFT JOIN Events ON EventDrops.EventID = Events.EventID", []);
             // get active sprites
-            const onlinesprites = await this.get<schema.OnlineSprites>("SELECT * FROM OnlineSprites WHERE Slot > 0", []);
+            const onlinesprites = await this.get<schema.OnlineSprites>("SELECT LobbyKey, LobbyPlayerID, ItemID as Sprite, Date, Slot, CONCAT(LobbyKey, ItemID) as ID FROM `OnlineItems` WHERE ItemType = 'sprite';", []);
             // get active scenes
-            const onlinescenes = await this.get<schema.OnlineSprites>("SELECT * FROM OnlineSprites WHERE Slot < 0", []);
+            const onlinescenes = await this.get<schema.OnlineSprites>("SELECT LobbyKey, LobbyPlayerID, ItemID as Sprite, Date, '-1' as Slot, CONCAT(LobbyKey, ItemID) as ID FROM `OnlineItems` WHERE ItemType = 'scene';", []);
             // get sprites
             const sprites = await this.get<schema.Sprites>("SELECT * FROM Sprites", []);
             // get scenes
