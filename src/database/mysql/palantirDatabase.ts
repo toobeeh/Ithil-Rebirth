@@ -373,6 +373,7 @@ class PalantirDatabase {
      * @returns Indicator if the query succeeded
      */
     async clearVolatile() {
+        return true;
         let success = false;
         try {
             await this.get("DELETE FROM Reports WHERE Date < DATE_ADD(CURRENT_TIMESTAMP, INTERVAL -30 SECOND)", []);
