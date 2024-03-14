@@ -354,11 +354,11 @@ class PalantirDatabase {
             await this.update(query, params);
 
             /* insert online rewardee tags and remove old */
-            const playing = statuses.filter(s => s.status.Status === "playing");
+            /*const playing = statuses.filter(s => s.status.Status === "playing");
             await this.update("DELETE FROM OnlineItems WHERE ItemType LIKE 'rewardee'", []);
             let queryR = "INSERT INTO OnlineItems VALUES " + playing.map(s => "('rewardee',1,?,?,?, UNIX_TIMESTAMP())").join(", ");
             let paramsR = playing.map(s => [s.status.LobbyID, s.lobbyKey, s.status.LobbyPlayerID]).flat();
-            await this.update(queryR, paramsR);
+            await this.update(queryR, paramsR);*/
 
             success = true;
         }
