@@ -79,14 +79,12 @@ export default class Drops {
 
                 // poll claim buffer while drop is not timed out
                 console.log("Waiting for claims...");
-                const dropTimeout = 5000;
+                const dropTimeout = 2000;
                 const bufferPoll = 30;
                 let lastClaim: ipc.dropClaimEventdata | undefined;
                 let successfulClaims: Array<{ claim: ipc.dropClaimEventdata, leagueWeight: number, mode: 'league' | 'normal' }> = [];
-                let leagueDropClaimed = false;
 
                 // random league drop extension
-                const leagueRandom = Math.random() * 100;
                 const claimedUsers: Array<string> = [];
 
                 while (Date.now() - dispatchStats.dispatchTimestamp < dropTimeout) {
@@ -96,38 +94,37 @@ export default class Drops {
                     if (lastClaim && lastClaim.dropID == nextDrop.DropID.toString()) {
 
                         if (lastClaim.claimTimestamp - dispatchStats.dispatchTimestamp < 187) {
-                            console.log("rejected spam", lastClaim);
+                            console.log("rejected spam from " + lastClaim.username, lastClaim);
                             continue;
                         }
 
-                        // get claimed drop and double-check if drop still valid
-                        console.log("Shifted claim:", lastClaim);
-                        const claimTarget = (await this.db.getDrop(nextDrop.DropID.toString()));
-                        if (!claimedUsers.some(user => user == lastClaim?.userID) && claimTarget.result && claimTarget.result.CaughtLobbyPlayerID == "") {
+                        // check that user has not claimed before
+                        if (!claimedUsers.some(user => user == lastClaim?.userID)) {
 
                             // save user claimed
                             claimedUsers.push(lastClaim.userID);
+                            const claimTarget = {...nextDrop};
 
                             /* detect if it was caught below 1s => leaguedrop */
-                            let leagueDrop = lastClaim.claimTimestamp - dispatchStats.dispatchTimestamp < 1000 + leagueRandom;
+                            /*let leagueDrop = lastClaim.claimTimestamp - dispatchStats.dispatchTimestamp < 1000 + leagueRandom;*/
 
                             /* reject if drop was caught in league mode, but no league drop */
-                            if (!leagueDrop && lastClaim.dropMode === 'league') {
+                            /*if (!leagueDrop && lastClaim.dropMode === 'league') {
                                 console.log("rejected slow league mode");
                                 continue;
-                            }
+                            }*/
 
                             /* set league mode indicator */
                             if (lastClaim.dropMode === 'league') {
-                                claimTarget.result.EventDropID = -1;
+                                claimTarget.EventDropID = -1;
                             }
 
                             /* time if league drop */
-                            let leagueTime = leagueDrop ? lastClaim.claimTimestamp - dispatchStats.dispatchTimestamp : 0;
+                            const leagueTime = lastClaim.claimTimestamp - dispatchStats.dispatchTimestamp;
+                            const isLastClaim = leagueTime > 1000;
 
                             // claim and reward drop
-                            if (!leagueDrop) await this.db.rewardDrop(lastClaim.login, nextDrop.EventDropID);
-                            await this.db.claimDrop(lastClaim.lobbyKey, lastClaim.username, nextDrop.DropID.toString(), lastClaim.userID, leagueTime, claimTarget.result);
+                            await this.db.claimDrop(lastClaim.lobbyKey, lastClaim.username, nextDrop.DropID.toString(), lastClaim.userID, leagueTime, claimTarget);
 
                             // clear drop and exit loop
                             const clearData: ipc.clearDropEventdata = {
@@ -135,21 +132,19 @@ export default class Drops {
                                 caughtLobbyKey: lastClaim.lobbyKey,
                                 claimTicket: lastClaim.claimTicket,
                                 caughtPlayer: "<abbr title='Drop ID: " + nextDrop.DropID + "'>" + lastClaim.username + "</abbr>",
-                                leagueWeight: leagueDrop ? Drops.leagueWeight(leagueTime / 1000) : 0
+                                leagueWeight: Drops.leagueWeight(leagueTime / 1000)
                             };
                             this.ipcServer.broadcastClearDrop(clearData);
 
                             /* collect claim */
                             successfulClaims.push({ claim: lastClaim, leagueWeight: leagueTime, mode: lastClaim.dropMode });
 
-                            /* if it was a league drop, accept other drops */
-                            if (!leagueDrop) break;
-                            else {
-                                console.log("league drop claimed with weight " + leagueTime);
-                                leagueDropClaimed = true;
-                            }
+                            /* if it was below 1000ms, accept other drops */
+                            console.log("drop claimed with weight " + leagueTime);
+                            if (!isLastClaim) break;
+
                         }
-                        else console.log("Rejected claim.", claimTarget);
+                        else console.log("Rejected claim.", lastClaim);
                     }
                     else await this.idle(bufferPoll);
                     lastClaim = undefined;

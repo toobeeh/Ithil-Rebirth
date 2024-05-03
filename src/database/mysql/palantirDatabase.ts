@@ -124,7 +124,12 @@ class PalantirDatabase {
             /* get webhooks */
             for (const guild of result.result.member.Guilds) {
                 const guildHooks = await this.getServerWebhooks(guild.GuildID, true);
-                result.result.webhooks = result.result.webhooks.concat(...guildHooks.result);
+                try {
+                    result.result.webhooks = result.result.webhooks.concat(...guildHooks.result);
+                }
+                catch {
+                    result.result.webhooks = [];
+                }
             }
 
             result.success = true;
