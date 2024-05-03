@@ -374,7 +374,7 @@ export default class TypoClient {
         const flags = await this.flags;
 
         // check if slot is valid and sprite is owned
-        if (flags.admin || slots >= eventdata.slot && eventdata.slot > 0 && currentInv.some(inv => inv.id == eventdata.sprite)) {
+        if (flags.admin || slots >= eventdata.slot && eventdata.slot > 0 && (currentInv.some(inv => inv.id == eventdata.sprite) || eventdata.sprite == 0)) {
 
             // disable old slot sprite and activate new - if new is special, disable old special
             const targetIsSpecial = this.isSpecialSprite(eventdata.sprite);

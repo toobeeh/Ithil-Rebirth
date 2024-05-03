@@ -157,7 +157,7 @@ export default class Drops {
                     const ranks: Array<string> = [];
 
                     successfulClaims.forEach(claim => {
-                        const emote = claim.leagueWeight != 0 ? (claim.mode === 'normal' ? " 💎 " : " 🧿 ") : "";
+                        const emote = claim.leagueWeight < 1000 ? (claim.mode === 'normal' ? " 💎 " : " 🧿 ") : " 💧 ";
                         let successfulRank = `<abbr title="`
                             + `- drop server dispatch delay: ${dispatchStats!.dispatchTimestamp - listenStartTimestamp}ms&#013;&#010;`
                             + `- individual socket dispatch delay: ${dispatchStats!.dispatchDelays.find(d => d.claimTicket == lastClaim?.claimTicket)?.delay}ms&#013;&#010;`
