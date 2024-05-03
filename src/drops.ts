@@ -141,7 +141,7 @@ export default class Drops {
 
                             /* if it was below 1000ms, accept other drops */
                             console.log("drop claimed with weight " + leagueTime);
-                            if (!isLastClaim) break;
+                            if (isLastClaim) break;
 
                         }
                         else console.log("Rejected claim.", lastClaim);
