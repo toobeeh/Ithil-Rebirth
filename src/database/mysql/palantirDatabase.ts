@@ -107,7 +107,7 @@ class PalantirDatabase {
             }
 
             /* get weighted league drops */
-            let weight = 0;
+            /*let weight = 0;
             let rows = await this.get<schema.PastDrops>(`SELECT LeagueWeight FROM PastDrops WHERE CaughtLobbyPlayerID = ? AND LeagueWeight > 0 AND EventDropID = 0`, [result.result.member.UserID]);
             rows.forEach(row => {
                 try {
@@ -119,7 +119,7 @@ class PalantirDatabase {
                     console.warn("Error calculating drop weight: ", e);
                 }
             });
-            result.result.drops += Math.floor(weight / 100);
+            result.result.drops += Math.floor(weight / 100);*/
 
             /* get webhooks */
             for (const guild of result.result.member.Guilds) {

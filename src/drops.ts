@@ -121,7 +121,7 @@ export default class Drops {
 
                             /* time if league drop */
                             const leagueTime = lastClaim.claimTimestamp - dispatchStats.dispatchTimestamp;
-                            const isLastClaim = leagueTime > 1000;
+                            const isLastClaim = leagueTime > 1000 && lastClaim.dropMode == "normal";
 
                             // claim and reward drop
                             await this.db.claimDrop(lastClaim.lobbyKey, lastClaim.username, nextDrop.DropID.toString(), lastClaim.userID, leagueTime, claimTarget);
