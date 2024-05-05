@@ -82,6 +82,7 @@ export default class Drops {
                 const dropTimeout = 2000;
                 const bufferPoll = 30;
                 let lastClaim: ipc.dropClaimEventdata | undefined;
+                let firstNormalClaimed = false;
                 let successfulClaims: Array<{ claim: ipc.dropClaimEventdata, leagueWeight: number, mode: 'league' | 'normal', firstClaim: boolean }> = [];
 
                 // random league drop extension
@@ -102,7 +103,9 @@ export default class Drops {
                         if (!claimedUsers.some(user => user == lastClaim?.userID)) {
 
                             // save user claimed
-                            const firstClaim = successfulClaims.length === 0;
+                            const firstClaim = lastClaim.dropMode == "normal" && firstNormalClaimed === false;
+                            if(firstClaim) firstNormalClaimed = true;
+
                             claimedUsers.push(lastClaim.userID);
                             const claimTarget = {...nextDrop};
 
