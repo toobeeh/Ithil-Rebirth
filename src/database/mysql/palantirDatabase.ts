@@ -99,7 +99,7 @@ class PalantirDatabase {
                 member: JSON.parse(row.Member),
                 bubbles: Number(row.Bubbles),
                 sprites: row.Sprites,
-                drops: Number(row.Drops),
+                drops: Math.round(Number(row.Drops) *10)/10,
                 flags: row.Flag,
                 scenes: row.Scenes ? row.Scenes : "",
                 rainbowSprites: row.RainbowSprites ? row.RainbowSprites : "",
@@ -437,7 +437,7 @@ class PalantirDatabase {
         let success = false;
         try {
             // get drop
-            if (leagueweight == 0) this.update("UPDATE NextDrop SET CaughtLobbyKey = ?, CaughtLobbyPlayerID = ? WHERE DropID = ?", [lobbyKey, playerName, dropID]);
+            if (leagueweight == 0) throw new Error("regular drops not supported");
             await this.update("INSERT INTO PastDrops VALUES (?, ?, ?, ?, ?, ?)", [dropID, lobbyKey, userid, dropOrigin.ValidFrom, dropOrigin.EventDropID, leagueweight]);
             //this.db.prepare("UPDATE PastDrops SET CaughtLobbyPlayerID = ?, CaughtLobbyKey = ?, LeagueWeight = ? WHERE DropID = ?").run(userid, lobbyKey, leagueweight, dropID);
 
@@ -458,15 +458,15 @@ class PalantirDatabase {
       * @param eventdrop ID of the eventdrop, if associated with an event
       * @returns Indicator if the query succeeded
       */
-    async rewardDrop(login: string, eventdrop: number) {
+    async rewardDrop(login: string, eventdrop: number, value: number) {
         let success = false;
         try {
             // get drop
             if (eventdrop > 0) {
-                let result = await this.update("UPDATE EventCredits SET Credit = Credit + 1 WHERE EventDropID = ? AND Login = ?", [eventdrop, login]);
-                if (result.changedRows <= 0) await this.get("INSERT INTO EventCredits VALUES(?, ?, 1)", [login, eventdrop]);
+                let result = await this.update("UPDATE EventCredits SET Credit = Credit + ? WHERE EventDropID = ? AND Login = ?", [value, eventdrop, login]);
+                if (result.changedRows <= 0) await this.get("INSERT INTO EventCredits VALUES(?, ?, ?)", [login, eventdrop, value]);
             }
-            else await this.get("UPDATE Members SET Drops = Drops + 1 WHERE Login = ?", [login]);
+            else await this.get("UPDATE Members SET Drops = Drops + ? WHERE Login = ?", [value, login]);
             success = true;
         }
         catch (e) {

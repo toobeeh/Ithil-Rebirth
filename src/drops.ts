@@ -122,9 +122,11 @@ export default class Drops {
                             /* time if league drop */
                             const leagueTime = lastClaim.claimTimestamp - dispatchStats.dispatchTimestamp;
                             const isLastClaim = leagueTime > 1000 && lastClaim.dropMode == "normal";
+                            const weight = Drops.leagueWeight(leagueTime / 1000);
 
                             // claim and reward drop
                             await this.db.claimDrop(lastClaim.lobbyKey, lastClaim.username, nextDrop.DropID.toString(), lastClaim.userID, leagueTime, claimTarget);
+                            await this.db.rewardDrop(lastClaim.login, claimTarget.EventDropID, weight);
 
                             // clear drop and exit loop
                             const clearData: ipc.clearDropEventdata = {
@@ -132,7 +134,7 @@ export default class Drops {
                                 caughtLobbyKey: lastClaim.lobbyKey,
                                 claimTicket: lastClaim.claimTicket,
                                 caughtPlayer: "<abbr title='Drop ID: " + nextDrop.DropID + "'>" + lastClaim.username + "</abbr>",
-                                leagueWeight: Drops.leagueWeight(leagueTime / 1000)
+                                leagueWeight: weight
                             };
                             this.ipcServer.broadcastClearDrop(clearData);
 
