@@ -82,7 +82,7 @@ export default class Drops {
                 const dropTimeout = 2000;
                 const bufferPoll = 30;
                 let lastClaim: ipc.dropClaimEventdata | undefined;
-                let successfulClaims: Array<{ claim: ipc.dropClaimEventdata, leagueWeight: number, mode: 'league' | 'normal' }> = [];
+                let successfulClaims: Array<{ claim: ipc.dropClaimEventdata, leagueWeight: number, mode: 'league' | 'normal', firstClaim: boolean }> = [];
 
                 // random league drop extension
                 const claimedUsers: Array<string> = [];
@@ -102,6 +102,7 @@ export default class Drops {
                         if (!claimedUsers.some(user => user == lastClaim?.userID)) {
 
                             // save user claimed
+                            const firstClaim = successfulClaims.length === 0;
                             claimedUsers.push(lastClaim.userID);
                             const claimTarget = {...nextDrop};
 
@@ -123,10 +124,11 @@ export default class Drops {
                             const leagueTime = lastClaim.claimTimestamp - dispatchStats.dispatchTimestamp;
                             const isLastClaim = leagueTime > 1000 && lastClaim.dropMode == "normal";
                             const weight = Drops.leagueWeight(leagueTime / 1000);
+                            const rewardValue = firstClaim && weight < 100 ? 1 : weight / 100;
 
                             // claim and reward drop
                             await this.db.claimDrop(lastClaim.lobbyKey, lastClaim.username, nextDrop.DropID.toString(), lastClaim.userID, leagueTime, claimTarget);
-                            await this.db.rewardDrop(lastClaim.login, claimTarget.EventDropID, weight);
+                            await this.db.rewardDrop(lastClaim.login, claimTarget.EventDropID, rewardValue);
 
                             // clear drop and exit loop
                             const clearData: ipc.clearDropEventdata = {
@@ -139,7 +141,7 @@ export default class Drops {
                             this.ipcServer.broadcastClearDrop(clearData);
 
                             /* collect claim */
-                            successfulClaims.push({ claim: lastClaim, leagueWeight: leagueTime, mode: lastClaim.dropMode });
+                            successfulClaims.push({ claim: lastClaim, leagueWeight: leagueTime, mode: lastClaim.dropMode, firstClaim: firstClaim });
 
                             /* if it was below 1000ms, accept other drops */
                             console.log("drop claimed with weight " + leagueTime);
