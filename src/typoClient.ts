@@ -409,7 +409,7 @@ export default class TypoClient {
                 id: Number(slot.split(".").join("")),
                 slot: slot.split(".").length - 1
             } as types.spriteProperty;
-        });
+        }).filter(slot => slot.id > 0);
 
         this.clearCache(this.memberCache);
         const currentInv = await this.spriteInventory;
