@@ -106,7 +106,7 @@ class PalantirDatabase {
                 webhooks: []
             }
 
-            let guilds = await this.get("SELECT ServerConnections.GuildId, LobbyBotOptions.Name, LobbyBotOptions.Invite FROM ServerConnections LEFT JOIN LobbyBotOptions ON ServerConnections.GuildId = LobbyBotOptions.GuildId WHERE Login = ?;", [login]);
+            let guilds = await this.get("SELECT CAST(ServerConnections.GuildId AS char) AS GuildId, LobbyBotOptions.Name, LobbyBotOptions.Invite FROM ServerConnections LEFT JOIN LobbyBotOptions ON ServerConnections.GuildId = LobbyBotOptions.GuildId WHERE Login = ?;", [login]);
             result.result.member.Guilds = guilds.map(g => ({
                 GuildID: g.GuildId + "",
                 GuildName: g.Name,
@@ -522,7 +522,7 @@ class PalantirDatabase {
         let result = this.emptyResult<Array<types.palantirWebhook>>();
 
         try {
-            let rows = await this.get(`SELECT * FROM ServerWebhooks WHERE GuildId = ?`, [serverID]);
+            let rows = await this.get(`SELECT CAST(ServerWebhooks.GuildId AS char) AS GuildId, Name, Url FROM ServerWebhooks WHERE GuildId = ?`, [serverID]);
             result.result = [];
             rows.forEach(row => {
                 try {
