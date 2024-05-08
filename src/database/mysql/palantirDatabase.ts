@@ -106,6 +106,16 @@ class PalantirDatabase {
                 webhooks: []
             }
 
+            let guilds = await this.get("SELECT ServerConnections.GuildId, LobbyBotOptions.Name, LobbyBotOptions.Invite FROM ServerConnections LEFT JOIN LobbyBotOptions ON ServerConnections.GuildId = LobbyBotOptions.GuildId WHERE Login = ?;", [login]);
+            result.result.member.Guilds = guilds.map(g => ({
+                GuildID: g.GuildId + "",
+                GuildName: g.Name,
+                ObserveToken: g.Invite,
+                ChannelID: "",
+                MessageID: "",
+                Webhooks: []
+            }));
+
             /* get weighted league drops */
             /*let weight = 0;
             let rows = await this.get<schema.PastDrops>(`SELECT LeagueWeight FROM PastDrops WHERE CaughtLobbyPlayerID = ? AND LeagueWeight > 0 AND EventDropID = 0`, [result.result.member.UserID]);
@@ -512,14 +522,14 @@ class PalantirDatabase {
         let result = this.emptyResult<Array<types.palantirWebhook>>();
 
         try {
-            let rows = await this.get<schema.Webhooks>(`SELECT * FROM Webhooks WHERE ServerID = ?`, [serverID]);
+            let rows = await this.get(`SELECT * FROM ServerWebhooks WHERE GuildId = ?`, [serverID]);
             result.result = [];
             rows.forEach(row => {
                 try {
                     result.result?.push({
-                        ServerID: row.ServerID,
+                        ServerID: row.GuildId,
                         Name: row.Name,
-                        WebhookURL: censorURL ? ":^)" : row.WebhookURL
+                        WebhookURL: censorURL ? ":^)" : row.Url
                     });
                 }
                 catch (e) {
