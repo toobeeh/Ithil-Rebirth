@@ -110,7 +110,7 @@ class PalantirDatabase {
             result.result.member.Guilds = guilds.map(g => ({
                 GuildID: g.GuildId + "",
                 GuildName: g.Name,
-                ObserveToken: g.Invite,
+                ObserveToken: g.Invite + "" as any,
                 ChannelID: "",
                 MessageID: "",
                 Webhooks: []
