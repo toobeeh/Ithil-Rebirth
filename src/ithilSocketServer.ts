@@ -7,6 +7,7 @@ import * as ws from "ws";
 import { Server as SocketioServer, Socket } from "socket.io";
 import * as types from "./database/types";
 import { metaTags } from './s3/cloud';
+import {guildLobbyLink} from "./database/types";
 
 /**
  * A https server with certs loaded and cors enabled
@@ -405,7 +406,7 @@ export interface activeLobbiesEventdata {
     /**
      * Currently active guildlobbies
      */
-    activeGuildLobbies: types.activeGuildLobbies;
+    activeGuildLobbies: Array<guildLobbyLink>;
 }
 
 /**
@@ -460,7 +461,8 @@ export interface loginResponseEventdata {
     /**
      * Currently active lobbies of all guilds the authenticated member is conencted to
      */
-    activeLobbies: Array<types.activeGuildLobbies>;
+    activeLobbies: never [];
+    lobbyLinks: guildLobbyLink[];
 
     /**
      * The authenticated member
@@ -653,7 +655,8 @@ export interface leaveLobbyResponseEventdata {
      * Currently active lobbies of all guilds the authenticated member is conencted to
      * Sent to instantly update the current lobbies because client wouldn't receive updates while playing
      */
-    activeLobbies: Array<types.activeGuildLobbies>;
+    activeLobbies: never[];
+    lobbyLinks: guildLobbyLink[];
 }
 
 /**

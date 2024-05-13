@@ -24,6 +24,8 @@ import TypoClient from "./typoClient";
 import portscanner from "portscanner";
 import PalantirDatabase from "./database/mysql/palantirDatabase";
 import { S3CloudConnection } from "./s3/cloud";
+import Dict = NodeJS.Dict;
+import {guildLobbyLink} from "./database/types";
 
 const config = require("../ecosystem.config").config;
 
@@ -95,18 +97,21 @@ portscanner.findAPortNotInUse(
         // listen to ipc lobbies update event
         ipcClient.onActiveLobbiesChanged = (data) => {
             workerCache.activeLobbies = data.activeLobbies;
-            data.activeLobbies.forEach(guild => {
+            const guildsDictionary: {[id: string]: guildLobbyLink[]} = {}
+            data.activeLobbies.forEach(link => guildsDictionary[link.guildId] ? guildsDictionary[link.guildId].push(link) : guildsDictionary[link.guildId] = [link]);
+
+            Object.keys(guildsDictionary).forEach(guild => {
 
                 // build eventdata
                 const eventdata: ithilSocketServer.eventBase<ithilSocketServer.activeLobbiesEventdata> = {
                     event: ithilSocketServer.eventNames.activeLobbies,
                     payload: {
-                        activeGuildLobbies: guild
+                        activeGuildLobbies: guildsDictionary[guild]
                     }
                 };
 
                 // volatile emit to all sockets that are a member of this guild and not playing
-                workerSocketServer.in("guild" + guild.guildID).except("playing").volatile.emit(
+                workerSocketServer.in("guild" + guild).except("playing").volatile.emit(
                     ithilSocketServer.eventNames.activeLobbies,
                     eventdata
                 );
@@ -214,6 +219,7 @@ portscanner.findAPortNotInUse(
                 const response: ithilSocketServer.loginResponseEventdata = {
                     authorized: false,
                     activeLobbies: [],
+                    lobbyLinks: [],
                     member: {} as types.member
                 };
 
@@ -247,8 +253,9 @@ portscanner.findAPortNotInUse(
                     // fill login response data
                     response.authorized = true;
                     response.member = memberResult.result;
-                    response.activeLobbies = workerCache.activeLobbies.filter(
-                        guild => memberResult.result.member.Guilds.some(connectedGuild => connectedGuild.GuildID == guild.guildID)
+                    response.activeLobbies = [];
+                    response.lobbyLinks = workerCache.activeLobbies.filter(
+                        guild => memberResult.result.member.Guilds.some(connectedGuild => connectedGuild.GuildID == guild.guildId)
                     );
                 }
 

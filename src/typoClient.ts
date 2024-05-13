@@ -659,18 +659,19 @@ export default class TypoClient {
         this.reportData.joinedLobby = undefined;
         this.reportData.reportLobby = undefined;
 
-        let activeLobbies: types.activeGuildLobbies[] = [];
+        let activeLobbies: types.guildLobbyLink[] = [];
         if (previousState == "playing") {
 
             // send currently active lobbies if player was in a lobby (playing -> no broadcast of active lobbies)
             console.log(this.username + " left a lobby.");
 
             const guilds = (await sp(this.member)).member.Guilds;
-            activeLobbies = this.workerCache.activeLobbies.filter(guildLobby => guilds.some(guild => guild.GuildID == guildLobby.guildID));
+            activeLobbies = this.workerCache.activeLobbies.filter(guildLobby => guilds.some(guild => guild.GuildID == guildLobby.guildId));
         }
 
         const response: ithilSocketServer.leaveLobbyResponseEventdata = {
-            activeLobbies: activeLobbies
+            lobbyLinks: activeLobbies,
+            activeLobbies: []
         };
         return response;
     }

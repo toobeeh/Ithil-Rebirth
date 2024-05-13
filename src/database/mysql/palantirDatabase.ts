@@ -4,6 +4,7 @@ import * as schema from "./schema";
 import * as mysql2 from "mysql2/promise"
 import { OkPacket, RowDataPacket } from "mysql2/typings/mysql/lib/protocol/packets";
 import { metaTags } from "../../s3/cloud";
+import {guildLobbyLink} from "../types";
 
 /**
  * Palantir/Typo main db access
@@ -215,22 +216,11 @@ class PalantirDatabase {
      * @returns An array of palantir lobbies
      */
     async getActiveLobbies() {
-        let result = this.emptyResult<Array<types.activeGuildLobbies>>();
+        let result = this.emptyResult<Array<types.guildLobbyLink>>();
 
         try {
-            let rows = await this.get<schema.GuildLobbies>(`SELECT CONCAT('"', GuildID, '"') as GuildID, Lobbies FROM GuildLobbies`, []);
-            result.result = [];
-            rows.forEach(row => {
-                try {
-                    result.result?.push({
-                        guildID: JSON.parse(row.GuildID),
-                        guildLobbies: JSON.parse(row.Lobbies)
-                    });
-                }
-                catch (e) {
-                    console.warn("Error parsing lobby JSON: ", e);
-                }
-            });
+            let rows = await this.get<guildLobbyLink>(`SELECT CONCAT('"', GuildId, '"') as guildId, Link as link, SlotAvailable as slotAvailable, Username as username FROM GuildLobbies`, []);
+            result.result = rows;
             result.success = true;
         }
         catch (e) {

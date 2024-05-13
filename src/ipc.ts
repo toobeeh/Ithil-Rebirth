@@ -42,7 +42,7 @@ export interface publicDataEventdata {
 }
 
 export interface activeLobbiesEventdata {
-    activeLobbies: Array<types.activeGuildLobbies>;
+    activeLobbies: Array<types.guildLobbyLink>;
 }
 
 export interface nextDropEventdata {

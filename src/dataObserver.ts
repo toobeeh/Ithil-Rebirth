@@ -13,7 +13,7 @@ export default class DataObserver {
     /**
      * Collection of currently active lobbies
      */
-    activeLobbies: Array<types.activeGuildLobbies>;
+    activeLobbies: Array<types.guildLobbyLink>;
 
     /**
      * Palantir shared data object
@@ -27,7 +27,7 @@ export default class DataObserver {
     /**
      * The callback which fires when changes in active lobbies were found
      */
-    onActiveLobbiesChanged?: (lobbies: Array<types.activeGuildLobbies>) => void;
+    onActiveLobbiesChanged?: (lobbies: Array<types.guildLobbyLink>) => void;
 
     /**
      * The callback which fires when changes in active lobbies were found

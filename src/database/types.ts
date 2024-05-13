@@ -563,7 +563,7 @@ export interface workerCache {
     /**
     * The worker's last received active lobbies
     */
-    activeLobbies: Array<activeGuildLobbies>;
+    activeLobbies: Array<guildLobbyLink>;
 }
 
 /**
@@ -692,4 +692,11 @@ export interface palantirWebhook {
      * The webhook url
      */
     WebhookURL: string;
+}
+
+export interface guildLobbyLink {
+    guildId: string;
+    username: string;
+    link: string;
+    slotAvailable: boolean;
 }
