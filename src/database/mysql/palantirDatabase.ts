@@ -221,7 +221,7 @@ class PalantirDatabase {
         try {
             let rows = await this.get<guildLobbyLink>(`SELECT CONCAT('"', GuildId, '"') as guildId, Link as link, SlotAvailable as slotAvailable, Username as username FROM ServerLobbyLinks`, []);
             result.result = [];
-            const fixGuildId = (id: string) => id.replace("\"", "");
+            const fixGuildId = (id: string) => id.replace("\"", "").replace("\"", "");
             rows.forEach(row => result.result.push({username: row.username, guildId: fixGuildId(row.guildId), link: row.link, slotAvailable: row.slotAvailable}));
 
             result.success = true;
