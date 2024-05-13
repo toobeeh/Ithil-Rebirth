@@ -92,6 +92,7 @@ async function setup() {
     // add callbacks to data observer events
     dataObserver.onActiveLobbiesChanged = (lobbies) => {
         ipcServer.broadcastActiveLobbies({ activeLobbies: lobbies });
+        console.log("broadcasted lobbies: " + lobbies.length)
     }
 
     dataObserver.onPublicDataChanged = (data) => {

@@ -97,6 +97,7 @@ portscanner.findAPortNotInUse(
         // listen to ipc lobbies update event
         ipcClient.onActiveLobbiesChanged = (data) => {
             workerCache.activeLobbies = data.activeLobbies;
+            console.log("worker received lobbies: " + data.activeLobbies.length);
             const guildsDictionary: {[id: string]: guildLobbyLink[]} = {}
             data.activeLobbies.forEach(link => guildsDictionary[link.guildId] ? guildsDictionary[link.guildId].push(link) : guildsDictionary[link.guildId] = [link]);
 
