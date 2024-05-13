@@ -107,7 +107,8 @@ portscanner.findAPortNotInUse(
                 const eventdata: ithilSocketServer.eventBase<ithilSocketServer.activeLobbiesEventdata> = {
                     event: ithilSocketServer.eventNames.activeLobbies,
                     payload: {
-                        activeGuildLobbies: guildsDictionary[guild]
+                        activeGuildLobbies: guildsDictionary[guild],
+                        guild: guild
                     }
                 };
 

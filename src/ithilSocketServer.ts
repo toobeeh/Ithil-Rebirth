@@ -407,6 +407,7 @@ export interface activeLobbiesEventdata {
      * Currently active guildlobbies
      */
     activeGuildLobbies: Array<guildLobbyLink>;
+    guild: string;
 }
 
 /**
