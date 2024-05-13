@@ -112,7 +112,6 @@ portscanner.findAPortNotInUse(
                 };
 
                 // volatile emit to all sockets that are a member of this guild and not playing
-                console.log("emitting to room: guild" + guild);
                 workerSocketServer.in("guild" + guild).except("playing").volatile.emit(
                     ithilSocketServer.eventNames.activeLobbies,
                     eventdata
@@ -259,8 +258,6 @@ portscanner.findAPortNotInUse(
                     response.lobbyLinks = workerCache.activeLobbies.filter(
                         guild => memberResult.result.member.Guilds.some(connectedGuild => connectedGuild.GuildID == guild.guildId)
                     );
-
-                    console.log("connected guilds: " + memberResult.result.member.Guilds.map(g => g.GuildID).join(", "));
                 }
 
                 return response;
