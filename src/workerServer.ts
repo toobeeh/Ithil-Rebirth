@@ -100,7 +100,6 @@ portscanner.findAPortNotInUse(
             const guildsDictionary: {[id: string]: guildLobbyLink[]} = {}
             data.activeLobbies.forEach(link => guildsDictionary[link.guildId] ? guildsDictionary[link.guildId].push(link) : guildsDictionary[link.guildId] = [link]);
 
-            console.log("worker received lobbies for guilds: " + Object.keys(guildsDictionary).join(", "));
 
             Object.keys(guildsDictionary).forEach(guild => {
 
@@ -113,6 +112,7 @@ portscanner.findAPortNotInUse(
                 };
 
                 // volatile emit to all sockets that are a member of this guild and not playing
+                console.log("emitting to room: guild" + guild);
                 workerSocketServer.in("guild" + guild).except("playing").volatile.emit(
                     ithilSocketServer.eventNames.activeLobbies,
                     eventdata
@@ -259,6 +259,8 @@ portscanner.findAPortNotInUse(
                     response.lobbyLinks = workerCache.activeLobbies.filter(
                         guild => memberResult.result.member.Guilds.some(connectedGuild => connectedGuild.GuildID == guild.guildId)
                     );
+
+                    console.log("connected guilds: " + memberResult.result.member.Guilds.map(g => g.GuildID).join(", "));
                 }
 
                 return response;
