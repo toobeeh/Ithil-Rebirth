@@ -219,7 +219,7 @@ class PalantirDatabase {
         let result = this.emptyResult<Array<types.guildLobbyLink>>();
 
         try {
-            let rows = await this.get<guildLobbyLink>(`SELECT CONCAT('"', GuildId, '"') as guildId, Link as link, SlotAvailable as slotAvailable, Username as username FROM GuildLobbies`, []);
+            let rows = await this.get<guildLobbyLink>(`SELECT CONCAT('"', GuildId, '"') as guildId, Link as link, SlotAvailable as slotAvailable, Username as username FROM ServerLobbyLinks`, []);
             result.result = rows;
             result.success = true;
         }
