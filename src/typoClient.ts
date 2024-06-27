@@ -26,16 +26,14 @@ function sp<TPromise>(promise: Promise<TPromise>) {
 
 function getSlotBaseCount(drops: number) {
     if (drops > 30000) {
-        return 7 + Math.floor((drops - 30000) / 20000);
-    } else if (drops > 15) {
-        return 6;
-    } else if (drops > 8) {
+        return 6 + Math.floor((drops - 30000) / 20000);
+    } else if (drops > 15000) {
         return 5;
-    } else if (drops > 4) {
+    } else if (drops > 7000) {
         return 4;
-    } else if (drops > 2) {
+    } else if (drops > 3000) {
         return 3;
-    } else if (drops > 1) {
+    } else if (drops > 1000) {
         return 2;
     } else {
         return 1;
