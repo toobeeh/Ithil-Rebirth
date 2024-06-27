@@ -24,6 +24,24 @@ function sp<TPromise>(promise: Promise<TPromise>) {
     });
 }
 
+function getSlotBaseCount(drops: number) {
+    if (drops > 30000) {
+        return 7 + Math.floor((drops - 30000) / 20000);
+    } else if (drops > 15) {
+        return 6;
+    } else if (drops > 8) {
+        return 5;
+    } else if (drops > 4) {
+        return 4;
+    } else if (drops > 2) {
+        return 3;
+    } else if (drops > 1) {
+        return 2;
+    } else {
+        return 1;
+    }
+}
+
 /**
  * Manage dataflow and interactions with a client socket accessing from skribbl.io using typo
  */
@@ -89,8 +107,7 @@ export default class TypoClient {
             const member = await sp(this.member);
             const flags = await sp(this.flags);
 
-            let slots = 1;
-            slots += Math.floor(member.drops / 1000);
+            let slots = getSlotBaseCount(member.drops);
             if (flags.patron) slots++;
             if (flags.admin) slots += 100;
 
