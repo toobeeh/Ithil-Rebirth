@@ -778,6 +778,7 @@ export default class TypoClient {
      */
     async storeDrawing(eventdata: ithilSocketServer.storeDrawingEventdata) {
 
+        return {id: 0}; // TODO REMOVE TMP
         function isDefined<T>(val: T | null | undefined): val is T { return val !== null && val !== undefined };
 
         // fill missing meta
