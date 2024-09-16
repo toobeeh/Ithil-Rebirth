@@ -12,6 +12,21 @@ interface cachedData<TData> {
     cache?: TData
 }
 
+interface Wrapped<T> {
+    data: T;
+}
+
+function wrappedParams<T extends Record<string, Wrapped<any>>>(data: T, callback: (data: { [K in keyof T]: T[K]['data'] }) => void): void {
+    const result: any = {};
+    for (const key in data) {
+        if (data.hasOwnProperty(key)) {
+            result[key] = data[key].data;
+        }
+    }
+    callback(result);
+}
+
+//wrappedParams({a: {data: 6}}, data => console.log(data.a));
 
 function sp<TPromise>(promise: Promise<TPromise>) {
     let stack = (new Error()).stack;
@@ -778,10 +793,9 @@ export default class TypoClient {
      */
     async storeDrawing(eventdata: ithilSocketServer.storeDrawingEventdata) {
 
-        return {id: "0"}; // TODO REMOVE TMP
         function isDefined<T>(val: T | null | undefined): val is T { return val !== null && val !== undefined };
 
-        /*// fill missing meta
+        // fill missing meta
         const sanitizedMeta: types.imageMeta = {
             author: isDefined(eventdata.meta.author) ? eventdata.meta.author : "Unknown",
             date: isDefined(eventdata.meta.date) ? eventdata.meta.date : (new Date).toString(),
@@ -799,7 +813,7 @@ export default class TypoClient {
             uri: eventdata.uri
         });
 
-        /!* try to claim award drawing *!/
+        /* try to claim award drawing */
         if (eventdata.linkAwardId !== undefined) {
             await this.palantirDatabaseWorker.linkAwardToImage(eventdata.linkAwardId, uuid, this.login);
         }
@@ -807,7 +821,7 @@ export default class TypoClient {
         const response: ithilSocketServer.drawingIDEventdata = {
             id: uuid.toString()
         }
-        return response;*/
+        return response;
     }
 
     /**
