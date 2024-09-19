@@ -304,9 +304,9 @@ export default class TypoClient {
      */
     async onDisconnect(reason: string) {
         const flags = await sp(this.flags);
-        if (!flags.admin && !flags.patron && !flags.unlimitedCloud) {
+        /*if (!flags.admin && !flags.patron && !flags.unlimitedCloud) { TODO reactivate
             await this.cloud.bulkDeleteOlderThan(31 * 3);
-        }
+        }*/
 
         this.palantirDatabaseWorker.close();
 
