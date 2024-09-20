@@ -16,7 +16,7 @@ export class S3CloudConnection {
 
     private readonly bucketName = "cloud";
     private client: S3Client;
-    private userID?: string;
+    private userLogin?: string;
 
     constructor(key: string, secret: string, private palantirToken: number, private database: PalantirDatabase) {
         this.client = new S3Client({
@@ -24,22 +24,22 @@ export class S3CloudConnection {
                 accessKeyId: key,
                 secretAccessKey: secret,
             },
-            endpoint: "https://eu2.contabostorage.com/",
+            endpoint: "https://s3.typo.rip/",
             region: "us-east-1",
             forcePathStyle: true,
         });
     }
 
     get userFolder() {
-        if (!this.userID) throw new Error("userID not set");
-        return this.userID;
+        if (!this.userLogin) throw new Error("userLogin not set");
+        return this.userLogin;
     }
 
     /**
      * inits necessary constraints
      */
     async init() {
-        this.userID = await this.getUserDiscordID();
+        this.userLogin = await this.getUserLogin();
         // await this.ensureBucketExists(this.bucketName); skip this for performance; ASSUME bucket exists!
     }
 
@@ -47,9 +47,9 @@ export class S3CloudConnection {
      * opens a db conenction and gets the discord id of the user
      * @returns user id string
      */
-    private async getUserDiscordID() {
+    private async getUserLogin() {
         const user = await this.database.getUserByLogin(this.palantirToken);
-        return user.result.member.UserID;
+        return user.result.member.UserLogin;
     }
 
     /**
@@ -163,9 +163,9 @@ export class S3CloudConnection {
         const matches = await this.database.getCloudMetaMatch(tags, this.palantirToken.toString(), limit === -1 ? 1000 : limit);
         return matches.result.map(m => ({
             uuid: m,
-            meta: `https://cloud.typo.rip/${this.userFolder}/${m}/meta.json`,
-            commands: `https://cloud.typo.rip/${this.userFolder}/${m}/commands.json`,
-            image: `https://cloud.typo.rip/${this.userFolder}/${m}/image.png`
+            meta: `https://s3.typo.rip/cloud/${this.userFolder}/${m}/meta.json`,
+            commands: `https://s3.typo.rip/cloud/${this.userFolder}/${m}/commands.json`,
+            image: `https://s3.typo.rip/cloud/${this.userFolder}/${m}/image.png`
         }));
     }
 
