@@ -135,8 +135,9 @@ class PalantirDatabase {
             /* get webhooks */
             for (const guild of result.result.member.Guilds) {
                 const guildHooks = await this.getServerWebhooks(guild.GuildID, true);
+                const mapped = guildHooks.result.map(hook => ({...hook, Token: guild.ObserveToken}));
                 try {
-                    result.result.webhooks = result.result.webhooks.concat(...guildHooks.result);
+                    result.result.webhooks = result.result.webhooks.concat(...mapped);
                 }
                 catch {
                     result.result.webhooks = [];
@@ -522,7 +523,7 @@ class PalantirDatabase {
                     result.result?.push({
                         ServerID: row.GuildId,
                         Name: row.Name,
-                        WebhookURL: censorURL ? ":^)" : row.Url
+                        WebhookURL: censorURL ? ":^)" : row.Url,
                     });
                 }
                 catch (e) {
